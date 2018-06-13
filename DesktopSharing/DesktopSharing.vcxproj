@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{77F4AAA4-0051-480A-9168-A6CB8927FB6E}</ProjectGuid>
+    <RootNamespace>DesktopSharing</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)..\bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
+    <IntDir>$(ProjectDir)..\objs\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)..\bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
+    <IntDir>$(ProjectDir)..\objs\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)..\bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
+    <IntDir>$(ProjectDir)..\objs\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)..\bin\$(Platform)\$(Configuration)\$(ProjectName)</OutDir>
+    <IntDir>$(ProjectDir)..\objs\$(Platform)\$(Configuration)\$(ProjectName)</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\libs\librtmp\include;$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir);$(ProjectDir)..\libs\screen_capture\include;$(ProjectDir)..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\libs\ffmpeg\lib;$(ProjectDir)..\libs\librtmp\lib\debug;$(ProjectDir)..\libs\portaudio\lib\debug;$(ProjectDir)..\libs\screen_capture\lib\debug;$(ProjectDir)..\libs\screen_capture_lite\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\libs\librtmp\include;$(ProjectDir)\..\libs\portaudio\include;$(ProjectDir)\..\libs\ffmpeg\include;$(ProjectDir);$(ProjectDir)\..\libs\screen_capture\include;$(ProjectDir)\..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)\..\libs\ffmpeg\lib;$(ProjectDir)..\libs\librtmp\lib\debug;$(ProjectDir)..\libs\portaudio\lib\debug;$(ProjectDir)..\libs\screen_capture\lib\debug;$(ProjectDir)..\libs\screen_capture_lite\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\libs\librtmp\include;$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir);$(ProjectDir)..\libs\screen_capture\include;$(ProjectDir)..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\libs\portaudio\lib\release;$(ProjectDir)\..\libs\ffmpeg\lib;$(ProjectDir)..\libs\librtmpe\lib\release;$(ProjectDir)..\libs\screen_capture\lib\release;$(ProjectDir)..\libs\screen_capture_lite\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+      <StackReserveSize>
+      </StackReserveSize>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\libs\librtmp\include;$(ProjectDir)\..\libs\portaudio\include;$(ProjectDir)\..\libs\ffmpeg\include;$(ProjectDir);$(ProjectDir)\..\libs\screen_capture\include;$(ProjectDir)\..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\libs\portaudio\lib\release;$(ProjectDir)\..\libs\ffmpeg\lib;$(ProjectDir)..\libs\librtmpe\lib\release;$(ProjectDir)..\libs\screen_capture\lib\release;$(ProjectDir)..\libs\screen_capture_lite\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AACEncoder.cpp" />
+    <ClCompile Include="AudioCapture.cpp" />
+    <ClCompile Include="DesktopSharing.cpp" />
+    <ClCompile Include="H264Encoder.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="rtaudio\RtAudio.cpp" />
+    <ClCompile Include="RtmpPusher.cpp" />
+    <ClCompile Include="rtsp\AACSource.cpp" />
+    <ClCompile Include="rtsp\G711ASource.cpp" />
+    <ClCompile Include="rtsp\H264Source.cpp" />
+    <ClCompile Include="rtsp\H265Source.cpp" />
+    <ClCompile Include="rtsp\MediaSession.cpp" />
+    <ClCompile Include="rtsp\RtpConnection.cpp" />
+    <ClCompile Include="rtsp\RtspConnection.cpp" />
+    <ClCompile Include="rtsp\RtspPusher.cpp" />
+    <ClCompile Include="rtsp\RtspMessage.cpp" />
+    <ClCompile Include="rtsp\RtspServer.cpp" />
+    <ClCompile Include="VideoCapture.cpp" />
+    <ClCompile Include="xop\Acceptor.cpp" />
+    <ClCompile Include="xop\BufferReader.cpp" />
+    <ClCompile Include="xop\BufferWriter.cpp" />
+    <ClCompile Include="xop\EpollTaskScheduler.cpp" />
+    <ClCompile Include="xop\EventLoop.cpp" />
+    <ClCompile Include="xop\Logger.cpp" />
+    <ClCompile Include="xop\MemoryManager.cpp" />
+    <ClCompile Include="xop\NetInterface.cpp" />
+    <ClCompile Include="xop\Pipe.cpp" />
+    <ClCompile Include="xop\SelectTaskScheduler.cpp" />
+    <ClCompile Include="xop\SocketUtil.cpp" />
+    <ClCompile Include="xop\TcpConnection.cpp" />
+    <ClCompile Include="xop\TcpServer.cpp" />
+    <ClCompile Include="xop\TcpSocket.cpp" />
+    <ClCompile Include="xop\Timer.cpp" />
+    <ClCompile Include="xop\Timestamp.cpp" />
+    <ClCompile Include="xop\xop.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AACEncoder.h" />
+    <ClInclude Include="AudioCapture.h" />
+    <ClInclude Include="DesktopSharing.h" />
+    <ClInclude Include="H264Encoder.h" />
+    <ClInclude Include="rtaudio\RtAudio.h" />
+    <ClInclude Include="RtmpPusher.h" />
+    <ClInclude Include="rtsp\AACSource.h" />
+    <ClInclude Include="rtsp\G711ASource.h" />
+    <ClInclude Include="rtsp\H264Source.h" />
+    <ClInclude Include="rtsp\H265Source.h" />
+    <ClInclude Include="rtsp\media.h" />
+    <ClInclude Include="rtsp\MediaSession.h" />
+    <ClInclude Include="rtsp\MediaSource.h" />
+    <ClInclude Include="rtsp\rtp.h" />
+    <ClInclude Include="rtsp\RtpConnection.h" />
+    <ClInclude Include="rtsp\rtsp.h" />
+    <ClInclude Include="rtsp\RtspConnection.h" />
+    <ClInclude Include="rtsp\RtspPusher.h" />
+    <ClInclude Include="rtsp\RtspMessage.h" />
+    <ClInclude Include="rtsp\RtspServer.h" />
+    <ClInclude Include="VideoCapture.h" />
+    <ClInclude Include="xop\Acceptor.h" />
+    <ClInclude Include="xop\BufferReader.h" />
+    <ClInclude Include="xop\BufferWriter.h" />
+    <ClInclude Include="xop\Channel.h" />
+    <ClInclude Include="xop\EpollTaskScheduler.h" />
+    <ClInclude Include="xop\EventLoop.h" />
+    <ClInclude Include="xop\log.h" />
+    <ClInclude Include="xop\Logger.h" />
+    <ClInclude Include="xop\MemoryManager.h" />
+    <ClInclude Include="xop\NetInterface.h" />
+    <ClInclude Include="xop\Pipe.h" />
+    <ClInclude Include="xop\RingBuffer.h" />
+    <ClInclude Include="xop\SelectTaskScheduler.h" />
+    <ClInclude Include="xop\Socket.h" />
+    <ClInclude Include="xop\SocketUtil.h" />
+    <ClInclude Include="xop\TaskScheduler.h" />
+    <ClInclude Include="xop\TcpConnection.h" />
+    <ClInclude Include="xop\TcpServer.h" />
+    <ClInclude Include="xop\TcpSocket.h" />
+    <ClInclude Include="xop\Timer.h" />
+    <ClInclude Include="xop\Timestamp.h" />
+    <ClInclude Include="xop\xop.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
