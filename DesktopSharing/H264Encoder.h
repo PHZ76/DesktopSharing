@@ -1,4 +1,4 @@
-#ifndef _H264_ENCODER_H
+﻿#ifndef _H264_ENCODER_H
 #define _H264_ENCODER_H
 
 #include <cstdint>

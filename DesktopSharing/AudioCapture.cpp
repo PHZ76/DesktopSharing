@@ -1,4 +1,4 @@
-#include "AudioCapture.h"
+﻿#include "AudioCapture.h"
 #include "xop/log.h"
 #include "xop/Timestamp.h"
 

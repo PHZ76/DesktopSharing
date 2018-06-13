@@ -1,4 +1,4 @@
-#include "H264Encoder.h"
+﻿#include "H264Encoder.h"
 #include "xop/log.h"
 
 #pragma comment(lib,"avformat.lib")
@@ -61,7 +61,7 @@ bool H264Encoder::Init(struct VideoConfig vc)
 
 	_vCodecCtx->rc_min_rate = 0;
 	_vCodecCtx->rc_max_rate = _vCodecCtx->bit_rate; // vbv
-	_vCodecCtx->rc_buffer_size = _vCodecCtx->bit_rate;
+	_vCodecCtx->rc_buffer_size = (int)_vCodecCtx->bit_rate;
 
 	_vCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	//_vCodecCtx->flags |= AV_CODEC_FLAG2_LOCAL_HEADER;

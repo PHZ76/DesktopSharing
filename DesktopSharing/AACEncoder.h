@@ -1,4 +1,4 @@
-#ifndef _AAC_ENCODER_H
+﻿#ifndef _AAC_ENCODER_H
 #define _AAC_ENCODER_H
 
 #include <cstdint>

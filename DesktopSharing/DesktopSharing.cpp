@@ -1,4 +1,4 @@
-#include "DesktopSharing.h"
+ï»¿#include "DesktopSharing.h"
 #include "xop/xop.h"
 #include "xop/NetInterface.h"
 #include "AudioCapture.h"
@@ -213,10 +213,10 @@ void DesktopSharing::PushVideo()
 						vidoeFrame.timestamp = xop::H264Source::getTimeStamp();
 						if (pkt->data[4] == 0x65) //0x67:sps ,0x65:IDR
 						{
-							// ±àÂëÆ÷Ê¹ÓÃÁËAV_CODEC_FLAG_GLOBAL_HEADER, ÕâÀïÐèÒªÌí¼Ósps, pps
+							// ç¼–ç å™¨ä½¿ç”¨äº†AV_CODEC_FLAG_GLOBAL_HEADER, è¿™é‡Œéœ€è¦æ·»åŠ sps, pps
 							uint8_t* extraData = H264Encoder::Instance().getAVCodecContext()->extradata;
 							uint8_t extraDatasize = H264Encoder::Instance().getAVCodecContext()->extradata_size;
-							memcpy(vidoeFrame.buffer.get()+ vidoeFrame.size, extraData+4, extraDatasize-4); // +4È¥µôH.264ÆðÊ¼Âë
+							memcpy(vidoeFrame.buffer.get()+ vidoeFrame.size, extraData+4, extraDatasize-4); // +4åŽ»æŽ‰H.264èµ·å§‹ç 
 							vidoeFrame.size += (extraDatasize - 4);
 							vidoeFrame.type = VIDEO_FRAME_I;
 
@@ -225,23 +225,23 @@ void DesktopSharing::PushVideo()
 						}
 						else
 						{
-							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data+4, pkt->size-4); // +4È¥µôH.264ÆðÊ¼Âë
+							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data+4, pkt->size-4); // +4åŽ»æŽ‰H.264èµ·å§‹ç 
 							vidoeFrame.size += (pkt->size-4);
 						}
 
-						// ±¾µØRTSPÊÓÆµ×ª·¢
+						// æœ¬åœ°RTSPè§†é¢‘è½¬å‘
 						if (this->_clients > 0)
 						{
 							_rtspServer->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
 						}
 
-						// RTSPÊÓÆµÍÆÁ÷
+						// RTSPè§†é¢‘æŽ¨æµ
 						if (_rtspPusher && _rtspPusher->isConnected())
 						{
 							_rtspPusher->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
 						}
 						
-						// RTMPÊÓÆµÍÆÁ÷
+						// RTMPè§†é¢‘æŽ¨æµ
 						if (_rtmpPusher && _rtmpPusher->isConnected())
 						{						
 							_rtmpPusher->pushFrame(xop::channel_0, pkt);
@@ -276,19 +276,19 @@ void DesktopSharing::PushAudio()
 						audioFrame.type = AUDIO_FRAME;
 						memcpy(audioFrame.buffer.get(), pkt->data, pkt->size);
 
-						// RTSPÒôÆµ×ª·¢
+						// RTSPéŸ³é¢‘è½¬å‘
 						if (this->_clients > 0)
 						{
 							_rtspServer->pushFrame(_sessionId, xop::channel_1, audioFrame);
 						}
 
-						// RTSPÒôÆµÍÆÁ÷
+						// RTSPéŸ³é¢‘æŽ¨æµ
 						if (_rtspPusher && _rtspPusher->isConnected())
 						{
 							_rtspPusher->pushFrame(_sessionId, xop::channel_1, audioFrame);
 						}
 
-						// RTMPÒôÆµÍÆÁ÷
+						// RTMPéŸ³é¢‘æŽ¨æµ
 						if (_rtmpPusher && _rtmpPusher->isConnected())
 						{	
 							_rtmpPusher->pushFrame(xop::channel_1, pkt);

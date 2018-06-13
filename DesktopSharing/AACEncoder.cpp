@@ -1,4 +1,4 @@
-#include "AACEncoder.h"
+﻿#include "AACEncoder.h"
 #include "xop/log.h"
 
 #pragma comment(lib,"avformat.lib")

@@ -1,4 +1,4 @@
-#ifndef _VIDEO_CAPTURE_H
+﻿#ifndef _VIDEO_CAPTURE_H
 #define _VIDEO_CAPTURE_H
 
 #include <cstdio>
