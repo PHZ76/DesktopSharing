@@ -1,4 +1,4 @@
-#ifndef _AUDIO_CAPTURE_H
+﻿#ifndef _AUDIO_CAPTURE_H
 #define _AUDIO_CAPTURE_H
 
 #include <thread>

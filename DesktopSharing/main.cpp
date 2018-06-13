@@ -1,14 +1,14 @@
-// 2018-6-12
+ï»¿// 2018-6-12
 // PHZ
 
-// Ö§³Ö±¾µØRTSP×ª·¢ºÍRTSPÍÆÁ÷Á½ÖÖÄ£Ê½
-// Ö§³ÖRTMPÍÆÁ÷
+// æ”¯æŒæœ¬åœ°RTSPè½¬å‘å’ŒRTSPæ¨æµä¸¤ç§æ¨¡å¼
+// æ”¯æŒRTMPæ¨æµ
 
 #include "DesktopSharing.h"
 #include "xop/xop.h"
 
-#define RTSP_PUSH_TEST "rtsp://192.168.77.86:554/test" // RTSPÍÆÁ÷µØÖ·, ÔÚEasyDarwinÏÂ²âÊÔÍ¨¹ı
-#define RTMP_PUSH_TEST "rtmp://192.168.77.101:1935/live/test" // RTMPÍÆÁ÷µØÖ·, ÔÚSRSÏÂ²âÊÔÍ¨¹ı
+#define RTSP_PUSH_TEST "rtsp://192.168.77.86:554/test" // RTSPæ¨æµåœ°å€, åœ¨EasyDarwinä¸‹æµ‹è¯•é€šè¿‡
+#define RTMP_PUSH_TEST "rtmp://192.168.77.101:1935/live/test" // RTMPæ¨æµåœ°å€, åœ¨SRSä¸‹æµ‹è¯•é€šè¿‡
 
 using namespace xop;
 
@@ -16,10 +16,10 @@ int main()
 {
     XOP_Init(); //WSAStartup
 
-    if (DesktopSharing::Instance().Init("live", 554)) // ±¾µØRTSP·şÎñÆ÷×ª·¢µØÖ·rtsp://ip/live
+    if (DesktopSharing::Instance().Init("live", 554)) // æœ¬åœ°RTSPæœåŠ¡å™¨è½¬å‘åœ°å€rtsp://ip/live
     {
-        DesktopSharing::Instance().startRtspPusher(RTSP_PUSH_TEST); //Æô¶¯RTSPÍÆÁ÷
-        DesktopSharing::Instance().startRtmpPusher(RTMP_PUSH_TEST); //Æô¶¯RTMPÍÆÁ÷
+        DesktopSharing::Instance().startRtspPusher(RTSP_PUSH_TEST); //å¯åŠ¨RTSPæ¨æµ
+        DesktopSharing::Instance().startRtmpPusher(RTMP_PUSH_TEST); //å¯åŠ¨RTMPæ¨æµ
         DesktopSharing::Instance().Start();
     }
 

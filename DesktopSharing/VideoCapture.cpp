@@ -1,4 +1,4 @@
-#include "VideoCapture.h"
+﻿#include "VideoCapture.h"
 #include "xop/log.h"
 
 // screencapture

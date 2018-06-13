@@ -1,4 +1,4 @@
-#ifndef FFMPEG_RTMP_PUSHER_H
+ï»¿#ifndef FFMPEG_RTMP_PUSHER_H
 #define FFMPEG_RTMP_PUSHER_H
 
 #include <string>
@@ -22,7 +22,7 @@ public:
 	bool openUrl(const char* url);
 	void close();
 
-	bool addStream(AVCodecContext * codecCtx); // ±àÂëÆ÷ÐÅÏ¢
+	bool addStream(AVCodecContext * codecCtx); 
 
 	bool isConnected() const 
 	{ return _isConnected; }
@@ -36,7 +36,7 @@ private:
 	std::string _url;
 	AVFormatContext* _formatCtx = nullptr;
 
-	xop::Timestamp _startTimePoint; //Ê±¼ä´Á
+	xop::Timestamp _startTimePoint; 
     
 	bool _isConnected = false;
 	bool _hasHeader = false;

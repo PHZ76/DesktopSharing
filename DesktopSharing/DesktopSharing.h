@@ -1,4 +1,4 @@
-#ifndef DESKTOP_SHARING_H
+﻿#ifndef DESKTOP_SHARING_H
 #define DESKTOP_SHARING_H
 
 #include <mutex>
