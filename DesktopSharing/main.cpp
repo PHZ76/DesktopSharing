@@ -3,6 +3,7 @@
 
 // 支持本地RTSP转发和RTSP推流两种模式
 // 支持RTMP推流
+// 本地RTSP地址 rtsp://ip/live
 
 #include "DesktopSharing.h"
 #include "xop/xop.h"
@@ -12,14 +13,14 @@
 
 using namespace xop;
 
-int main()
+int main(int argc, char **argv)
 {
     XOP_Init(); //WSAStartup
 
     if (DesktopSharing::Instance().Init("live", 554)) // 本地RTSP服务器转发地址rtsp://ip/live
     {
-        DesktopSharing::Instance().startRtspPusher(RTSP_PUSH_TEST); //启动RTSP推流
-        DesktopSharing::Instance().startRtmpPusher(RTMP_PUSH_TEST); //启动RTMP推流
+        //DesktopSharing::Instance().StartRtspPusher(RTSP_PUSH_TEST); //启动RTSP推流
+        //DesktopSharing::Instance().StartRtmpPusher(RTMP_PUSH_TEST); //启动RTMP推流
         DesktopSharing::Instance().Start();
     }
 

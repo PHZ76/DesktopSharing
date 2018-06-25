@@ -23,8 +23,9 @@ public:
 	void Start();
 	void Stop();
 
-	void startRtspPusher(const char* url);
-	void startRtmpPusher(const char* url);
+    // 推流测试接口
+	void StartRtspPusher(const char* url);
+	void StartRtmpPusher(const char* url);
 
 private:
 	DesktopSharing();
