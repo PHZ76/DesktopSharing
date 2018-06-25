@@ -135,7 +135,7 @@ void DesktopSharing::Start()
 	}
 }
 
-void DesktopSharing::startRtspPusher(const char* url)
+void DesktopSharing::StartRtspPusher(const char* url)
 {
 	if (_rtspPusher && _rtspPusher->isConnected())
 	{
@@ -160,7 +160,7 @@ void DesktopSharing::startRtspPusher(const char* url)
 	std::cout << "Push rtsp stream to " << url << " ..." << std::endl;
 }
 
-void DesktopSharing::startRtmpPusher(const char* url)
+void DesktopSharing::StartRtmpPusher(const char* url)
 {
 	_rtmpPusher.reset(new RtmpPusher);
 	if (!_rtmpPusher->openUrl(url))
