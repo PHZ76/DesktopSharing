@@ -31,7 +31,3 @@
 VLC播放效果
 -
 ![image](https://github.com/PHZ76/DesktopSharing/blob/master/pic/2.pic.jpg) 
-
-其他
--
-* 编译和使用的过程中遇到问题可以联系我。QQ: 2235710879
