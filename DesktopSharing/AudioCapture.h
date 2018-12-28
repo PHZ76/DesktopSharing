@@ -4,7 +4,7 @@
 #include <thread>
 #include <cstdint>
 #include <memory>
-#include "xop/RingBuffer.h"
+#include "net/RingBuffer.h"
 #include "portaudio.h"  
 
 #define AUDIO_LENGTH_PER_FRAME 1024
@@ -27,14 +27,14 @@ class AudioCapture
 public:
 	AudioCapture & operator=(const AudioCapture &) = delete;
 	AudioCapture(const AudioCapture &) = delete;
-	static AudioCapture& Instance();
+	static AudioCapture& instance();
 	~AudioCapture();
 
-	bool Init(uint32_t samplerate=44100, uint32_t channels = 2);
-	void Exit();
+	bool init(uint32_t samplerate=44100, uint32_t channels = 2);
+	void exit();
 
-	bool Start();
-	void Stop();
+	bool start();
+	void stop();
 	
 	bool getFrame(PCMFrame& frame);
 
@@ -55,7 +55,7 @@ private:
 	bool _isInitialized = false;
 	uint32_t _channels = 2;
 	uint32_t _samplerate = 44100;
-	std::shared_ptr<RingBuffer<PCMFrame>> _frameBuffer;
+	std::shared_ptr<xop::RingBuffer<PCMFrame>> _frameBuffer;
 };
 
 #endif

@@ -5,7 +5,7 @@
 #include <memory>
 #include <cstdint>
 #include <mutex>
-#include "xop/Timestamp.h"
+#include "net/Timestamp.h"
 
 extern "C"
 {

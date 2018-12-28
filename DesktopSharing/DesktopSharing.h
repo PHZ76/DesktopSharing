@@ -2,9 +2,9 @@
 #define DESKTOP_SHARING_H
 
 #include <mutex>
-#include "rtsp/RtspServer.h"
-#include "rtsp/RtspPusher.h"
-#include "xop/Timer.h"
+#include "xop/RtspServer.h"
+#include "xop/RtspPusher.h"
+#include "net/Timer.h"
 #include "H264Encoder.h"
 #include "AACEncoder.h"
 #include "RtmpPusher.h"
@@ -14,23 +14,23 @@ class DesktopSharing
 public:
 	DesktopSharing & operator=(const DesktopSharing &) = delete;
 	DesktopSharing(const DesktopSharing &) = delete;
-	static DesktopSharing& Instance();
+	static DesktopSharing& instance();
 	~DesktopSharing();
 
-	bool Init(std::string suffix="live", uint16_t rtspPort=554);
-	void Exit();
+	bool init(std::string suffix="live", uint16_t rtspPort=554);
+	void exit();
 
-	void Start();
-	void Stop();
+	void start();
+	void stop();
 
     // 推流测试接口
-	void StartRtspPusher(const char* url);
-	void StartRtmpPusher(const char* url);
+	void startRtspPusher(const char* url);
+	void startRtmpPusher(const char* url);
 
 private:
 	DesktopSharing();
-	void PushAudio();
-	void PushVideo();
+	void pushAudio();
+	void pushVideo();
 
 	std::string _ip;
 	std::string _rtspSuffix;

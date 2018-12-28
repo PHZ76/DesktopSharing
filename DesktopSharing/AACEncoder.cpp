@@ -1,5 +1,5 @@
 ﻿#include "AACEncoder.h"
-#include "xop/log.h"
+#include "net/log.h"
 
 #pragma comment(lib,"avformat.lib")
 #pragma comment(lib,"swresample.lib")
@@ -17,17 +17,17 @@ AACEncoder::~AACEncoder()
 
 }
 
-AACEncoder& AACEncoder::Instance()
+AACEncoder& AACEncoder::instance()
 {
 	static AACEncoder s_encoder;
 	return s_encoder;
 }
 
-bool AACEncoder::Init(struct AudioConfig ac)
+bool AACEncoder::init(struct AudioConfig ac)
 {
 	if (_isInitialized)
 	{
-		Exit();
+		this->exit();
 	}
 
 	_audioConfig = ac;
@@ -66,7 +66,7 @@ bool AACEncoder::Init(struct AudioConfig ac)
 	return true;
 }
 
-void AACEncoder::Exit()
+void AACEncoder::exit()
 {
 	_isInitialized = false;
 	_aPts = 0;
@@ -97,7 +97,7 @@ void AACEncoder::Exit()
 	}
 }
 
-AVPacket* AACEncoder::EncodeAudio(const uint8_t *pcm)
+AVPacket* AACEncoder::encodeAudio(const uint8_t *pcm)
 {
 	if (!_swrCtx)
 	{

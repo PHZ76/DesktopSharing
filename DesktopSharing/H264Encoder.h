@@ -31,16 +31,16 @@ class H264Encoder
 public:
 	H264Encoder & operator=(const H264Encoder &) = delete;
 	H264Encoder(const H264Encoder &) = delete;
-	static H264Encoder& Instance();
+	static H264Encoder& instance();
 	~H264Encoder();
 
-	bool Init(struct VideoConfig vc);
-	void Exit();
+	bool init(struct VideoConfig vc);
+	void exit();
 
 	AVCodecContext* getAVCodecContext() const
 	{ return _vCodecCtx; }
 
-	AVPacket* EncodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts = 0);
+	AVPacket* encodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts = 0);
 
 private:
 	H264Encoder();
