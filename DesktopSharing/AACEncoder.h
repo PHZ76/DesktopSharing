@@ -31,16 +31,16 @@ class AACEncoder
 public:
 	AACEncoder & operator=(const AACEncoder &) = delete;
 	AACEncoder(const AACEncoder &) = delete;
-	static AACEncoder& Instance();
+	static AACEncoder& instance();
 	~AACEncoder();
 
-	bool Init(struct AudioConfig ac);
-	void Exit();
+	bool init(struct AudioConfig ac);
+	void exit();
 
 	AVCodecContext* getAVCodecContext() const
 	{ return _aCodecCtx; }
 
-	AVPacket* EncodeAudio(const uint8_t *pcm);
+	AVPacket* encodeAudio(const uint8_t *pcm);
 
 private:
 	AACEncoder();

@@ -1,10 +1,8 @@
 ﻿#include "DesktopSharing.h"
-#include "xop/xop.h"
-#include "xop/NetInterface.h"
 #include "AudioCapture.h"
 #include "VideoCapture.h"
-#include "rtsp/H264Source.h"
-#include "rtsp/AACSource.h"
+#include "net/NetInterface.h"
+#include "xop/RtspServer.h"
 
 DesktopSharing::DesktopSharing()
 	: _eventLoop(new xop::EventLoop)
@@ -17,13 +15,13 @@ DesktopSharing::~DesktopSharing()
 
 }
 
-DesktopSharing& DesktopSharing::Instance()
+DesktopSharing& DesktopSharing::instance()
 {
 	static DesktopSharing s_ds;
 	return s_ds;
 }
 
-bool DesktopSharing::Init(std::string suffix, uint16_t rtspPort)
+bool DesktopSharing::init(std::string suffix, uint16_t rtspPort)
 {
 	std::lock_guard<std::mutex> locker(_mutex);
 	if (_isInitialized)
@@ -34,36 +32,36 @@ bool DesktopSharing::Init(std::string suffix, uint16_t rtspPort)
 	_rtspServer.reset(new xop::RtspServer(_eventLoop.get(), _ip, rtspPort));
 	xop::MediaSession* session = xop::MediaSession::createNew(_rtspSuffix);
 
-	VideoCapture& videoCpature = VideoCapture::Instance();
+	VideoCapture& videoCpature = VideoCapture::instance();
 	_videoConfig.framerate = 25;
 	_videoConfig.bitrate = 2000000;
 	_videoConfig.gop = 10;
-	if (videoCpature.Init(_videoConfig.framerate))
+	if (videoCpature.init(_videoConfig.framerate))
 	{		
-		_videoConfig.width = videoCpature.Width();
-		_videoConfig.height = videoCpature.Height();
-		if (H264Encoder::Instance().Init(_videoConfig))
+		_videoConfig.width = videoCpature.width();
+		_videoConfig.height = videoCpature.height();
+		if (H264Encoder::instance().init(_videoConfig))
 		{
 			session->addMediaSource(xop::channel_0, xop::H264Source::createNew());
 		}
 		else
 		{
-			videoCpature.Exit();
+			videoCpature.exit();
 		}
 	}
 
-	AudioCapture& audioCapture = AudioCapture::Instance();
+	AudioCapture& audioCapture = AudioCapture::instance();
 	_audioConfig.samplerate = 44100;
 	_audioConfig.channels = 2;
-	if (audioCapture.Init(_audioConfig.samplerate, _audioConfig.channels))
+	if (audioCapture.init(_audioConfig.samplerate, _audioConfig.channels))
 	{
-		if (AACEncoder::Instance().Init(_audioConfig))
+		if (AACEncoder::instance().init(_audioConfig))
 		{
 			session->addMediaSource(xop::channel_1, xop::AACSource::createNew(_audioConfig.samplerate, _audioConfig.channels, false));
 		}
 		else
 		{
-			audioCapture.Exit();
+			audioCapture.exit();
 		}
 	}
 
@@ -73,25 +71,24 @@ bool DesktopSharing::Init(std::string suffix, uint16_t rtspPort)
 	});
 
 	 _sessionId = _rtspServer->addMeidaSession(session);
-
 	_isInitialized = true;
 	return true;
 }
 
-void DesktopSharing::Exit()
+void DesktopSharing::exit()
 {
 	std::lock_guard<std::mutex> locker(_mutex);
 
 	if (_isInitialized)
 	{
 		if (_isRunning)
-			Stop();
+			stop();
 
 		_isInitialized = false;
-		VideoCapture::Instance().Exit();
-		H264Encoder::Instance().Exit();
-		AudioCapture::Instance().Exit();
-		AACEncoder::Instance().Exit();		
+		VideoCapture::instance().exit();
+		H264Encoder::instance().exit();
+		AudioCapture::instance().exit();
+		AACEncoder::instance().exit();		
 	}
 
 	if (_rtspPusher && _rtspPusher->isConnected())
@@ -105,25 +102,25 @@ void DesktopSharing::Exit()
 	}
 }
 
-void DesktopSharing::Start()
+void DesktopSharing::start()
 {
 	if (!_isInitialized || _isRunning)
 		return;
 
-	if (VideoCapture::Instance().Start())
+	if (VideoCapture::instance().start())
 	{
-		if (VideoCapture::Instance().isCapturing())
+		if (VideoCapture::instance().isCapturing())
 		{
-			_videoThread.reset(new std::thread(&DesktopSharing::PushVideo, this));
+			_videoThread.reset(new std::thread(&DesktopSharing::pushVideo, this));
 			_isRunning = true;
 		}
 	}
 
-	if (AudioCapture::Instance().Start())
+	if (AudioCapture::instance().start())
 	{
-		if (AudioCapture::Instance().isCapturing())
+		if (AudioCapture::instance().isCapturing())
 		{
-			_audioThread.reset(new std::thread(&DesktopSharing::PushAudio, this));
+			_audioThread.reset(new std::thread(&DesktopSharing::pushAudio, this));
 			_isRunning = true;
 		}
 	}
@@ -135,7 +132,7 @@ void DesktopSharing::Start()
 	}
 }
 
-void DesktopSharing::StartRtspPusher(const char* url)
+void DesktopSharing::startRtspPusher(const char* url)
 {
 	if (_rtspPusher && _rtspPusher->isConnected())
 	{
@@ -149,7 +146,7 @@ void DesktopSharing::StartRtspPusher(const char* url)
 
 	if (_rtspPusher->addMeidaSession(session) > 0)
 	{
-		if (!_rtspPusher->openUrl(url))
+		if (_rtspPusher->openUrl(url) != 0)
 		{
 			_rtspPusher = nullptr;
 			std::cout << "Open " << url << " failed." << std::endl;
@@ -160,7 +157,7 @@ void DesktopSharing::StartRtspPusher(const char* url)
 	std::cout << "Push rtsp stream to " << url << " ..." << std::endl;
 }
 
-void DesktopSharing::StartRtmpPusher(const char* url)
+void DesktopSharing::startRtmpPusher(const char* url)
 {
 	_rtmpPusher.reset(new RtmpPusher);
 	if (!_rtmpPusher->openUrl(url))
@@ -170,21 +167,21 @@ void DesktopSharing::StartRtmpPusher(const char* url)
 		return;
 	}
 
-	_rtmpPusher->addStream(H264Encoder::Instance().getAVCodecContext()); // channel_0
-	_rtmpPusher->addStream(AACEncoder::Instance().getAVCodecContext()); // channel_1
+	_rtmpPusher->addStream(H264Encoder::instance().getAVCodecContext()); // channel_0
+	_rtmpPusher->addStream(AACEncoder::instance().getAVCodecContext()); // channel_1
 
 	std::cout << "Push rtmp stream to " << url << " ..." << std::endl;
 }
 
-void DesktopSharing::Stop()
+void DesktopSharing::stop()
 {
-	if (VideoCapture::Instance().isCapturing() && _isRunning)
+	if (VideoCapture::instance().isCapturing() && _isRunning)
 	{
 		_isRunning = false;
 		_videoThread->join();
 	}
 
-	if (AudioCapture::Instance().isCapturing())
+	if (AudioCapture::instance().isCapturing())
 	{
 		_isRunning = false;
 		_audioThread->join();
@@ -193,7 +190,7 @@ void DesktopSharing::Stop()
 	_eventLoop->quit();
 }
 
-void DesktopSharing::PushVideo()
+void DesktopSharing::pushVideo()
 {
 	xop::Timer timer;
 	timer.setEventCallback([&timer, this] {
@@ -202,23 +199,23 @@ void DesktopSharing::PushVideo()
 			//if (this->_clients > 0)
 			{
 				RGBAFrame frame(0);
-				if (VideoCapture::Instance().getFrame(frame))
+				if (VideoCapture::instance().getFrame(frame))
 				{
-					AVPacket* pkt = H264Encoder::Instance().EncodeVideo(frame.data.get(), frame.width, frame.height);
+					AVPacket* pkt = H264Encoder::instance().encodeVideo(frame.data.get(), frame.width, frame.height);
 					if (pkt)
 					{
 						xop::AVFrame vidoeFrame(pkt->size+1024);
 						vidoeFrame.size = 0;
-						vidoeFrame.type = VIDEO_FRAME_P;
+						vidoeFrame.type = xop::VIDEO_FRAME_P;
 						vidoeFrame.timestamp = xop::H264Source::getTimeStamp();
 						if (pkt->data[4] == 0x65) //0x67:sps ,0x65:IDR
 						{
 							// 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps
-							uint8_t* extraData = H264Encoder::Instance().getAVCodecContext()->extradata;
-							uint8_t extraDatasize = H264Encoder::Instance().getAVCodecContext()->extradata_size;
+							uint8_t* extraData = H264Encoder::instance().getAVCodecContext()->extradata;
+							uint8_t extraDatasize = H264Encoder::instance().getAVCodecContext()->extradata_size;
 							memcpy(vidoeFrame.buffer.get()+ vidoeFrame.size, extraData+4, extraDatasize-4); // +4去掉H.264起始码
 							vidoeFrame.size += (extraDatasize - 4);
-							vidoeFrame.type = VIDEO_FRAME_I;
+							vidoeFrame.type = xop::VIDEO_FRAME_I;
 
 							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data, pkt->size); 
 							vidoeFrame.size += pkt->size;
@@ -250,14 +247,15 @@ void DesktopSharing::PushVideo()
 				}
 			}
 		}
+		return false;
 		timer.stop();
 	});
 
 	timer.start(1000*1000/_videoConfig.framerate, true);	
-	VideoCapture::Instance().Stop();
+	VideoCapture::instance().stop();
 }
 
-void DesktopSharing::PushAudio()
+void DesktopSharing::pushAudio()
 {
 	xop::Timer timer;
 	timer.setEventCallback([&timer, this] {
@@ -266,14 +264,14 @@ void DesktopSharing::PushAudio()
 			//if (this->_clients > 0)
 			{
 				PCMFrame frame(0);
-				if (AudioCapture::Instance().getFrame(frame))
+				if (AudioCapture::instance().getFrame(frame))
 				{
-					AVPacket* pkt = AACEncoder::Instance().EncodeAudio(frame.data.get());
+					AVPacket* pkt = AACEncoder::instance().encodeAudio(frame.data.get());
 					if (pkt)
 					{
 						xop::AVFrame audioFrame(pkt->size);
 						audioFrame.timestamp = xop::AACSource::getTimeStamp();
-						audioFrame.type = AUDIO_FRAME;
+						audioFrame.type = xop::AUDIO_FRAME;
 						memcpy(audioFrame.buffer.get(), pkt->data, pkt->size);
 
 						// RTSP音频转发
@@ -298,8 +296,9 @@ void DesktopSharing::PushAudio()
 			}
 		}
 		timer.stop();
+		return false;
 	});
 
 	timer.start(10000, true);	
-	AudioCapture::Instance().Stop();
+	AudioCapture::instance().stop();
 }

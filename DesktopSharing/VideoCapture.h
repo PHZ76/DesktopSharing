@@ -6,7 +6,7 @@
 #include <memory>
 #include <iostream>
 #include <thread>
-#include "xop/RingBuffer.h"
+#include "net/RingBuffer.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
@@ -31,14 +31,14 @@ class VideoCapture
 public:
 	VideoCapture & operator=(const VideoCapture &) = delete;
 	VideoCapture(const VideoCapture &) = delete;
-	static VideoCapture& Instance();
+	static VideoCapture& instance();
 	~VideoCapture();
 
-	bool Init(uint32_t framerate=25);
-	void Exit();
+	bool init(uint32_t framerate=25);
+	void exit();
 
-	bool Start(); // 16ms
-	void Stop();
+	bool start(); // 16ms
+	void stop();
 
 	bool getFrame(RGBAFrame& frame);
 
@@ -49,20 +49,20 @@ public:
 		return false;
 	}
 	
-	uint32_t Width() const
+	uint32_t width() const
 	{
 		return _width;
 	}
 
-	uint32_t Height() const
+	uint32_t height() const
 	{
 		return _height;
 	}
 
 private:
 	VideoCapture();
-    bool GetDisplaySetting(std::string& name);
-    void Capture();
+    bool getDisplaySetting(std::string& name);
+    void capture();
     static void FrameCallback(sc::PixelBuffer& buf);
     
 	std::thread _thread;
@@ -73,7 +73,7 @@ private:
 	uint32_t _height = 0;
 
 	RGBAFrame _lastFrame;
-	std::shared_ptr<RingBuffer<RGBAFrame>> _frameBuffer;
+	std::shared_ptr<xop::RingBuffer<RGBAFrame>> _frameBuffer;
 };
 
 #endif

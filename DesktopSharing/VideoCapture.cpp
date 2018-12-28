@@ -1,5 +1,5 @@
 ﻿#include "VideoCapture.h"
-#include "xop/log.h"
+#include "net/log.h"
 
 // screencapture
 #pragma comment(lib, "dxgi.lib")
@@ -10,7 +10,7 @@
 using namespace std;
 
 VideoCapture::VideoCapture()
-	: _frameBuffer(new RingBuffer<RGBAFrame>(10))
+	: _frameBuffer(new xop::RingBuffer<RGBAFrame>(10))
 {
 	_lastFrame.size = 0;
 }
@@ -20,13 +20,13 @@ VideoCapture::~VideoCapture()
 
 }
 
-VideoCapture& VideoCapture::Instance()
+VideoCapture& VideoCapture::instance()
 {
 	static VideoCapture s_vc;
 	return s_vc;
 }
 
-bool VideoCapture::Init(uint32_t framerate)
+bool VideoCapture::init(uint32_t framerate)
 {
 	if (_isInitialized)
 		return true;
@@ -46,7 +46,7 @@ bool VideoCapture::Init(uint32_t framerate)
 		return false;
 	}
 
-	GetDisplaySetting(displays[0]->name);
+	getDisplaySetting(displays[0]->name);
     
     settings.pixel_format = SC_BGRA;
 	settings.display = 0;
@@ -59,24 +59,24 @@ bool VideoCapture::Init(uint32_t framerate)
 	}
 
 	_isInitialized = true;
-	_thread = std::thread(&VideoCapture::Capture, this);
+	_thread = std::thread(&VideoCapture::capture, this);
 
 	return true;
 }
 
-void VideoCapture::Exit()
+void VideoCapture::exit()
 {
 	if(_isInitialized)
     {      
 		_isInitialized = false;
 		_thread.join();
 		if (_capture->isStarted())
-			Stop();
+			stop();
         _capture->shutdown();
     }
 }
 
-bool VideoCapture::Start()
+bool VideoCapture::start()
 {
 	if (!_isInitialized)
 	{
@@ -91,12 +91,12 @@ bool VideoCapture::Start()
 	return true;
 }
 
-void VideoCapture::Stop()
+void VideoCapture::stop()
 {
 	_capture->stop();
 }
 
-bool VideoCapture::GetDisplaySetting(std::string& name)
+bool VideoCapture::getDisplaySetting(std::string& name)
 {
 	//DEVMODEW devMode;
 	//EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
@@ -107,7 +107,7 @@ bool VideoCapture::GetDisplaySetting(std::string& name)
 	return true;
 }
 
-void VideoCapture::Capture()
+void VideoCapture::capture()
 {
 	while (_isInitialized)
 	{
@@ -118,7 +118,7 @@ void VideoCapture::Capture()
 
 void VideoCapture::FrameCallback(sc::PixelBuffer& buf)
 {
-    VideoCapture& vc = VideoCapture::Instance();
+    VideoCapture& vc = VideoCapture::instance();
 
 	if (vc._frameBuffer->isFull())
 	{

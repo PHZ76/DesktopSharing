@@ -1,5 +1,5 @@
 ﻿#include "H264Encoder.h"
-#include "xop/log.h"
+#include "net/log.h"
 
 #pragma comment(lib,"avformat.lib")
 #pragma comment(lib,"swresample.lib")
@@ -19,18 +19,18 @@ H264Encoder::~H264Encoder()
 
 }
 
-H264Encoder& H264Encoder::Instance()
+H264Encoder& H264Encoder::instance()
 {
 	static H264Encoder s_encoder;
 	return s_encoder;
 }
 
 
-bool H264Encoder::Init(struct VideoConfig vc)
+bool H264Encoder::init(struct VideoConfig vc)
 {
 	if (_isInitialized)
 	{
-		Exit();
+		this->exit();
 	}
 
 	_videoConfig = vc;
@@ -85,7 +85,7 @@ bool H264Encoder::Init(struct VideoConfig vc)
 	return true;
 }
 
-void H264Encoder::Exit()
+void H264Encoder::exit()
 {
 	_isInitialized = false;
 	_pts = 0;
@@ -116,7 +116,7 @@ void H264Encoder::Exit()
 	}
 }
 
-AVPacket* H264Encoder::EncodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts)
+AVPacket* H264Encoder::encodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts)
 {
 	if (_swsCtx == nullptr)
 	{

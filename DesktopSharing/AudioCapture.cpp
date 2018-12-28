@@ -1,6 +1,6 @@
 ﻿#include "AudioCapture.h"
-#include "xop/log.h"
-#include "xop/Timestamp.h"
+#include "net/log.h"
+#include "net/Timestamp.h"
 
 #pragma comment(lib, "portaudio_static_x86.lib")
 
@@ -8,7 +8,7 @@
 typedef short SAMPLE;
 
 AudioCapture::AudioCapture()
-	: _frameBuffer(new RingBuffer<PCMFrame>(10))
+	: _frameBuffer(new xop::RingBuffer<PCMFrame>(10))
 {
     Pa_Initialize();
 }
@@ -18,13 +18,13 @@ AudioCapture::~AudioCapture()
     Pa_Terminate();
 }
 
-AudioCapture& AudioCapture::Instance()
+AudioCapture& AudioCapture::instance()
 {
 	static AudioCapture s_ac;
 	return s_ac;
 }
 
-bool AudioCapture::Init(uint32_t samplerate, uint32_t channels)
+bool AudioCapture::init(uint32_t samplerate, uint32_t channels)
 {
 	if (_isInitialized)
 		return false;
@@ -55,13 +55,13 @@ bool AudioCapture::Init(uint32_t samplerate, uint32_t channels)
 	return true;
 }
 
-void AudioCapture::Exit()
+void AudioCapture::exit()
 {
 	if (_isInitialized)
 	{
 		_isInitialized = false;
 		if (isCapturing())
-			Stop();
+			stop();
 
 		if (_stream)
 		{
@@ -88,7 +88,7 @@ int AudioCapture::FrameCallback(const void *inputBuffer, void *outputBuffer,
 	}
 #endif
 
-    AudioCapture& ac = AudioCapture::Instance();
+    AudioCapture& ac = AudioCapture::instance();
 	if (ac._frameBuffer->isFull())
 	{
 		return paContinue;
@@ -101,7 +101,7 @@ int AudioCapture::FrameCallback(const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
-bool AudioCapture::Start()
+bool AudioCapture::start()
 {
 	if (isCapturing())
 	{
@@ -112,7 +112,7 @@ bool AudioCapture::Start()
 	return true;
 }
 
-void AudioCapture::Stop()
+void AudioCapture::stop()
 {
 	if(isCapturing())
     {
