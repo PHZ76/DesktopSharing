@@ -22,6 +22,9 @@
     <Filter Include="源文件\net">
       <UniqueIdentifier>{7e8e052b-16fb-483a-b622-eb08a34f8097}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\ScreenCapture">
+      <UniqueIdentifier>{ff421d97-3a5f-46d4-8d09-f36dfd07a3dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -128,6 +131,9 @@
     </ClCompile>
     <ClCompile Include="xop\RtspServer.cpp">
       <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp">
+      <Filter>源文件\ScreenCapture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -262,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="xop\RtspServer.h">
       <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenCapture\DXGIScreenCapture.h">
+      <Filter>源文件\ScreenCapture</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
