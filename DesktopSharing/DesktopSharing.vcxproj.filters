@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="源文件\rtaudio">
-      <UniqueIdentifier>{14b3652c-36b7-4717-806b-caff1ed84166}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\rtaudio">
       <UniqueIdentifier>{59564e08-90db-474f-ab98-34324d9cf916}</UniqueIdentifier>
     </Filter>
@@ -38,9 +35,6 @@
     </ClCompile>
     <ClCompile Include="AudioCapture.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="rtaudio\RtAudio.cpp">
-      <Filter>源文件\rtaudio</Filter>
     </ClCompile>
     <ClCompile Include="AACEncoder.cpp">
       <Filter>源文件</Filter>
