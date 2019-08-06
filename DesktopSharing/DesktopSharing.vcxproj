@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\screen_capture\include;$(ProjectDir)..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -73,7 +73,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\screen_capture\include;$(ProjectDir)..\libs\screen_capture_lite\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -111,7 +111,6 @@
     <ClCompile Include="net\Timestamp.cpp" />
     <ClCompile Include="RtmpPusher.cpp" />
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp" />
-    <ClCompile Include="VideoCapture.cpp" />
     <ClCompile Include="xop\AACSource.cpp" />
     <ClCompile Include="xop\G711ASource.cpp" />
     <ClCompile Include="xop\H264Parser.cpp" />
@@ -151,10 +150,8 @@
     <ClInclude Include="net\ThreadSafeQueue.h" />
     <ClInclude Include="net\Timer.h" />
     <ClInclude Include="net\Timestamp.h" />
-    <ClInclude Include="rtaudio\RtAudio.h" />
     <ClInclude Include="RtmpPusher.h" />
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h" />
-    <ClInclude Include="VideoCapture.h" />
     <ClInclude Include="xop\AACSource.h" />
     <ClInclude Include="xop\G711ASource.h" />
     <ClInclude Include="xop\H264Parser.h" />

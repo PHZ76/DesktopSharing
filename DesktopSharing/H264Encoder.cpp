@@ -35,8 +35,11 @@ bool H264Encoder::init(struct VideoConfig vc)
 
 	_videoConfig = vc;
 
+	av_log_set_level(1);
+
 	AVCodec *codec = nullptr;
 	codec = avcodec_find_encoder(AV_CODEC_ID_H264);
+	//codec = avcodec_find_encoder_by_name("h264_nvenc");
 	if (!codec)
 	{
 		LOG("H.264 Encoder not found.\n");
@@ -116,7 +119,7 @@ void H264Encoder::exit()
 	}
 }
 
-AVPacket* H264Encoder::encodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts)
+AVPacket* H264Encoder::encodeVideo(const uint8_t *bgra, uint32_t width, uint32_t height, uint64_t pts)
 {
 	if (_swsCtx == nullptr)
 	{
@@ -146,7 +149,7 @@ AVPacket* H264Encoder::encodeVideo(const uint8_t *rgba, uint32_t width, uint32_t
 	}
 
 	uint8_t* data[AV_NUM_DATA_POINTERS] = { 0 };
-	data[0] = (uint8_t*)rgba;
+	data[0] = (uint8_t*)bgra;
 	int insize[AV_NUM_DATA_POINTERS] = { 0 };
 	insize[0] = width * 4;
 	int outHeight = sws_scale(_swsCtx, data, insize, 0, height,_yuvFrame->data, _yuvFrame->linesize);
