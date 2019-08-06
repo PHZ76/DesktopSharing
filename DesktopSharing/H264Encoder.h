@@ -40,7 +40,7 @@ public:
 	AVCodecContext* getAVCodecContext() const
 	{ return _vCodecCtx; }
 
-	AVPacket* encodeVideo(const uint8_t *rgba, uint32_t width, uint32_t height, uint64_t pts = 0);
+	AVPacket* encodeVideo(const uint8_t *bgra, uint32_t width, uint32_t height, uint64_t pts = 0);
 
 private:
 	H264Encoder();

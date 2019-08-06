@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="头文件\rtaudio">
-      <UniqueIdentifier>{59564e08-90db-474f-ab98-34324d9cf916}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\xop">
       <UniqueIdentifier>{6574fa59-78fc-4101-8309-916283e7c698}</UniqueIdentifier>
     </Filter>
@@ -28,9 +25,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoCapture.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="H264Encoder.cpp">
@@ -137,17 +131,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="VideoCapture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="H264Encoder.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="AudioCapture.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="rtaudio\RtAudio.h">
-      <Filter>头文件\rtaudio</Filter>
     </ClInclude>
     <ClInclude Include="AACEncoder.h">
       <Filter>头文件</Filter>

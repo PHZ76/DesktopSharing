@@ -39,6 +39,9 @@ public:
 	inline ID3D11Device* getID3D11Device() { return m_d3d11device.Get(); }
 	inline ID3D11DeviceContext* getID3D11DeviceContext() { return m_d3d11DeviceContext.Get(); }
 
+	bool isCapturing() const
+	{ return m_isEnabeld; }
+
 private:
 	int createSharedTexture();
 	int aquireFrame();

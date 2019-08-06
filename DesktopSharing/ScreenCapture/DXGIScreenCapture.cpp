@@ -7,6 +7,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d11.lib")
 
+
 DXGIScreenCapture::DXGIScreenCapture()
 	: m_initialized(false)
 	, m_isEnabeld(false)
@@ -45,7 +46,7 @@ int DXGIScreenCapture::init(int displayIndex)
 	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory), (void **)m_dxgiFactory.GetAddressOf());
 	if (FAILED(hr)) 
 	{
-		printf("[DXGIScreenCapture] Failed to dxgi factory.\n");
+		printf("[DXGIScreenCapture] Failed to create dxgi factory.\n");
 		return -1;
 	}
 
@@ -307,7 +308,7 @@ int DXGIScreenCapture::captureFrame(ID3D11Device* device, ID3D11Texture2D* textu
 	device->GetImmediateContext(deviceContext.GetAddressOf());
 	if (deviceContext.Get() == nullptr)
 	{
-		printf("[DXGIScreenCapture] Failed to get contexe from device.\n");
+		printf("[DXGIScreenCapture] Failed to get context from device.\n");
 		return -1;
 	}
 

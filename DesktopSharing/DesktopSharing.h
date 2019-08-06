@@ -8,6 +8,7 @@
 #include "H264Encoder.h"
 #include "AACEncoder.h"
 #include "RtmpPusher.h"
+#include "ScreenCapture/DXGIScreenCapture.h"
 
 class DesktopSharing
 {
@@ -17,13 +18,13 @@ public:
 	static DesktopSharing& instance();
 	~DesktopSharing();
 
-	bool init(std::string suffix="live", uint16_t rtspPort=554);
+	bool init();
 	void exit();
 
 	void start();
 	void stop();
 
-    // 推流测试接口
+	void startRtspServer(std::string suffix = "live", uint16_t rtspPort = 554);
 	void startRtspPusher(const char* url);
 	void startRtmpPusher(const char* url);
 
@@ -33,7 +34,6 @@ private:
 	void pushVideo();
 
 	std::string _ip;
-	std::string _rtspSuffix;
 
 	bool _isInitialized = false;
 	bool _isRunning = false;
@@ -49,6 +49,8 @@ private:
 	std::mutex _mutex;
 	std::shared_ptr<std::thread> _videoThread;
 	std::shared_ptr<std::thread> _audioThread;
+
+	DXGIScreenCapture _screenCapture;
 };
 
 #endif
