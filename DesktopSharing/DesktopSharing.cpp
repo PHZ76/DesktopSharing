@@ -251,7 +251,7 @@ void DesktopSharing::pushVideo()
 		{
 			msec -= elapsed;
 		}
-
+		tp.reset();
 		std::this_thread::sleep_for(std::chrono::milliseconds(msec));
 
 		std::shared_ptr<uint8_t> bgraData;
