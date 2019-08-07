@@ -30,7 +30,7 @@ bool DesktopSharing::init()
 
 	/* video config */
 	_videoConfig.framerate = 25;
-	_videoConfig.bitrate = 8000000 * 0.5;
+	_videoConfig.bitrate = 4000000;
 	_videoConfig.gop = 25;
 
 	/* audio config */
@@ -236,29 +236,42 @@ void DesktopSharing::startRtmpPusher(const char* url)
 
 void DesktopSharing::pushVideo()
 {
-	static xop::Timestamp tp;
+	static xop::Timestamp tp, tp2;
+	
+	uint32_t fps = 0;
+	uint32_t msec = 1000 / _videoConfig.framerate;
 	tp.reset();
 
 	while (this->_isRunning)
 	{
-		uint32_t msec = 1000 / _videoConfig.framerate;
-		uint32_t elapsed = (uint32_t)tp.elapsed(); /*编码耗时计算*/
-		if (elapsed > msec)
+		if (tp2.elapsed() >= 1000)
 		{
-			msec = 0;
+			//printf("video fps: %d\n", fps); /*编码帧率统计*/
+			tp2.reset();
+			fps = 0;
+		}
+
+		uint32_t delay = msec;
+		uint32_t elapsed = (uint32_t)tp.elapsed(); /*编码耗时计算*/
+		if (elapsed > delay)
+		{
+			delay = 0;
 		}
 		else
 		{
-			msec -= elapsed;
+			delay -= elapsed;
 		}
+		
+		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 		tp.reset();
-		std::this_thread::sleep_for(std::chrono::milliseconds(msec));
 
 		std::shared_ptr<uint8_t> bgraData;
 		uint32_t bgraSize = 0;
 
 		if (_screenCapture.captureFrame(bgraData, bgraSize) == 0)
 		{
+			fps += 1;
+
 			AVPacket* pkt = H264Encoder::instance().encodeVideo(bgraData.get(), _screenCapture.getWidth(), _screenCapture.getHeight());
 			if (pkt)
 			{
