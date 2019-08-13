@@ -132,6 +132,9 @@
     <ClCompile Include="WASAPICapture.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="WASAPIPlayer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="H264Encoder.h">
@@ -264,6 +267,9 @@
       <Filter>源文件\ScreenCapture</Filter>
     </ClInclude>
     <ClInclude Include="WASAPICapture.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WASAPIPlayer.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

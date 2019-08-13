@@ -5,7 +5,8 @@ WASAPICapture::WASAPICapture()
 	, m_isEnabeld(false)
 	, m_mixFormat(NULL)
 {
-	
+	m_pcmBufSize = 48000 * 32 * 2 * 2;
+	m_pcmBuf.reset(new uint8_t[m_pcmBufSize]);
 }
 
 WASAPICapture::~WASAPICapture()
@@ -56,6 +57,7 @@ int WASAPICapture::init()
 		return -1;
 	}
 
+	adjustFormatTo16Bits(m_mixFormat);
 	m_hnsActualDuration = REFTIMES_PER_SEC;
 	hr = m_audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, m_hnsActualDuration, 0, m_mixFormat, NULL);
 	if (FAILED(hr)) 
@@ -90,6 +92,32 @@ int WASAPICapture::exit()
 	return 0;
 }
 
+int WASAPICapture::adjustFormatTo16Bits(WAVEFORMATEX *pwfx)
+{
+	if (pwfx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
+	{
+		pwfx->wFormatTag = WAVE_FORMAT_PCM;
+	}
+	else if (pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+	{
+		PWAVEFORMATEXTENSIBLE pEx = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(pwfx);
+		if (IsEqualGUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, pEx->SubFormat))
+		{
+			pEx->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+			pEx->Samples.wValidBitsPerSample = 16;
+		}
+	}
+	else
+	{
+		return -1;
+	}
+
+	pwfx->wBitsPerSample = 16;
+	pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
+	pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
+	return 0;
+}
+
 int WASAPICapture::start()
 {
 	std::lock_guard<std::mutex> locker(m_mutex);
@@ -113,11 +141,8 @@ int WASAPICapture::start()
 	
 	m_isEnabeld = true;
 	m_threadPtr.reset(new std::thread([this] {
-
-
 		while (this->m_isEnabeld)
 		{			
-
 			if (this->capture() < 0)
 			{
 				break;
@@ -155,8 +180,6 @@ void WASAPICapture::setCallback(PacketCallback callback)
 
 int WASAPICapture::capture()
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
 	HRESULT hr = S_OK;
 	uint32_t packetLength = 0;
 	uint32_t numFramesAvailable = 0;
@@ -170,6 +193,12 @@ int WASAPICapture::capture()
 		return -1;
 	}
 
+	if (packetLength == 0)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		return 0;
+	}
+
 	while (packetLength != 0) 
 	{
 		hr = m_audioCaptureClient->GetBuffer(&pData, &numFramesAvailable, &flags, NULL, NULL);
@@ -177,6 +206,21 @@ int WASAPICapture::capture()
 		{
 			printf("[WASAPICapture] Faild to get buffer.\n");
 			return -1;
+		}
+
+		if (m_pcmBufSize < numFramesAvailable * m_mixFormat->nBlockAlign)
+		{
+			m_pcmBufSize = numFramesAvailable * m_mixFormat->nBlockAlign;
+			m_pcmBuf.reset(new uint8_t[m_pcmBufSize]);
+		}
+
+		if (flags & AUDCLNT_BUFFERFLAGS_SILENT)
+		{
+			memset(m_pcmBuf.get(), 0, m_pcmBufSize);
+		}
+		else
+		{
+			memcpy(m_pcmBuf.get(), pData, numFramesAvailable * m_mixFormat->nBlockAlign);
 		}
 
 		{
