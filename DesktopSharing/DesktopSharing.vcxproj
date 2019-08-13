@@ -111,6 +111,7 @@
     <ClCompile Include="net\Timestamp.cpp" />
     <ClCompile Include="RtmpPusher.cpp" />
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp" />
+    <ClCompile Include="WASAPICapture.cpp" />
     <ClCompile Include="xop\AACSource.cpp" />
     <ClCompile Include="xop\G711ASource.cpp" />
     <ClCompile Include="xop\H264Parser.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="net\Timestamp.h" />
     <ClInclude Include="RtmpPusher.h" />
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h" />
+    <ClInclude Include="WASAPICapture.h" />
     <ClInclude Include="xop\AACSource.h" />
     <ClInclude Include="xop\G711ASource.h" />
     <ClInclude Include="xop\H264Parser.h" />

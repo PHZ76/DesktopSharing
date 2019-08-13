@@ -129,6 +129,9 @@
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp">
       <Filter>源文件\ScreenCapture</Filter>
     </ClCompile>
+    <ClCompile Include="WASAPICapture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="H264Encoder.h">
@@ -259,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h">
       <Filter>源文件\ScreenCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="WASAPICapture.h">
+      <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
