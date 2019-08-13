@@ -1,7 +1,4 @@
-// https://docs.microsoft.com/en-us/previous-versions//ms678709(v=vs.85)
-
-#ifndef WASAPI_CAPTURE_H
-#define WASAPI_CAPTURE_H
+#pragma once
 
 #include <Audioclient.h>
 #include <mmdeviceapi.h>
@@ -13,47 +10,44 @@
 #include <memory>
 #include <thread>
 
-class WASAPICapture
+
+class WASAPIPlayer
 {
 public:
-	typedef std::function<void(const WAVEFORMATEX *mixFormat, uint8_t *data, uint32_t samples)> PacketCallback;
+	typedef std::function<void(const WAVEFORMATEX *mixFormat, uint8_t *data, uint32_t samples)> AudioDataCallback;
 
-	WASAPICapture();
-	~WASAPICapture();
-	WASAPICapture &operator=(const WASAPICapture &) = delete;
-	WASAPICapture(const WASAPICapture &) = delete;
+	WASAPIPlayer();
+	~WASAPIPlayer();
+	WASAPIPlayer &operator=(const WASAPIPlayer &) = delete;
+	WASAPIPlayer(const WASAPIPlayer &) = delete;
 
 	int init();
 	int exit();
-	int start();
+	int start(AudioDataCallback callback);
 	int stop();
-	void setCallback(PacketCallback callback);
 
 private:
 	int adjustFormatTo16Bits(WAVEFORMATEX *pwfx);
-	int capture();
+	int play();
 
 	const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 	const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 	const IID IID_IAudioClient = __uuidof(IAudioClient);
-	const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
+	const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 	const int REFTIMES_PER_SEC = 10000000;
 	const int REFTIMES_PER_MILLISEC = 10000;
 
 	bool m_initialized;
 	bool m_isEnabeld;
-	std::mutex m_mutex, m_mutex2;
+	std::mutex m_mutex;
 	std::shared_ptr<std::thread> m_threadPtr;
 	WAVEFORMATEX *m_mixFormat;
 	REFERENCE_TIME m_hnsActualDuration;
 	uint32_t m_bufferFrameCount;
-	PacketCallback m_callback;
-	std::shared_ptr<uint8_t> m_pcmBuf;
-	uint32_t m_pcmBufSize;
+	AudioDataCallback m_callback;
 	Microsoft::WRL::ComPtr<IMMDeviceEnumerator> m_enumerator;
 	Microsoft::WRL::ComPtr<IMMDevice> m_device;
 	Microsoft::WRL::ComPtr<IAudioClient> m_audioClient;
-	Microsoft::WRL::ComPtr<IAudioCaptureClient> m_audioCaptureClient;
+	Microsoft::WRL::ComPtr<IAudioRenderClient> m_audioRenderClient;
 };
 
-#endif
