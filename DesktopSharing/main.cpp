@@ -8,7 +8,7 @@
 #include "DesktopSharing.h"
 
 #define RTSP_PUSH_TEST "rtsp://192.168.43.213:554/test" // RTSP推流地址, 在EasyDarwin下测试通过
-#define RTMP_PUSH_TEST "rtmp://192.168.43.191/live/01"  // RTMP推流地址, 在SRS下测试通过
+#define RTMP_PUSH_TEST "rtmp://127.0.0.1/live/01"  // RTMP推流地址, 在SRS下测试通过
 
 using namespace xop;
 
