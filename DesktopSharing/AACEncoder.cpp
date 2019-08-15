@@ -52,7 +52,6 @@ bool AACEncoder::init(struct AudioConfig ac)
 	_aCodecCtx->channels = _audioConfig.channels;
 	_aCodecCtx->channel_layout = av_get_default_channel_layout(_audioConfig.channels);
 	_aCodecCtx->bit_rate = _audioConfig.bitrate;
-
 	//_aCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 	if (avcodec_open2(_aCodecCtx, codec, NULL) != 0)
@@ -97,8 +96,23 @@ void AACEncoder::exit()
 	}
 }
 
-AVPacket* AACEncoder::encodeAudio(const uint8_t *pcm)
+uint32_t AACEncoder::getFrameSamples()
 {
+	if (!_isInitialized)
+	{
+		return 0;
+	}
+
+	return _aCodecCtx->frame_size;
+}
+
+AVPacket* AACEncoder::encodeAudio(const uint8_t *pcm, int samples)
+{
+	if (samples != _aCodecCtx->frame_size)
+	{
+		return NULL;
+	}
+
 	if (!_swrCtx)
 	{
 		_swrCtx = swr_alloc_set_opts(_swrCtx, _aCodecCtx->channel_layout, _aCodecCtx->sample_fmt,
@@ -117,7 +131,7 @@ AVPacket* AACEncoder::encodeAudio(const uint8_t *pcm)
 			_pcmFrame->format = _aCodecCtx->sample_fmt;
 			_pcmFrame->channels = _aCodecCtx->channels;
 			_pcmFrame->channel_layout = _aCodecCtx->channel_layout;
-			_pcmFrame->nb_samples = _audioConfig.frameLength; //1024
+			_pcmFrame->nb_samples = _aCodecCtx->frame_size;
 			ret = av_frame_get_buffer(_pcmFrame, 0);
 			if (ret < 0)
 			{
@@ -129,8 +143,9 @@ AVPacket* AACEncoder::encodeAudio(const uint8_t *pcm)
 
 	const uint8_t *data[AV_NUM_DATA_POINTERS] = { 0 };
 	data[0] = (uint8_t *)pcm;
+	data[1] = NULL;
 	int len = swr_convert(_swrCtx, _pcmFrame->data, _pcmFrame->nb_samples,
-		data, _pcmFrame->nb_samples);
+							data, _pcmFrame->nb_samples);
 
 	if (len < 0)
 	{

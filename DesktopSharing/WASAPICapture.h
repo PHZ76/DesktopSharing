@@ -29,6 +29,11 @@ public:
 	int stop();
 	void setCallback(PacketCallback callback);
 
+	WAVEFORMATEX *getAudioFormat() const
+	{
+		return m_mixFormat;
+	}
+
 private:
 	int adjustFormatTo16Bits(WAVEFORMATEX *pwfx);
 	int capture();

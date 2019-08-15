@@ -266,11 +266,14 @@
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h">
       <Filter>源文件\ScreenCapture</Filter>
     </ClInclude>
+    <ClInclude Include="AudioBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="WASAPICapture.h">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="WASAPIPlayer.h">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

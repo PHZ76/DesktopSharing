@@ -4,23 +4,9 @@
 #include <thread>
 #include <cstdint>
 #include <memory>
-#include "net/RingBuffer.h"
-#include "portaudio.h"  
-
-#define AUDIO_LENGTH_PER_FRAME 1024
-
-struct PCMFrame
-{
-	PCMFrame(uint32_t size = 100)
-		: data(new uint8_t[size + 1024])
-	{
-		this->size = size;
-	}
-	uint32_t size = 0;
-	uint32_t channels = 2;
-	uint32_t samplerate = 44100;
-	std::shared_ptr<uint8_t> data;
-};
+#include "WASAPICapture.h"
+#include "WASAPIPlayer.h"
+#include "AudioBuffer.h"
 
 class AudioCapture
 {
@@ -30,32 +16,37 @@ public:
 	static AudioCapture& instance();
 	~AudioCapture();
 
-	bool init(uint32_t samplerate=44100, uint32_t channels = 2);
-	void exit();
-
-	bool start();
-	void stop();
+	int init();
+	int exit();
+	int start();
+	int stop();
 	
-	bool getFrame(PCMFrame& frame);
+	int readSamples(uint8_t*data,uint32_t samples);
 
-	bool isCapturing()
-	{
-		return (_isInitialized && Pa_IsStreamActive(_stream));
-	}
+	int getSamples();
+
+	int getSamplerate();
+
+	int getChannels();
+
+	int getBitsPerSample();
+
+	bool isCapturing() const 
+	{ return m_isEnabled; }
 
 private:
 	AudioCapture();
-	static int FrameCallback(const void *inputBuffer, void *outputBuffer,
-							unsigned long framesPerBuffer,
-							const PaStreamCallbackTimeInfo* timeInfo,
-							PaStreamCallbackFlags statusFlags, void *userData);
+	
+	bool m_isInitialized = false;
+	bool m_isEnabled = false;
 
-	PaStreamParameters _inputParameters;
-	PaStream* _stream = nullptr;
-	bool _isInitialized = false;
-	uint32_t _channels = 2;
-	uint32_t _samplerate = 44100;
-	std::shared_ptr<xop::RingBuffer<PCMFrame>> _frameBuffer;
+	uint32_t m_channels = 2;
+	uint32_t m_samplerate = 48000;
+	uint32_t m_bitsPerSample = 16;
+
+	WASAPIPlayer m_player;
+	WASAPICapture m_capture;
+	AudioBuffer m_audioBuffer;
 };
 
 #endif

@@ -2,20 +2,14 @@
 #include "net/log.h"
 #include "net/Timestamp.h"
 
-#pragma comment(lib, "portaudio_static_x86.lib")
-
-#define PA_SAMPLE_TYPE  paInt16  
-typedef short SAMPLE;
-
 AudioCapture::AudioCapture()
-	: _frameBuffer(new xop::RingBuffer<PCMFrame>(10))
 {
-    Pa_Initialize();
+   
 }
 
 AudioCapture::~AudioCapture()
 {
-    Pa_Terminate();
+    
 }
 
 AudioCapture& AudioCapture::instance()
@@ -24,108 +18,134 @@ AudioCapture& AudioCapture::instance()
 	return s_ac;
 }
 
-bool AudioCapture::init(uint32_t samplerate, uint32_t channels)
+int AudioCapture::init()
 {
-	if (_isInitialized)
-		return false;
-
-	_inputParameters.device = Pa_GetDefaultInputDevice();
-	if (_inputParameters.device == paNoDevice)
+	if (m_isInitialized)
 	{
-		LOG("Default input device not found.\n");
-		return false;
+		return -1;
 	}
 
-	_inputParameters.channelCount = _channels;
-	_inputParameters.sampleFormat = PA_SAMPLE_TYPE;
-	_inputParameters.suggestedLatency = Pa_GetDeviceInfo(_inputParameters.device)->defaultLowInputLatency;
-	_inputParameters.hostApiSpecificStreamInfo = NULL;
-
-	PaError error;
-	error = Pa_OpenStream( &_stream, &_inputParameters, NULL, _samplerate,
-						 AUDIO_LENGTH_PER_FRAME, paClipOff, FrameCallback, NULL);
-	if (error != paNoError)
+	if (m_capture.init() < 0)
 	{
-		LOG("Pa_OpenStream() failed.");
+		return -1;
+	}
+	else
+	{
+		WAVEFORMATEX *audioFmt = m_capture.getAudioFormat();
+		m_channels = audioFmt->nChannels;
+		m_samplerate = audioFmt->nSamplesPerSec;
+		m_bitsPerSample = audioFmt->wBitsPerSample;
+		m_player.init();
 	}
 
-	_isInitialized = true;
-	//_thread = std::thread(&AudioCapture::processEntries, this);
-
-	return true;
+	m_isInitialized = true;
+	return 0;
 }
 
-void AudioCapture::exit()
+int AudioCapture::exit()
 {
-	if (_isInitialized)
+	if (m_isInitialized)
 	{
-		_isInitialized = false;
-		if (isCapturing())
-			stop();
-
-		if (_stream)
+		if (m_isEnabled)
 		{
-			Pa_CloseStream(_stream);
-			_stream = nullptr;
+			stop();
 		}
 	}
+
+	return 0;
 }
 
-int AudioCapture::FrameCallback(const void *inputBuffer, void *outputBuffer,
-								unsigned long framesPerBuffer,
-								const PaStreamCallbackTimeInfo* timeInfo,
-								PaStreamCallbackFlags statusFlags,void *userData)
+int AudioCapture::start()
 {
-#if 0
-	static xop::Timestamp tp;
-	static int fps = 0;
-	fps++;
-	if (tp.elapsed() > 1000)
+	if (!m_isInitialized)
 	{
-		printf("audio fps: %d\n", fps);
-		fps = 0;
-		tp.reset();
-	}
-#endif
-
-    AudioCapture& ac = AudioCapture::instance();
-	if (ac._frameBuffer->isFull())
-	{
-		return paContinue;
+		return -1;
 	}
 
-	int frameSize = ac._channels * sizeof(SAMPLE) * framesPerBuffer;
-	PCMFrame frame(frameSize);
-	memcpy(frame.data.get(), inputBuffer, frameSize);
-	ac._frameBuffer->push(std::move(frame));
-    return paContinue;
+	if (m_isEnabled)
+	{
+		return 0;
+	}
+
+	m_capture.setCallback([this](const WAVEFORMATEX *mixFormat, uint8_t *data, uint32_t samples) {
+
+		static xop::Timestamp tp;
+		static int samplesPerSecond = 0;
+
+		samplesPerSecond += samples;
+		if (tp.elapsed() >= 990)
+		{
+			//printf("samples per second: %d\n", samplesPerSecond);
+			samplesPerSecond = 0;
+			tp.reset();
+		}
+
+		m_channels = mixFormat->nChannels;
+		m_samplerate = mixFormat->nSamplesPerSec;
+		m_bitsPerSample = mixFormat->wBitsPerSample;
+		m_audioBuffer.write((char*)data, mixFormat->nBlockAlign * samples);
+	});
+
+	m_audioBuffer.clear();
+	if (m_capture.start() < 0)
+	{
+		return -1;
+	}
+	else
+	{
+		m_player.start([this](const WAVEFORMATEX *mixFormat, uint8_t *data, uint32_t samples) {
+			memset(data, 0, mixFormat->nBlockAlign*samples);
+		});
+	}
+
+	m_isEnabled = true;
+	return 0;
 }
 
-bool AudioCapture::start()
+int AudioCapture::stop()
 {
-	if (isCapturing())
+	if (!m_isInitialized)
 	{
-		return false;
-	}
-    
-	Pa_StartStream(_stream);
-	return true;
-}
-
-void AudioCapture::stop()
-{
-	if(isCapturing())
-    {
-		Pa_StopStream(_stream);
-    }
-}
-
-bool AudioCapture::getFrame(PCMFrame& frame)
-{
-	if (_frameBuffer->isEmpty())
-	{
-		return false;
+		return -1;
 	}
 
-	return _frameBuffer->pop(frame);
+	if (m_isEnabled)
+	{
+		m_player.stop();
+		m_capture.stop();
+		m_isEnabled = false;
+	}
+
+	return 0;
+}
+
+int AudioCapture::readSamples(uint8_t *data, uint32_t samples)
+{
+	if ((int)samples > this->getSamples())
+	{
+		return 0;
+	}
+
+	m_audioBuffer.read((char*)data, samples * m_bitsPerSample / 8 * m_channels);
+	return samples;
+}
+
+int AudioCapture::getSamples()
+{
+	return m_audioBuffer.size() * 8 / m_bitsPerSample / m_channels;
+}
+
+int AudioCapture::getSamplerate()
+{
+	return m_samplerate;
+}
+
+int AudioCapture::getChannels()
+{
+	return m_channels;
+}
+
+int AudioCapture::getBitsPerSample()
+{
+	return m_bitsPerSample;
 }

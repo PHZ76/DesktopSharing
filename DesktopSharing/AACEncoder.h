@@ -20,9 +20,8 @@ extern "C"
 struct AudioConfig
 {
 	uint32_t channels = 2;
-	uint32_t samplerate = 44100;
-	uint32_t bitrate = 64000;
-	uint32_t frameLength = 1024;
+	uint32_t samplerate = 48000;
+	uint32_t bitrate = 16000 * 4;
 };
 
 
@@ -37,10 +36,12 @@ public:
 	bool init(struct AudioConfig ac);
 	void exit();
 
+	uint32_t getFrameSamples();
+
 	AVCodecContext* getAVCodecContext() const
 	{ return _aCodecCtx; }
 
-	AVPacket* encodeAudio(const uint8_t *pcm);
+	AVPacket* encodeAudio(const uint8_t *pcm, int samples);
 
 private:
 	AACEncoder();
