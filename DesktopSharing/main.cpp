@@ -1,4 +1,4 @@
-﻿// 2019-8-1
+﻿// 2019-8-15
 // PHZ
 
 // 支持本地RTSP转发和RTSP推流两种模式
@@ -27,11 +27,11 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
 	DesktopSharing::instance().stop();
-    DesktopSharing::instance().exit();
+	DesktopSharing::instance().exit();
     getchar();
     return 0;
 }

@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AACEncoder.h" />
+    <ClInclude Include="AudioBuffer.h" />
     <ClInclude Include="AudioCapture.h" />
     <ClInclude Include="DesktopSharing.h" />
     <ClInclude Include="H264Encoder.h" />

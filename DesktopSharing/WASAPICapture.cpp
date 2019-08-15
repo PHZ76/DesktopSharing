@@ -195,11 +195,11 @@ int WASAPICapture::capture()
 
 	if (packetLength == 0)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		return 0;
 	}
 
-	while (packetLength != 0) 
+	while (packetLength > 0) 
 	{
 		hr = m_audioCaptureClient->GetBuffer(&pData, &numFramesAvailable, &flags, NULL, NULL);
 		if (FAILED(hr)) 
