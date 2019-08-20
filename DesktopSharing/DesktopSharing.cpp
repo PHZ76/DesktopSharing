@@ -176,7 +176,7 @@ void DesktopSharing::startRtspServer(std::string suffix, uint16_t rtspPort)
 	});
 	t.detach();
 
-	std::cout << "RTSP URL: " << "rtsp://" << _ip << ":" << std::to_string(rtspPort) << "/" << suffix << std::endl;
+	std::cout << "RTSP URL: " << "rtsp://" << xop::NetInterface::getLocalIPAddress() << ":" << std::to_string(rtspPort) << "/" << suffix << std::endl;
 }
 
 void DesktopSharing::startRtspPusher(const char* url)
