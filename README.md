@@ -22,10 +22,6 @@
 * win10, vs2017, windows-sdk-version-10.0.17134.0
 * 项目使用的模块都是开源项目, 在vs2017下编译通过。
 
-设计思路
--
-![image](https://github.com/PHZ76/DesktopSharing/blob/master/pic/1.pic.jpg) 
-
 模块说明
 -
 * 屏幕采集: 使用DXGI抓屏技术，所以项目只适合运行在win8以上的系统。
