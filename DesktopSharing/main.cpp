@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	DesktopSharing::instance().start();
 	DesktopSharing::instance().startRtspServer("live", 8554);
 	//DesktopSharing::instance().startRtspPusher(RTSP_PUSH_TEST); //启动RTSP推流
-	//DesktopSharing::instance().startRtmpPusher(RTMP_PUSH_TEST); //启动RTMP推流
+	DesktopSharing::instance().startRtmpPusher(RTMP_PUSH_TEST); //启动RTMP推流
 
 	while (1)
 	{

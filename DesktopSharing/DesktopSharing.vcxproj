@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -73,7 +73,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\portaudio\include;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -109,16 +109,20 @@
     <ClCompile Include="net\TcpSocket.cpp" />
     <ClCompile Include="net\Timer.cpp" />
     <ClCompile Include="net\Timestamp.cpp" />
-    <ClCompile Include="RtmpPusher.cpp" />
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp" />
     <ClCompile Include="WASAPICapture.cpp" />
     <ClCompile Include="WASAPIPlayer.cpp" />
     <ClCompile Include="xop\AACSource.cpp" />
+    <ClCompile Include="xop\amf.cpp" />
     <ClCompile Include="xop\G711ASource.cpp" />
     <ClCompile Include="xop\H264Parser.cpp" />
     <ClCompile Include="xop\H264Source.cpp" />
     <ClCompile Include="xop\H265Source.cpp" />
     <ClCompile Include="xop\MediaSession.cpp" />
+    <ClCompile Include="xop\RtmpConnection.cpp" />
+    <ClCompile Include="xop\RtmpPublisher.cpp" />
+    <ClCompile Include="xop\RtmpServer.cpp" />
+    <ClCompile Include="xop\RtmpSession.cpp" />
     <ClCompile Include="xop\RtpConnection.cpp" />
     <ClCompile Include="xop\RtspConnection.cpp" />
     <ClCompile Include="xop\RtspMessage.cpp" />
@@ -153,11 +157,11 @@
     <ClInclude Include="net\ThreadSafeQueue.h" />
     <ClInclude Include="net\Timer.h" />
     <ClInclude Include="net\Timestamp.h" />
-    <ClInclude Include="RtmpPusher.h" />
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h" />
     <ClInclude Include="WASAPICapture.h" />
     <ClInclude Include="WASAPIPlayer.h" />
     <ClInclude Include="xop\AACSource.h" />
+    <ClInclude Include="xop\amf.h" />
     <ClInclude Include="xop\G711ASource.h" />
     <ClInclude Include="xop\H264Parser.h" />
     <ClInclude Include="xop\H264Source.h" />
@@ -165,6 +169,11 @@
     <ClInclude Include="xop\media.h" />
     <ClInclude Include="xop\MediaSession.h" />
     <ClInclude Include="xop\MediaSource.h" />
+    <ClInclude Include="xop\rtmp.h" />
+    <ClInclude Include="xop\RtmpConnection.h" />
+    <ClInclude Include="xop\RtmpPublisher.h" />
+    <ClInclude Include="xop\RtmpServer.h" />
+    <ClInclude Include="xop\RtmpSession.h" />
     <ClInclude Include="xop\rtp.h" />
     <ClInclude Include="xop\RtpConnection.h" />
     <ClInclude Include="xop\rtsp.h" />

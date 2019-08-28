@@ -4,10 +4,10 @@
 #include <mutex>
 #include "xop/RtspServer.h"
 #include "xop/RtspPusher.h"
+#include "xop/RtmpPublisher.h"
 #include "net/Timer.h"
 #include "H264Encoder.h"
 #include "AACEncoder.h"
-#include "RtmpPusher.h"
 #include "ScreenCapture/DXGIScreenCapture.h"
 
 class DesktopSharing
@@ -42,7 +42,7 @@ private:
 	std::shared_ptr<xop::EventLoop> _eventLoop = nullptr;
 	std::shared_ptr<xop::RtspServer> _rtspServer = nullptr;	
 	std::shared_ptr<xop::RtspPusher> _rtspPusher = nullptr;
-	std::shared_ptr<RtmpPusher> _rtmpPusher = nullptr;
+	std::shared_ptr<xop::RtmpPublisher> _rtmpPublisher = nullptr;
 	AudioConfig _audioConfig;
 	VideoConfig _videoConfig;
 

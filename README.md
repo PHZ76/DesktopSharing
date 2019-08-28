@@ -9,13 +9,12 @@
 * 完成屏幕采集(DXGI)和H.264编码。
 * 完成音频采集(WASAPI)和AAC编码。
 * 完成RTSP本地转发音视频数据。
-* 完成RTSP推流。
-* 完成RTMP推流。
+* 完成RTSP推流器。
+* 完成RTMP推流器。
 
 后续计划
 -
 * 增加硬件编码
-* RTMP转发
 
 编译环境
 -
@@ -26,7 +25,8 @@
 -
 * 屏幕采集: 使用DXGI抓屏技术，所以项目只适合运行在win8以上的系统。
 * 音频采集: 使用WASAPI捕获声卡音频数据。
-* 编码器, RTMP推流器: 使用开源项目 [ffmpeg4.0](https://ffmpeg.org/)，ffmpeg的dll文件太大，请到官网下载(4.0版本)。
+* 编码器: 使用开源项目 [ffmpeg4.0](https://ffmpeg.org/)，ffmpeg的dll文件太大，请到官网下载(4.0版本)。
+* RTMP推流器: [rtmp](https://github.com/PHZ76/rtmp)。
 * RTSP服务器,推流器: [RtspServer](https://github.com/PHZ76/RtspServer)。
 
 VLC播放效果
