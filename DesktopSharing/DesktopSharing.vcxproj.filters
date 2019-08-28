@@ -39,9 +39,6 @@
     <ClCompile Include="DesktopSharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RtmpPusher.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="net\Acceptor.cpp">
       <Filter>源文件\net</Filter>
     </ClCompile>
@@ -135,6 +132,21 @@
     <ClCompile Include="WASAPIPlayer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="xop\amf.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\RtmpConnection.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\RtmpPublisher.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\RtmpServer.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\RtmpSession.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="H264Encoder.h">
@@ -147,9 +159,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="DesktopSharing.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RtmpPusher.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="net\Acceptor.h">
@@ -274,6 +283,24 @@
     </ClInclude>
     <ClInclude Include="WASAPIPlayer.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\amf.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\rtmp.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\RtmpConnection.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\RtmpPublisher.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\RtmpServer.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\RtmpSession.h">
+      <Filter>源文件\xop</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

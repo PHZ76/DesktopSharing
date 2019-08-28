@@ -3,11 +3,12 @@
 #include "net/NetInterface.h"
 #include "net/Timestamp.h"
 #include "xop/RtspServer.h"
+#include "xop/H264Parser.h"
 
 DesktopSharing::DesktopSharing()
 	: _eventLoop(new xop::EventLoop)
 {
-	
+
 }
 
 DesktopSharing::~DesktopSharing()
@@ -60,6 +61,11 @@ bool DesktopSharing::init()
 		return false;
 	}
 
+	std::thread t([this] {
+		_eventLoop->loop();
+	});
+	t.detach();
+
 	_isInitialized = true;
 	return true;
 }
@@ -86,10 +92,10 @@ void DesktopSharing::exit()
 		_rtspPusher = nullptr;
 	}
 
-	if (_rtmpPusher != nullptr && _rtmpPusher->isConnected())
+	if (_rtmpPublisher != nullptr && _rtmpPublisher->isConnected())
 	{
-		_rtmpPusher->close();
-		_rtmpPusher = nullptr;
+		_rtmpPublisher->close();
+		_rtmpPublisher = nullptr;
 	}
 
 	if (_rtspServer != nullptr)
@@ -171,11 +177,6 @@ void DesktopSharing::startRtspServer(std::string suffix, uint16_t rtspPort)
 	});
 
 	_sessionId = _rtspServer->addMeidaSession(session);
-	std::thread t([this] {
-		_eventLoop->loop();
-	});
-	t.detach();
-
 	std::cout << "RTSP URL: " << "rtsp://" << xop::NetInterface::getLocalIPAddress() << ":" << std::to_string(rtspPort) << "/" << suffix << std::endl;
 }
 
@@ -220,16 +221,42 @@ void DesktopSharing::startRtmpPusher(const char* url)
 		return;
 	}
 
-	_rtmpPusher.reset(new RtmpPusher);
-	if (!_rtmpPusher->openUrl(url))
+	_rtmpPublisher.reset(new xop::RtmpPublisher(_eventLoop.get()));
+
+	xop::MediaInfo mediaInfo;
+	uint8_t* extradata = AACEncoder::instance().getAVCodecContext()->extradata;
+	uint8_t extradata_size = AACEncoder::instance().getAVCodecContext()->extradata_size;
+
+	mediaInfo.audioSpecificConfigSize = extradata_size;
+	mediaInfo.audioSpecificConfig.reset(new uint8_t[mediaInfo.audioSpecificConfigSize]);
+	memcpy(mediaInfo.audioSpecificConfig.get(), extradata, extradata_size);
+
+	extradata = H264Encoder::instance().getAVCodecContext()->extradata;
+	extradata_size = H264Encoder::instance().getAVCodecContext()->extradata_size;
+
+	xop::Nal sps = xop::H264Parser::findNal(extradata, extradata_size);
+	if (sps.first != nullptr && sps.second != nullptr && *sps.first == 0x67)
 	{
-		_rtspPusher = nullptr;
-		std::cout << "Open " << url << " failed." << std::endl;
-		return;
+		mediaInfo.spsSize = sps.second - sps.first + 1;
+		mediaInfo.sps.reset(new uint8_t[mediaInfo.spsSize]);
+		memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.spsSize);
+
+		xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - extradata));
+		if (pps.first != nullptr && pps.second != nullptr && *pps.first == 0x68)
+		{
+			mediaInfo.ppsSize = pps.second - pps.first + 1;
+			mediaInfo.pps.reset(new uint8_t[mediaInfo.ppsSize]);
+			memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.ppsSize);
+		}
 	}
 
-	_rtmpPusher->addStream(H264Encoder::instance().getAVCodecContext()); // channel_0
-	_rtmpPusher->addStream(AACEncoder::instance().getAVCodecContext()); // channel_1
+	_rtmpPublisher->setMediaInfo(mediaInfo);
+
+	if (_rtmpPublisher->openUrl(url, 2000) < 0)
+	{
+		std::cout << "Open url " << url << " failed." << std::endl;
+		return;
+	}
 
 	std::cout << "Push rtmp stream to " << url << " ..." << std::endl;
 }
@@ -311,9 +338,9 @@ void DesktopSharing::pushVideo()
 					}
 
 					// RTMP视频推流
-					if (_rtmpPusher != nullptr && _rtmpPusher->isConnected())
+					if (_rtmpPublisher != nullptr && _rtmpPublisher->isConnected())
 					{
-						_rtmpPusher->pushFrame(xop::channel_0, pkt);
+						_rtmpPublisher->pushVideoFrame(vidoeFrame.buffer.get(), vidoeFrame.size);
 					}
 				}
 			}
@@ -362,9 +389,9 @@ void DesktopSharing::pushAudio()
 					}
 
 					// RTMP音频推流
-					if (_rtmpPusher && _rtmpPusher->isConnected())
+					if (_rtmpPublisher != nullptr && _rtmpPublisher->isConnected())
 					{
-						_rtmpPusher->pushFrame(xop::channel_1, pkt);
+						_rtmpPublisher->pushAudioFrame(audioFrame.buffer.get(), audioFrame.size);
 					}
 				}
 			}
