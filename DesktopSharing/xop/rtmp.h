@@ -1,6 +1,8 @@
 #ifndef XOP_RTMP_H
 #define XOP_RTMP_H
 
+#include <cstdio>
+#include <cstring>
 #include <cstdint>
 #include <memory>
 

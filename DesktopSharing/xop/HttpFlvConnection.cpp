@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "HttpFlvConnection.h"
 #include "RtmpServer.h"
 #include "net/Logger.h"
