@@ -147,6 +147,12 @@
     <ClCompile Include="xop\RtmpSession.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
+    <ClCompile Include="xop\HttpFlvConnection.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\HttpFlvServer.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="H264Encoder.h">
@@ -300,6 +306,12 @@
       <Filter>源文件\xop</Filter>
     </ClInclude>
     <ClInclude Include="xop\RtmpSession.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\HttpFlvConnection.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\HttpFlvServer.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
   </ItemGroup>

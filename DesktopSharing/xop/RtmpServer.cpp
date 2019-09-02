@@ -7,15 +7,32 @@ using namespace xop;
 
 RtmpServer::RtmpServer(EventLoop* loop, std::string ip, uint16_t port)
 	: TcpServer(loop, ip, port)
+	, m_eventLoop(loop)
 {
     if (this->start() != 0)
     {
-        LOG_INFO("RTSP Server listening on %d failed.", port);
+        LOG_INFO("RTSP Server listening on %u failed.", port);
     }
     else
     {
-        LOG_INFO("RTMP Server listen on 1935.\n");
+        LOG_INFO("RTMP Server listen on %u.\n", port);
     }
+
+	m_eventLoop->addTimer([this] {
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (auto iter = m_rtmpSessions.begin(); iter != m_rtmpSessions.end(); )
+		{
+			if (iter->second->getClients() == 0)
+			{
+				m_rtmpSessions.erase(iter++);
+			}
+			else
+			{
+				iter++;
+			}
+		}
+		return true;
+	}, 30000);
 }
 
 RtmpServer::~RtmpServer()

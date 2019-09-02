@@ -129,7 +129,7 @@ int RtmpPublisher::openUrl(std::string url, int msec)
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
 		sockfd = rtmpConn->fd();
 		m_eventLoop->addTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->close();
+			rtmpConn->disconnect();
 		});
 		m_rtmpConn = nullptr;
 	}
@@ -169,7 +169,7 @@ void RtmpPublisher::close()
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
 		SOCKET sockfd = rtmpConn->fd();
 		m_eventLoop->addTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->close();
+			rtmpConn->disconnect();
 		});
 		m_rtmpConn = nullptr;
 		m_videoTimestamp = 0;

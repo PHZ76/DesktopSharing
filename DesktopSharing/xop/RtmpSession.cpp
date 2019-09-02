@@ -1,4 +1,6 @@
 #include "RtmpSession.h"
+#include "RtmpConnection.h"
+#include "HttpFlvConnection.h"
 
 using namespace xop;
 
@@ -15,24 +17,19 @@ RtmpSession::~RtmpSession()
 void RtmpSession::sendMetaData(AmfObjects& metaData)
 { 
     std::lock_guard<std::mutex> lock(m_mutex);    
-    if(m_clients.size() == 0)
-    {
-        return ;
-    }
     
-	for (auto iter = m_clients.begin(); iter != m_clients.end(); )
+	for (auto iter = m_rtmpClients.begin(); iter != m_rtmpClients.end(); )
     {
         auto conn = iter->second.lock(); 
         if (conn == nullptr) 
         {
-            m_clients.erase(iter++);
+			m_rtmpClients.erase(iter++);
         }
         else
         {	
-            RtmpConnection* player = (RtmpConnection*)conn.get();
-            if(player->isPlayer())
+            if(conn->isPlayer())
             {               
-                player->sendMetaData(metaData);          
+				conn->sendMetaData(metaData);
             }
 			iter++;
         }
@@ -42,37 +39,52 @@ void RtmpSession::sendMetaData(AmfObjects& metaData)
 void RtmpSession::sendMediaData(uint8_t type, uint64_t timestamp, std::shared_ptr<char> data, uint32_t size)
 {
     std::lock_guard<std::mutex> lock(m_mutex);    
-    if(m_clients.size() <= 1 || size == 0)
-    {
-        return ;
-    }
 
-    for (auto iter = m_clients.begin(); iter != m_clients.end(); )
+    for (auto iter = m_rtmpClients.begin(); iter != m_rtmpClients.end(); )
     {
         auto conn = iter->second.lock(); 
         if (conn == nullptr) // conn disconect
         {
-            m_clients.erase(iter++);
+			m_rtmpClients.erase(iter++);
         }
         else
         {	
-            RtmpConnection* player = (RtmpConnection*)conn.get();
-            if(player->isPlayer())
+            if(conn->isPlayer())
             {               
-                player->sendMediaData(type, timestamp, data, size);
+				conn->sendMediaData(type, timestamp, data, size);
             }
 			iter++;
         }
     }
 
+	for (auto iter = m_httpClients.begin(); iter != m_httpClients.end(); )
+	{
+		auto conn = iter->second.lock();
+		if (conn == nullptr) // conn disconect
+		{
+			m_httpClients.erase(iter++);
+		}
+		else
+		{
+			if (!conn->hasFlvHeader())
+			{
+				conn->sendMediaData(RTMP_AVC_SEQUENCE_HEADER, 0, m_avcSequenceHeader, m_avcSequenceHeaderSize);
+				conn->sendMediaData(RTMP_AAC_SEQUENCE_HEADER, 0, m_aacSequenceHeader, m_aacSequenceHeaderSize);
+			}
+
+			conn->sendMediaData(type, timestamp, data, size);
+			iter++;
+		}
+	}
+
 	return;
 }
 
-void RtmpSession::addClient(std::shared_ptr<TcpConnection> conn)
+void RtmpSession::addRtmpClient(std::shared_ptr<RtmpConnection> conn)
 {
     std::lock_guard<std::mutex> lock(m_mutex);   
-    m_clients[conn->fd()] = conn;   
-    if(((RtmpConnection*)conn.get())->isPublisher())
+	m_rtmpClients[conn->fd()] = conn;
+    if(conn->isPublisher())
     {
 		m_publisher = conn;
         m_hasPublisher = true;
@@ -80,23 +92,66 @@ void RtmpSession::addClient(std::shared_ptr<TcpConnection> conn)
 	return;
 }
 
-void RtmpSession::removeClient(std::shared_ptr<TcpConnection> conn)
+void RtmpSession::removeRtmpClient(std::shared_ptr<RtmpConnection> conn)
 {
     std::lock_guard<std::mutex> lock(m_mutex);    
-    if(((RtmpConnection*)conn.get())->isPublisher())
+    if(conn->isPublisher())
     {
         m_hasPublisher = false;
     }
-	m_clients.erase(conn->fd());
+	m_rtmpClients.erase(conn->fd());
+}
+
+void RtmpSession::addHttpClient(std::shared_ptr<HttpFlvConnection> conn)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_httpClients[conn->fd()] = conn;
+}
+
+void RtmpSession::removeHttpClient(std::shared_ptr<HttpFlvConnection> conn)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	m_httpClients.erase(conn->fd());
+}
+
+void addHttpClient(std::shared_ptr<RtmpConnection> conn)
+{
+
+}
+
+void removeHttpClient(std::shared_ptr<RtmpConnection> conn)
+{
+
 }
 
 int RtmpSession::getClients()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    return (int)m_clients.size();
+
+	int clients = 0;
+
+	for (auto iter : m_rtmpClients)
+	{
+		auto conn = iter.second.lock();
+		if (conn != nullptr) 
+		{
+			clients += 1;
+		}
+	}
+
+	for (auto iter : m_httpClients)
+	{
+		auto conn = iter.second.lock();
+		if (conn != nullptr)
+		{
+			clients += 1;
+		}
+	}
+
+    return clients;
 }
 
-std::shared_ptr<TcpConnection> RtmpSession::getPublisher()
+std::shared_ptr<RtmpConnection> RtmpSession::getPublisher()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_publisher.lock();
