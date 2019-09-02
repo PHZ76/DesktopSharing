@@ -37,7 +37,7 @@ bool HttpFlvConnection::onRead(BufferReader& buffer)
 	}
 
 	std::string buf(buffer.peek(), firstCrlf - buffer.peek());
-	printf("%s\n", buf.c_str());
+	//printf("%s\n", buf.c_str());
 
 	auto pos1 = buf.find("GET");
 	auto pos2 = buf.find(".flv");
