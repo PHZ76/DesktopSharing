@@ -147,7 +147,7 @@ private:
 
 	RtmpServer *m_rtmpServer = nullptr;
 	RtmpPublisher *m_rtmpPublisher = nullptr;
-	ConnectionMode  m_connMode = RTMP_SERVER;
+	ConnectionMode m_connMode = RTMP_SERVER;
 	TaskScheduler *m_taskScheduler;
 	std::shared_ptr<xop::Channel> m_channelPtr;
 
@@ -170,7 +170,7 @@ private:
 	ChunkParseState m_chunkParseState = PARSE_HEADER;
 	int m_chunkStreamId = 0;
 
-	bool hasKeyFrame = false;
+	bool m_hasKeyFrame = false;
 	std::map<uint64_t, RtmpMessage> m_gopCache;
 	std::shared_ptr<char> m_avcSequenceHeader;
 	std::shared_ptr<char> m_aacSequenceHeader;

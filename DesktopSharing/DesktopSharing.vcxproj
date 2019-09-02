@@ -118,6 +118,8 @@
     <ClCompile Include="xop\H264Parser.cpp" />
     <ClCompile Include="xop\H264Source.cpp" />
     <ClCompile Include="xop\H265Source.cpp" />
+    <ClCompile Include="xop\HttpFlvConnection.cpp" />
+    <ClCompile Include="xop\HttpFlvServer.cpp" />
     <ClCompile Include="xop\MediaSession.cpp" />
     <ClCompile Include="xop\RtmpConnection.cpp" />
     <ClCompile Include="xop\RtmpPublisher.cpp" />
@@ -166,6 +168,8 @@
     <ClInclude Include="xop\H264Parser.h" />
     <ClInclude Include="xop\H264Source.h" />
     <ClInclude Include="xop\H265Source.h" />
+    <ClInclude Include="xop\HttpFlvConnection.h" />
+    <ClInclude Include="xop\HttpFlvServer.h" />
     <ClInclude Include="xop\media.h" />
     <ClInclude Include="xop\MediaSession.h" />
     <ClInclude Include="xop\MediaSource.h" />
