@@ -1,6 +1,10 @@
 // PHZ
 // 2019-7-22
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "DXGIScreenCapture.h"
 #include <fstream> 
 
@@ -35,8 +39,8 @@ int DXGIScreenCapture::init(int displayIndex)
 
 	D3D_FEATURE_LEVEL featureLevel;
 	hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION,
-							m_d3d11device.GetAddressOf(), &featureLevel, m_d3d11DeviceContext.GetAddressOf());
-	if (FAILED(hr)) 
+		m_d3d11device.GetAddressOf(), &featureLevel, m_d3d11DeviceContext.GetAddressOf());
+	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to create d3d11 device.\n");
 		return -1;
@@ -44,7 +48,7 @@ int DXGIScreenCapture::init(int displayIndex)
 
 	Microsoft::WRL::ComPtr<IDXGIFactory> m_dxgiFactory;
 	hr = CreateDXGIFactory1(__uuidof(IDXGIFactory), (void **)m_dxgiFactory.GetAddressOf());
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to create dxgi factory.\n");
 		return -1;
@@ -58,6 +62,7 @@ int DXGIScreenCapture::init(int displayIndex)
 		if (m_dxgiFactory->EnumAdapters(index, dxgiAdapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND)
 		{
 			int i = 0;
+			hr = dxgiAdapter->EnumOutputs(i, dxgiOutput.GetAddressOf());
 			while (dxgiAdapter->EnumOutputs(i, dxgiOutput.GetAddressOf()) != DXGI_ERROR_NOT_FOUND)
 			{
 				i++;
@@ -77,33 +82,34 @@ int DXGIScreenCapture::init(int displayIndex)
 	}
 
 	if (dxgiOutput.Get() == nullptr)
-	{
+	{		
 		printf("[DXGIScreenCapture] DXGI output not found.\n");
 		return -1;
 	}
 
 	Microsoft::WRL::ComPtr<IDXGIOutput1> dxgiOutput1;
 	hr = dxgiOutput.Get()->QueryInterface(__uuidof(IDXGIOutput1), reinterpret_cast<void **>(dxgiOutput1.GetAddressOf()));
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to query interface dxgiOutput1.\n");
 		return -1;
 	}
 
 	hr = dxgiOutput1->DuplicateOutput(m_d3d11device.Get(), m_dxgi0utputDuplication.GetAddressOf());
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 	{
+		/* 0x887a0004: NVIDIA控制面板-->全局设置--首选图形处理器(自动选择) */
 		printf("[DXGIScreenCapture] Failed to get duplicate output.\n");
 		return -1;
 	}
 
-	 m_dxgi0utputDuplication->GetDesc(&m_dxgiDesc);
+	m_dxgi0utputDuplication->GetDesc(&m_dxgiDesc);
 
 	if (createSharedTexture())
 	{
 		return -1;
 	}
-	
+
 	m_initialized = true;
 	return 0;
 }
@@ -262,7 +268,6 @@ int DXGIScreenCapture::aquireFrame()
 	}
 
 	m_d3d11DeviceContext->CopyResource(m_sharedTexture.Get(), outputTexture.Get());
-
 	return 0;
 }
 
@@ -315,13 +320,21 @@ int DXGIScreenCapture::captureFrame(ID3D11Device* device, ID3D11Texture2D* textu
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> inputTexture;
 	HRESULT hr = device->OpenSharedResource((HANDLE)(uintptr_t)m_textureHandle, __uuidof(ID3D11Texture2D),
 											reinterpret_cast<void **>(inputTexture.GetAddressOf()));
-	if (FAILED(hr))
+	if (FAILED(hr)) /* 不同设备创建的device? */
 	{
-		printf("[DXGIScreenCapture] Failed to open shared resource from device.\n");
-		return -1;
-	}
+		//printf("[DXGIScreenCapture] Failed to open shared resource from device.\n");
+		//return -1;
 
-	deviceContext->CopyResource(texture, inputTexture.Get());
+		D3D11_MAPPED_SUBRESOURCE map;
+		deviceContext->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
+		memcpy((uint8_t *)map.pData, m_bgraPtr.get(), m_bgraSize);
+		deviceContext->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
+	}
+	else
+	{
+		deviceContext->CopyResource(texture, inputTexture.Get());
+	}
+	
 	return 0;
 }
 

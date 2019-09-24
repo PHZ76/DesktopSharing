@@ -32,7 +32,7 @@ public:
 	inline int getHeight() { return m_dxgiDesc.ModeDesc.Height; }
 
 	int captureFrame(std::shared_ptr<uint8_t>& bgraPtr, uint32_t& size);
-	int captureFrame(ID3D11Device* device, ID3D11Texture2D* texture);
+	int captureFrame(ID3D11Device* device, ID3D11Texture2D* texture);	
 
 	int captureImage(std::string pathname);
 

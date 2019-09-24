@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 	AVConfig avconfig;
 	avconfig.bitrate = 2000000; // video bitrate
 	avconfig.framerate = 25;    // video framerate
-	avconfig.codec = "h264";    
+	avconfig.codec = "h264";    // hardware encoder: "h264_nvenc";        
 
 	if (!DesktopSharing::instance().init(&avconfig))
 	{

@@ -8,6 +8,7 @@
 #include "net/Timer.h"
 #include "H264Encoder.h"
 #include "AACEncoder.h"
+#include "nvenc.h"
 #include "ScreenCapture/DXGIScreenCapture.h"
 
 struct AVConfig
@@ -55,7 +56,7 @@ private:
 	AVConfig _avconfig;
 	AudioConfig _audioConfig;
 	VideoConfig _videoConfig;
-
+	void *_nvenc_data = nullptr;
 	std::mutex _mutex;
 	std::shared_ptr<std::thread> _videoThread;
 	std::shared_ptr<std::thread> _audioThread;

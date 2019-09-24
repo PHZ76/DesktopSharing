@@ -29,7 +29,7 @@ bool DesktopSharing::init(AVConfig *config)
 	if (_isInitialized)
 		return false;
 
-	memcpy(&_avconfig, config, sizeof(AVConfig));
+	_avconfig = *config;
 
 	/* video config */
 	_videoConfig.framerate = _avconfig.framerate;
@@ -53,9 +53,36 @@ bool DesktopSharing::init(AVConfig *config)
 	_videoConfig.width = _screenCapture.getWidth();
 	_videoConfig.height = _screenCapture.getHeight();
 
-	if (!H264Encoder::instance().init(_videoConfig))
+	if (_avconfig.codec == "h264_nvenc")
 	{
-		return false;
+		if (nvenc_info.is_supported())
+		{
+			_nvenc_data = nvenc_info.create();
+		}
+
+		if (_nvenc_data != nullptr)
+		{
+			encoder_config nvenc_config;
+			nvenc_config.codec = "h264";
+			nvenc_config.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+			nvenc_config.width = _videoConfig.width;
+			nvenc_config.height = _videoConfig.height;
+			nvenc_config.framerate = _videoConfig.framerate;
+			nvenc_config.gop = _videoConfig.gop;
+			if (!nvenc_info.init(_nvenc_data, &nvenc_config))
+			{
+				nvenc_info.destroy(&_nvenc_data);
+				_nvenc_data = nullptr;
+			}
+		}
+	}
+	
+	if(_nvenc_data == nullptr)
+	{
+		if (!H264Encoder::instance().init(_videoConfig))
+		{
+			return false;
+		}
 	}
 
 	if (!AACEncoder::instance().init(_audioConfig))
@@ -85,7 +112,13 @@ void DesktopSharing::exit()
 		_screenCapture.exit();
 		H264Encoder::instance().exit();
 		AudioCapture::instance().exit();
-		AACEncoder::instance().exit();		
+		AACEncoder::instance().exit();	
+
+		if (_nvenc_data != nullptr)
+		{
+			nvenc_info.destroy(&_nvenc_data);
+			_nvenc_data = nullptr;
+		}
 	}
 
 	if (_rtspPusher!=nullptr && _rtspPusher->isConnected())
@@ -270,6 +303,9 @@ void DesktopSharing::pushVideo()
 	uint32_t fps = 0;
 	uint32_t msec = 1000 / _videoConfig.framerate;
 	tp.reset();
+	
+	uint32_t bufferSize = 1920*1080*4;				    
+	std::shared_ptr<uint8_t> buffer(new uint8_t[bufferSize]);
 
 	while (this->_isRunning)
 	{
@@ -297,56 +333,87 @@ void DesktopSharing::pushVideo()
 		std::shared_ptr<uint8_t> bgraData;
 		uint32_t bgraSize = 0;
 		uint32_t timestamp = xop::H264Source::getTimeStamp();
-		if (_screenCapture.captureFrame(bgraData, bgraSize) == 0)
+		
 		{
 			fps += 1;
+			xop::AVFrame vidoeFrame;
+			vidoeFrame.size = 0;
 
-			AVPacket* pkt = H264Encoder::instance().encodeVideo(bgraData.get(), _screenCapture.getWidth(), _screenCapture.getHeight());
-			if (pkt)
+			if (_nvenc_data != nullptr)
 			{
-				xop::AVFrame vidoeFrame(pkt->size + 1024);
-				vidoeFrame.size = 0;
-				vidoeFrame.type = xop::VIDEO_FRAME_P;
-				vidoeFrame.timestamp = timestamp;
-				if (pkt->data[4] == 0x65 || pkt->data[4] == 0x6) //0x67:sps ,0x65:IDR, 0x6: SEI
+				ID3D11Device* device = nvenc_info.get_device(_nvenc_data);
+				ID3D11Texture2D* texture = nvenc_info.get_texture(_nvenc_data);
+				if (_screenCapture.captureFrame(device, texture) == 0)
 				{
-					// 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps
-					uint8_t* extraData = H264Encoder::instance().getAVCodecContext()->extradata;
-					uint8_t extraDatasize = H264Encoder::instance().getAVCodecContext()->extradata_size;
-					memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, extraData + 4, extraDatasize - 4); // +4去掉H.264起始码
-					vidoeFrame.size += (extraDatasize - 4);
-					vidoeFrame.type = xop::VIDEO_FRAME_I;
-
-					memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data, pkt->size);
-					vidoeFrame.size += pkt->size;
-				}
-				else
-				{
-					memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data + 4, pkt->size - 4); // +4去掉H.264起始码
-					vidoeFrame.size += (pkt->size - 4);
-				}
-
-				{
-					// 本地RTSP视频转发
-					if (_rtspServer != nullptr && this->_clients > 0)
+					int frameSize = nvenc_info.encode_texture(_nvenc_data, texture, buffer.get(), bufferSize);
+					if (frameSize > 0)
 					{
-						_rtspServer->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
-					}
+						vidoeFrame.buffer.reset(new uint8_t[frameSize]);
+						vidoeFrame.type = xop::VIDEO_FRAME_P;
+						vidoeFrame.timestamp = timestamp;						
+						if (buffer.get()[4] == 0x67 || buffer.get()[4] == 0x65 || buffer.get()[4] == 0x6)
+						{
+							vidoeFrame.type = xop::VIDEO_FRAME_I;
+						}
 
-					// RTSP视频推流
-					if (_rtspPusher != nullptr && _rtspPusher->isConnected())
-					{
-						_rtspPusher->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
-					}
-
-					// RTMP视频推流
-					if (_rtmpPublisher != nullptr && _rtmpPublisher->isConnected())
-					{
-						_rtmpPublisher->pushVideoFrame(vidoeFrame.buffer.get(), vidoeFrame.size);
+						memcpy(vidoeFrame.buffer.get(), buffer.get() + 4, frameSize - 4);
+						vidoeFrame.size = frameSize - 4;
 					}
 				}
 			}
+			else 
+			{
+				if (_screenCapture.captureFrame(bgraData, bgraSize) == 0)
+				{
+					AVPacket* pkt = H264Encoder::instance().encodeVideo(bgraData.get(), _screenCapture.getWidth(), _screenCapture.getHeight());
+					if (pkt)
+					{
+						vidoeFrame.buffer.reset(new uint8_t[pkt->size + 1024]);
+						vidoeFrame.type = xop::VIDEO_FRAME_P;
+						vidoeFrame.timestamp = timestamp;
+						if (pkt->data[4] == 0x65 || pkt->data[4] == 0x6) //0x67:sps ,0x65:IDR, 0x6: SEI
+						{
+							// 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps
+							uint8_t* extraData = H264Encoder::instance().getAVCodecContext()->extradata;
+							uint8_t extraDatasize = H264Encoder::instance().getAVCodecContext()->extradata_size;
+							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, extraData + 4, extraDatasize - 4); // +4去掉H.264起始码
+							vidoeFrame.size += (extraDatasize - 4);
+							vidoeFrame.type = xop::VIDEO_FRAME_I;
+
+							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data, pkt->size);
+							vidoeFrame.size += pkt->size;
+						}
+						else
+						{
+							memcpy(vidoeFrame.buffer.get() + vidoeFrame.size, pkt->data + 4, pkt->size - 4); // +4去掉H.264起始码
+							vidoeFrame.size += (pkt->size - 4);
+						}
+					}
+				}				
+			}
+
+			if(vidoeFrame.size > 0)
+			{
+				// 本地RTSP视频转发
+				if (_rtspServer != nullptr && this->_clients > 0)
+				{
+					_rtspServer->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
+				}
+
+				// RTSP视频推流
+				if (_rtspPusher != nullptr && _rtspPusher->isConnected())
+				{
+					_rtspPusher->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
+				}
+
+				// RTMP视频推流
+				if (_rtmpPublisher != nullptr && _rtmpPublisher->isConnected())
+				{
+					_rtmpPublisher->pushVideoFrame(vidoeFrame.buffer.get(), vidoeFrame.size);
+				}
+			}
 		}
+		
 	}
 }
 
