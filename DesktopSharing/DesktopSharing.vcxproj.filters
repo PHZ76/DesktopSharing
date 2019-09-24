@@ -22,6 +22,15 @@
     <Filter Include="源文件\ScreenCapture">
       <UniqueIdentifier>{ff421d97-3a5f-46d4-8d09-f36dfd07a3dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\NvCodec">
+      <UniqueIdentifier>{04699705-dad5-45fb-b939-71d64c6d0e93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\NvCodec\NvEncoder">
+      <UniqueIdentifier>{56f1b2c0-db81-45a4-8f90-14f2519c962f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\wasapi">
+      <UniqueIdentifier>{91c87bcd-3edf-4969-afe4-e88a78918d2b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -126,12 +135,6 @@
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp">
       <Filter>源文件\ScreenCapture</Filter>
     </ClCompile>
-    <ClCompile Include="WASAPICapture.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="WASAPIPlayer.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="xop\amf.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
@@ -152,6 +155,21 @@
     </ClCompile>
     <ClCompile Include="xop\HttpFlvServer.cpp">
       <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="NvCodec\NvEncoder\NvEncoder.cpp">
+      <Filter>源文件\NvCodec\NvEncoder</Filter>
+    </ClCompile>
+    <ClCompile Include="NvCodec\NvEncoder\NvEncoderD3D11.cpp">
+      <Filter>源文件\NvCodec\NvEncoder</Filter>
+    </ClCompile>
+    <ClCompile Include="wasapi\WASAPICapture.cpp">
+      <Filter>源文件\wasapi</Filter>
+    </ClCompile>
+    <ClCompile Include="wasapi\WASAPIPlayer.cpp">
+      <Filter>源文件\wasapi</Filter>
+    </ClCompile>
+    <ClCompile Include="nvenc.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -284,12 +302,6 @@
     <ClInclude Include="AudioBuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="WASAPICapture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="WASAPIPlayer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="xop\amf.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
@@ -313,6 +325,27 @@
     </ClInclude>
     <ClInclude Include="xop\HttpFlvServer.h">
       <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="NvCodec\NvEncoder\nvEncodeAPI.h">
+      <Filter>源文件\NvCodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="NvCodec\NvEncoder\NvEncoder.h">
+      <Filter>源文件\NvCodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="NvCodec\NvEncoder\NvEncoderD3D11.h">
+      <Filter>源文件\NvCodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="wasapi\WASAPICapture.h">
+      <Filter>源文件\wasapi</Filter>
+    </ClInclude>
+    <ClInclude Include="wasapi\WASAPIPlayer.h">
+      <Filter>源文件\wasapi</Filter>
+    </ClInclude>
+    <ClInclude Include="nvenc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="encoder_info.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
