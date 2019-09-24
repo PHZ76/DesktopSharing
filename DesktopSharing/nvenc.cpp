@@ -16,6 +16,7 @@ struct nvenc_data
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
 	Microsoft::WRL::ComPtr<IDXGIAdapter>        adapter;
 	Microsoft::WRL::ComPtr<IDXGIFactory1>       factory;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D>     texture;
 
 	uint32_t width;
 	uint32_t height;
@@ -88,6 +89,7 @@ static void* nvenc_create()
 			DXGI_ADAPTER_DESC adapterDesc;
 			enc->adapter->GetDesc(&adapterDesc);
 			wcstombs(szDesc, adapterDesc.Description, sizeof(szDesc));
+			//printf("%s\n", szDesc);
 			if (strstr(szDesc, "NVIDIA") == NULL)
 			{
 				continue;
@@ -118,9 +120,9 @@ failed:
 	return nullptr;
 }
 
-static void nvenc_destroy(void *nvenc_data)
+static void nvenc_destroy(void **nvenc_data)
 {
-	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+	struct nvenc_data *enc = (struct nvenc_data *)(*nvenc_data);
 
 	enc->nvenc->DestroyEncoder();
 	delete enc->nvenc;
@@ -129,6 +131,8 @@ static void nvenc_destroy(void *nvenc_data)
 	enc->context->Release();
 	enc->adapter->Release();
 	enc->factory->Release();
+	enc->texture->Release();
+	*nvenc_data = nullptr;
 }
 
 static bool nvenc_init(void *nvenc_data, void *encoder_config)
@@ -141,11 +145,30 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
 	struct encoder_config* config = (struct encoder_config*)encoder_config;
 
+	D3D11_TEXTURE2D_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
+	desc.Width = config->width;
+	desc.Height = config->height;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = config->format;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_STAGING;
+	desc.BindFlags = 0;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	HRESULT hr = enc->device.Get()->CreateTexture2D(&desc, NULL, enc->texture.GetAddressOf());
+	if (FAILED(hr))
+	{
+		printf("[nvenc] Error: Failed to create texture. \n");
+		return false;
+	}
+
 	enc->width = config->width;
 	enc->height = config->height;
 	enc->framerate = config->framerate;
 	enc->format = config->format;
 	enc->codec = config->codec;
+	enc->gop = config->gop;
 
 	NV_ENC_BUFFER_FORMAT eBufferFormat = NV_ENC_BUFFER_FORMAT_NV12;
 	if (enc->format == DXGI_FORMAT_NV12)
@@ -189,6 +212,8 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 	initializeParams.frameRateNum = enc->framerate;
 	initializeParams.encodeConfig->gopLength = enc->gop;
 	enc->nvenc->CreateEncoder(&initializeParams);
+
+	return true;
 }
 
 int nvenc_encode_texture(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* buf, uint32_t maxBufSize)
@@ -223,10 +248,34 @@ int nvenc_encode_texture(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* bu
 	return frameSize;
 }
 
+static ID3D11Device* get_device(void *nvenc_data)
+{
+	if (nvenc_data == nullptr)
+	{
+		return nullptr;
+	}
+
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+	return enc->device.Get();
+}
+
+static ID3D11Texture2D* get_texture(void *nvenc_data)
+{
+	if (nvenc_data == nullptr)
+	{
+		return nullptr;
+	}
+
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+	return enc->texture.Get();
+}
+
 struct encoder_info nvenc_info = {
 	is_supported,
 	nvenc_create,
 	nvenc_destroy,
 	nvenc_init,
-	nvenc_encode_texture
+	nvenc_encode_texture,
+	get_device,
+	get_texture
 };

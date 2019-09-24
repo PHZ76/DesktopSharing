@@ -63,6 +63,7 @@
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)..\libs\ffmpeg\lib;$(ProjectDir)..\libs\portaudio\lib\debug;$(ProjectDir)..\libs\screen_capture\lib\debug;$(ProjectDir)..\libs\screen_capture_lite\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

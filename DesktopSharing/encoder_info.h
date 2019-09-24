@@ -20,9 +20,11 @@ struct encoder_info
 {
 	bool (*is_supported)(void);
 	void* (*create)(void);
-	void (*destroy)(void *encoder_data);
+	void (*destroy)(void **encoder_data);
 	bool (*init)(void *encoder_data, void *encoder_config);
 	int (*encode_texture)(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* buf, uint32_t maxBufSize);
+	ID3D11Device* (*get_device)(void *encoder_data);
+	ID3D11Texture2D* (*get_texture)(void *encoder_data);
 };
 
 #endif

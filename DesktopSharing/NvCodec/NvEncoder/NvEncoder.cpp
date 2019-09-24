@@ -198,6 +198,27 @@ void NvEncoder::CreateDefaultEncoderParams(NV_ENC_INITIALIZE_PARAMS* pIntializeP
 
 void NvEncoder::CreateEncoder(const NV_ENC_INITIALIZE_PARAMS* pEncoderParams)
 {
+	if (pEncoderParams->encodeGUID == NV_ENC_CODEC_H264_GUID)
+	{
+		if (m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444 || m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
+		{
+			pEncoderParams->encodeConfig->encodeCodecConfig.h264Config.chromaFormatIDC = 3;
+		}
+		pEncoderParams->encodeConfig->encodeCodecConfig.h264Config.idrPeriod = pEncoderParams->encodeConfig->gopLength;
+		pEncoderParams->encodeConfig->encodeCodecConfig.h264Config.repeatSPSPPS = 1;
+	}
+	else if (pEncoderParams->encodeGUID == NV_ENC_CODEC_HEVC_GUID)
+	{
+		pEncoderParams->encodeConfig->encodeCodecConfig.hevcConfig.pixelBitDepthMinus8 =
+			(m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV420_10BIT || m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT) ? 2 : 0;
+		if (m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444 || m_eBufferFormat == NV_ENC_BUFFER_FORMAT_YUV444_10BIT)
+		{
+			pEncoderParams->encodeConfig->encodeCodecConfig.hevcConfig.chromaFormatIDC = 3;
+		}
+		pEncoderParams->encodeConfig->encodeCodecConfig.hevcConfig.idrPeriod = pEncoderParams->encodeConfig->gopLength;
+		pEncoderParams->encodeConfig->encodeCodecConfig.hevcConfig.repeatSPSPPS = 1;
+	}
+
     if (!m_hEncoder)
     {
         NVENC_THROW_ERROR("Encoder Initialization failed", NV_ENC_ERR_NO_ENCODE_DEVICE);
