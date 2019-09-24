@@ -27,6 +27,7 @@
 * 屏幕采集: 使用DXGI抓屏技术，所以项目只适合运行在win8以上的系统。
 * 音频采集: 使用WASAPI捕获声卡音频数据。
 * 编码器: 使用开源项目 [ffmpeg4.0](https://ffmpeg.org/)，ffmpeg的dll文件太大，请到官网下载(4.0版本)。
+* 硬件编码器: 使用 [Video-Codec-SDK](https://developer.nvidia.com/nvidia-video-codec-sdk), Version: 8.2。
 * RTMP推流器: [rtmp](https://github.com/PHZ76/rtmp)。
 * RTSP服务器,推流器: [RtspServer](https://github.com/PHZ76/RtspServer)。
 
