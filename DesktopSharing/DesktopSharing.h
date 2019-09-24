@@ -10,6 +10,15 @@
 #include "AACEncoder.h"
 #include "ScreenCapture/DXGIScreenCapture.h"
 
+struct AVConfig
+{
+	uint32_t bitrate = 2000000;
+	uint32_t framerate = 25;
+	uint32_t gop = 25;
+
+	std::string codec = "h264"; // [software codec: "h264"]  [hardware codec: "h264_nvenc"]
+};
+
 class DesktopSharing
 {
 public:
@@ -18,7 +27,7 @@ public:
 	static DesktopSharing& instance();
 	~DesktopSharing();
 
-	bool init();
+	bool init(AVConfig *config);
 	void exit();
 
 	void start();
@@ -43,6 +52,7 @@ private:
 	std::shared_ptr<xop::RtspServer> _rtspServer = nullptr;	
 	std::shared_ptr<xop::RtspPusher> _rtspPusher = nullptr;
 	std::shared_ptr<xop::RtmpPublisher> _rtmpPublisher = nullptr;
+	AVConfig _avconfig;
 	AudioConfig _audioConfig;
 	VideoConfig _videoConfig;
 

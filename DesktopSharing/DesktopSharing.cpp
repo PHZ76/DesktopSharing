@@ -22,17 +22,19 @@ DesktopSharing& DesktopSharing::instance()
 	return s_ds;
 }
 
-bool DesktopSharing::init()
+bool DesktopSharing::init(AVConfig *config)
 {
 	std::lock_guard<std::mutex> locker(_mutex);
 
 	if (_isInitialized)
 		return false;
 
+	memcpy(&_avconfig, config, sizeof(AVConfig));
+
 	/* video config */
-	_videoConfig.framerate = 25;
-	_videoConfig.bitrate = 4000000;
-	_videoConfig.gop = 25;
+	_videoConfig.framerate = _avconfig.framerate;
+	_videoConfig.bitrate = _avconfig.bitrate;
+	_videoConfig.gop = _avconfig.gop;
 
 	if (_screenCapture.init() < 0)
 	{

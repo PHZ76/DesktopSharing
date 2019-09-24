@@ -56,7 +56,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -73,7 +73,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -109,9 +109,12 @@
     <ClCompile Include="net\TcpSocket.cpp" />
     <ClCompile Include="net\Timer.cpp" />
     <ClCompile Include="net\Timestamp.cpp" />
+    <ClCompile Include="NvCodec\NvEncoder\NvEncoder.cpp" />
+    <ClCompile Include="NvCodec\NvEncoder\NvEncoderD3D11.cpp" />
+    <ClCompile Include="nvenc.cpp" />
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp" />
-    <ClCompile Include="WASAPICapture.cpp" />
-    <ClCompile Include="WASAPIPlayer.cpp" />
+    <ClCompile Include="wasapi\WASAPICapture.cpp" />
+    <ClCompile Include="wasapi\WASAPIPlayer.cpp" />
     <ClCompile Include="xop\AACSource.cpp" />
     <ClCompile Include="xop\amf.cpp" />
     <ClCompile Include="xop\G711ASource.cpp" />
@@ -136,6 +139,7 @@
     <ClInclude Include="AudioBuffer.h" />
     <ClInclude Include="AudioCapture.h" />
     <ClInclude Include="DesktopSharing.h" />
+    <ClInclude Include="encoder_info.h" />
     <ClInclude Include="H264Encoder.h" />
     <ClInclude Include="net\Acceptor.h" />
     <ClInclude Include="net\BufferReader.h" />
@@ -159,9 +163,13 @@
     <ClInclude Include="net\ThreadSafeQueue.h" />
     <ClInclude Include="net\Timer.h" />
     <ClInclude Include="net\Timestamp.h" />
+    <ClInclude Include="NvCodec\NvEncoder\nvEncodeAPI.h" />
+    <ClInclude Include="NvCodec\NvEncoder\NvEncoder.h" />
+    <ClInclude Include="NvCodec\NvEncoder\NvEncoderD3D11.h" />
+    <ClInclude Include="nvenc.h" />
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h" />
-    <ClInclude Include="WASAPICapture.h" />
-    <ClInclude Include="WASAPIPlayer.h" />
+    <ClInclude Include="wasapi\WASAPICapture.h" />
+    <ClInclude Include="wasapi\WASAPIPlayer.h" />
     <ClInclude Include="xop\AACSource.h" />
     <ClInclude Include="xop\amf.h" />
     <ClInclude Include="xop\G711ASource.h" />

@@ -4,8 +4,8 @@
 #include <thread>
 #include <cstdint>
 #include <memory>
-#include "WASAPICapture.h"
-#include "WASAPIPlayer.h"
+#include "wasapi/WASAPICapture.h"
+#include "wasapi/WASAPIPlayer.h"
 #include "AudioBuffer.h"
 
 class AudioCapture
