@@ -18,6 +18,7 @@ struct nvenc_data
 	Microsoft::WRL::ComPtr<IDXGIFactory1>       factory;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>     texture;
 
+	std::mutex mutex;
 	uint32_t width;
 	uint32_t height;
 	uint32_t framerate;
@@ -124,14 +125,23 @@ static void nvenc_destroy(void **nvenc_data)
 {
 	struct nvenc_data *enc = (struct nvenc_data *)(*nvenc_data);
 
-	enc->nvenc->DestroyEncoder();
-	delete enc->nvenc;
+	enc->mutex.lock();
+
+	if (enc->nvenc != nullptr)
+	{
+		enc->nvenc->DestroyEncoder();
+		delete enc->nvenc;
+	}
 
 	enc->device->Release();
 	enc->context->Release();
 	enc->adapter->Release();
 	enc->factory->Release();
 	enc->texture->Release();
+
+	enc->mutex.unlock();
+
+	delete *nvenc_data;
 	*nvenc_data = nullptr;
 }
 
@@ -144,6 +154,12 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 
 	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
 	struct encoder_config* config = (struct encoder_config*)encoder_config;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
+	if (enc->nvenc != nullptr)
+	{
+		return false;
+	}
 
 	D3D11_TEXTURE2D_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -223,9 +239,15 @@ int nvenc_encode_texture(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* bu
 		return -1;
 	}
 
-	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
-	std::vector<std::vector<uint8_t>> vPacket;
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;	
 
+	std::lock_guard<std::mutex> locker(enc->mutex);
+	if (enc->nvenc == nullptr)
+	{
+		return -1;
+	}
+
+	std::vector<std::vector<uint8_t>> vPacket;
 	const NvEncInputFrame* encoderInputFrame = enc->nvenc->GetNextInputFrame();
 	ID3D11Texture2D *pTexBgra = reinterpret_cast<ID3D11Texture2D*>(encoderInputFrame->inputPtr);
 	enc->context->CopyResource(pTexBgra, texture);
@@ -248,14 +270,40 @@ int nvenc_encode_texture(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* bu
 	return frameSize;
 }
 
-static ID3D11Device* get_device(void *nvenc_data)
+int nvenc_get_sequence_params(void *nvenc_data, uint8_t* buf, uint32_t maxBufSize)
 {
+	if (nvenc_data == nullptr)
+	{
+		return 0;
+	}
+
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
+	if (enc->nvenc != nullptr)
+	{
+		std::vector<uint8_t> seq_params;
+		enc->nvenc->GetSequenceParams(seq_params);
+		if (seq_params.size() > 0 && seq_params.size() < maxBufSize)
+		{
+			memcpy(buf, seq_params.data(), seq_params.size());
+			return seq_params.size();
+		}		
+	}
+
+	return 0;
+}
+
+static ID3D11Device* get_device(void *nvenc_data)
+{	
 	if (nvenc_data == nullptr)
 	{
 		return nullptr;
 	}
 
 	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
 	return enc->device.Get();
 }
 
@@ -267,6 +315,8 @@ static ID3D11Texture2D* get_texture(void *nvenc_data)
 	}
 
 	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
 	return enc->texture.Get();
 }
 
@@ -276,6 +326,7 @@ struct encoder_info nvenc_info = {
 	nvenc_destroy,
 	nvenc_init,
 	nvenc_encode_texture,
+	nvenc_get_sequence_params,
 	get_device,
 	get_texture
 };
