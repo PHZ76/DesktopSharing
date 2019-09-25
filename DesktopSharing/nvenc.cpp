@@ -226,10 +226,10 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 
 	initializeParams.encodeConfig->rcParams.averageBitRate = enc->bitrate * 5 / 6;
 	initializeParams.encodeConfig->rcParams.maxBitRate = enc->bitrate;
-	initializeParams.encodeConfig->rcParams.vbvBufferSize = enc->bitrate / (initializeParams.frameRateNum / initializeParams.frameRateDen);
-	initializeParams.encodeConfig->rcParams.vbvInitialDelay = initializeParams.encodeConfig->rcParams.vbvInitialDelay;
+	//initializeParams.encodeConfig->rcParams.vbvBufferSize = enc->bitrate; // / (initializeParams.frameRateNum / initializeParams.frameRateDen);
+	//initializeParams.encodeConfig->rcParams.vbvInitialDelay = initializeParams.encodeConfig->rcParams.vbvInitialDelay;
 	initializeParams.encodeConfig->rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
-
+	
 	enc->nvenc->CreateEncoder(&initializeParams);
 
 	return true;
