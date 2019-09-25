@@ -22,10 +22,11 @@ struct nvenc_data
 	uint32_t width;
 	uint32_t height;
 	uint32_t framerate;
+	uint32_t bitrate;
 	uint32_t gop;
 	std::string codec;
 	DXGI_FORMAT format;
-	NvEncoderD3D11 *nvenc;
+	NvEncoderD3D11 *nvenc = nullptr;
 };
 
 static bool is_supported(void)
@@ -129,15 +130,9 @@ static void nvenc_destroy(void **nvenc_data)
 
 	if (enc->nvenc != nullptr)
 	{
-		enc->nvenc->DestroyEncoder();
+		//enc->nvenc->DestroyEncoder();
 		delete enc->nvenc;
 	}
-
-	enc->device->Release();
-	enc->context->Release();
-	enc->adapter->Release();
-	enc->factory->Release();
-	enc->texture->Release();
 
 	enc->mutex.unlock();
 
@@ -185,6 +180,7 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 	enc->format = config->format;
 	enc->codec = config->codec;
 	enc->gop = config->gop;
+	enc->bitrate = config->bitrate;
 
 	NV_ENC_BUFFER_FORMAT eBufferFormat = NV_ENC_BUFFER_FORMAT_NV12;
 	if (enc->format == DXGI_FORMAT_NV12)
@@ -227,6 +223,13 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 	initializeParams.maxEncodeHeight = enc->height;
 	initializeParams.frameRateNum = enc->framerate;
 	initializeParams.encodeConfig->gopLength = enc->gop;
+
+	initializeParams.encodeConfig->rcParams.averageBitRate = enc->bitrate * 5 / 6;
+	initializeParams.encodeConfig->rcParams.maxBitRate = enc->bitrate;
+	initializeParams.encodeConfig->rcParams.vbvBufferSize = enc->bitrate / (initializeParams.frameRateNum / initializeParams.frameRateDen);
+	initializeParams.encodeConfig->rcParams.vbvInitialDelay = initializeParams.encodeConfig->rcParams.vbvInitialDelay;
+	initializeParams.encodeConfig->rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
+
 	enc->nvenc->CreateEncoder(&initializeParams);
 
 	return true;

@@ -69,6 +69,7 @@ bool DesktopSharing::init(AVConfig *config)
 			nvenc_config.height = _videoConfig.height;
 			nvenc_config.framerate = _videoConfig.framerate;
 			nvenc_config.gop = _videoConfig.gop;
+			nvenc_config.bitrate = _videoConfig.bitrate;
 			if (!nvenc_info.init(_nvenc_data, &nvenc_config))
 			{
 				nvenc_info.destroy(&_nvenc_data);
