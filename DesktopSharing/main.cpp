@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	DesktopSharing::instance().stop();
 	DesktopSharing::instance().exit();
 
-    getchar();
-    return 0;
+	getchar();
+	return 0;
 }
 
