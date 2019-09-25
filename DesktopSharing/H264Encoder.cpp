@@ -52,8 +52,7 @@ bool H264Encoder::init(struct VideoConfig vc)
 		LOG("avcodec_alloc_context3() failed.");
 		return false;
 	}
-
-	_vCodecCtx->bit_rate = _videoConfig.bitrate;
+	
 	_vCodecCtx->width = _videoConfig.width;
 	_vCodecCtx->height = _videoConfig.height;
 	_vCodecCtx->time_base = { 1,  (int)_videoConfig.framerate };
@@ -62,9 +61,10 @@ bool H264Encoder::init(struct VideoConfig vc)
 	_vCodecCtx->max_b_frames = 0;
 	_vCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
 
-	_vCodecCtx->rc_min_rate = 0;
-	_vCodecCtx->rc_max_rate = _vCodecCtx->bit_rate; // vbv
-	_vCodecCtx->rc_buffer_size = (int)_vCodecCtx->bit_rate;
+	_vCodecCtx->bit_rate = _videoConfig.bitrate;
+	_vCodecCtx->rc_min_rate = _videoConfig.bitrate;
+	_vCodecCtx->rc_max_rate = _videoConfig.bitrate;
+	_vCodecCtx->rc_buffer_size = _vCodecCtx->bit_rate;
 
 	_vCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	//_vCodecCtx->flags |= AV_CODEC_FLAG2_LOCAL_HEADER;

@@ -11,6 +11,7 @@ struct encoder_config
 	uint32_t width;
 	uint32_t height;
 	uint32_t framerate;
+	uint32_t bitrate;
 	uint32_t gop;
 	std::string codec;  // "h264" "hevc"
 	DXGI_FORMAT format; // DXGI_FORMAT_NV12 DXGI_FORMAT_B8G8R8A8_UNORM
