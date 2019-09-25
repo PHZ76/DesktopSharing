@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 {
 	AVConfig avconfig;
 	avconfig.bitrate = 4000000; // video bitrate
-	avconfig.framerate = 25;    // video framerate
+	avconfig.framerate = 60;    // video framerate
 	avconfig.codec = "h264";    // hardware encoder: "h264_nvenc";        
 
 	if (!DesktopSharing::instance().init(&avconfig))
@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	DesktopSharing::instance().start();
 	DesktopSharing::instance().startRtspServer("live", 8554);     // rtsp://localhost:8554/live
 	//DesktopSharing::instance().startRtspPusher(RTSP_PUSH_TEST); 
-	//DesktopSharing::instance().startRtmpPusher(RTMP_PUSH_TEST); 
+	DesktopSharing::instance().startRtmpPusher(RTMP_PUSH_TEST); 
 
 	while (1)
 	{
