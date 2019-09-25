@@ -266,8 +266,17 @@ void DesktopSharing::startRtmpPusher(const char* url)
 	mediaInfo.audioSpecificConfig.reset(new uint8_t[mediaInfo.audioSpecificConfigSize]);
 	memcpy(mediaInfo.audioSpecificConfig.get(), extradata, extradata_size);
 
-	extradata = H264Encoder::instance().getAVCodecContext()->extradata;
-	extradata_size = H264Encoder::instance().getAVCodecContext()->extradata_size;
+	uint8_t extradataBuf[1024];
+	if (_nvenc_data != nullptr)
+	{
+		extradata_size = nvenc_info.get_sequence_params(_nvenc_data, extradataBuf, 1024);
+		extradata = extradataBuf;
+	}
+	else
+	{
+		extradata = H264Encoder::instance().getAVCodecContext()->extradata;
+		extradata_size = H264Encoder::instance().getAVCodecContext()->extradata_size;
+	}
 
 	xop::Nal sps = xop::H264Parser::findNal(extradata, extradata_size);
 	if (sps.first != nullptr && sps.second != nullptr && *sps.first == 0x67)
