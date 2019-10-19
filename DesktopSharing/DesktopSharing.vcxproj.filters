@@ -31,6 +31,9 @@
     <Filter Include="源文件\wasapi">
       <UniqueIdentifier>{91c87bcd-3edf-4969-afe4-e88a78918d2b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\md5">
+      <UniqueIdentifier>{6f86d385-535f-48be-9e29-2a2b6cd33f39}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -170,6 +173,9 @@
     </ClCompile>
     <ClCompile Include="nvenc.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\DigestAuthentication.cpp">
+      <Filter>源文件\xop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -346,6 +352,12 @@
     </ClInclude>
     <ClInclude Include="encoder_info.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\DigestAuthentication.h">
+      <Filter>源文件\xop</Filter>
+    </ClInclude>
+    <ClInclude Include="md5\md5.hpp">
+      <Filter>源文件\md5</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

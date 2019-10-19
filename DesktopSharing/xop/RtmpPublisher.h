@@ -32,7 +32,8 @@ private:
 	RtmpPublisher() {}
 	bool isKeyFrame(uint8_t *data, uint32_t size);
 
-	xop::EventLoop *m_eventLoop;
+	xop::EventLoop *m_eventLoop = nullptr;
+	TaskScheduler *m_taskScheduler = nullptr;
 	std::mutex m_mutex;
 	std::shared_ptr<RtmpConnection> m_rtmpConn;
 

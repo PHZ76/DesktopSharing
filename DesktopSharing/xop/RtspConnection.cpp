@@ -21,7 +21,6 @@ RtspConnection::RtspConnection(Rtsp *rtsp, TaskScheduler *taskScheduler, SOCKET 
     , _rtpChannelPtr(new Channel(sockfd))
     , _rtspRequestPtr(new RtspRequest)
     , _rtspResponsePtr(new RtspResponse)
-    , _rtpConnPtr(new RtpConnection(this))
 {
     this->setReadCallback([this](std::shared_ptr<TcpConnection> conn, xop::BufferReader& buffer) {
         return this->onRead(buffer);
@@ -42,6 +41,13 @@ RtspConnection::RtspConnection(Rtsp *rtsp, TaskScheduler *taskScheduler, SOCKET 
     {
         _rtcpChannels[chn] = nullptr;
     }
+
+	_hasAuth = true;
+	if (rtsp->_hasAuthInfo)
+	{
+		_hasAuth = false;
+		_authInfoPtr.reset(new DigestAuthentication(rtsp->_realm, rtsp->_username, rtsp->_password));
+	}	
 }
 
 RtspConnection::~RtspConnection()
@@ -51,7 +57,7 @@ RtspConnection::~RtspConnection()
 
 bool RtspConnection::onRead(BufferReader& buffer)
 {
-    keepAlive(); // 心跳计数, 未加入RTCP解析
+    keepAlive();
 
     int size = buffer.readableBytes();
     if (size <= 0)
@@ -107,7 +113,9 @@ bool RtspConnection::handleRtspRequest(BufferReader& buffer)
 #if RTSP_DEBUG
 	string str(buffer.peek(), buffer.readableBytes());
 	if (str.find("rtsp") != string::npos || str.find("RTSP") != string::npos)
-		cout << str << endl;
+	{
+		std::cout << str << std::endl;
+	}
 #endif
 
     if (_rtspRequestPtr->parseRequest(&buffer))
@@ -217,7 +225,7 @@ void RtspConnection::handleRtcp(BufferReader& buffer)
         uint32_t pktSize = peek[2]<<8 | peek[3];
         if(pktSize+4 >=  buffer.readableBytes())
         {
-            buffer.retrieve(pktSize+4);  // 忽略RTCP包
+            buffer.retrieve(pktSize+4);  /* 忽略RTCP包 */
         }
     }
 }
@@ -240,8 +248,19 @@ void RtspConnection::handleCmdOption()
 
 void RtspConnection::handleCmdDescribe()
 {
+	if (_authInfoPtr!=nullptr && !handleAuthentication())
+	{
+		return;
+	}
+
+	if (_rtpConnPtr == nullptr)
+	{
+		_rtpConnPtr.reset(new RtpConnection(shared_from_this()));
+	}
+
     std::shared_ptr<char> res(new char[4096]);
     int size = 0;
+
     MediaSessionPtr mediaSessionPtr = _pRtsp->lookMediaSession(_rtspRequestPtr->getRtspUrlSuffix());
     if(!mediaSessionPtr)
     {
@@ -257,9 +276,9 @@ void RtspConnection::handleCmdDescribe()
             MediaSource* source = mediaSessionPtr->getMediaSource((MediaChannelId)chn);
             if(source != nullptr)
             {
-                // 设置时钟频率
+                /* 设置时钟频率 */
                 _rtpConnPtr->setClockRate((MediaChannelId)chn, source->getClockRate());
-                // 设置媒体负载类型
+				/* 设置媒体负载类型 */
                 _rtpConnPtr->setPayloadType((MediaChannelId)chn, source->getPayloadType());
             }
         }
@@ -281,6 +300,11 @@ void RtspConnection::handleCmdDescribe()
 
 void RtspConnection::handleCmdSetup()
 {
+	if (_authInfoPtr != nullptr && !handleAuthentication())
+	{
+		return;
+	}
+
     std::shared_ptr<char> res(new char[4096]);
     int size = 0;
     MediaChannelId channelId = _rtspRequestPtr->getChannelId();
@@ -291,7 +315,7 @@ void RtspConnection::handleCmdSetup()
         goto server_error;
     }
 
-    if(mediaSessionPtr->isMulticast()) //会话使用组播
+    if(mediaSessionPtr->isMulticast()) /* 会话使用组播 */
     {
         std::string multicastIP = mediaSessionPtr->getMulticastIp();
         if(_rtspRequestPtr->getTransportMode() == RTP_OVER_MULTICAST)
@@ -310,7 +334,7 @@ void RtspConnection::handleCmdSetup()
             goto transport_unsupport;
         }
     }
-    else //会话使用单播
+    else /* 会话使用单播 */
     {
         if(_rtspRequestPtr->getTransportMode() == RTP_OVER_TCP)
         {
@@ -366,6 +390,12 @@ server_error:
 
 void RtspConnection::handleCmdPlay()
 {
+	if (_authInfoPtr != nullptr && !handleAuthentication())
+	{
+		return;
+	}
+
+	_connState = START_PLAY;
     _rtpConnPtr->play();
 
     uint16_t sessionId = _rtpConnPtr->getRtpSessionId();
@@ -395,8 +425,38 @@ void RtspConnection::handleCmdGetParamter()
     sendMessage(res, size);
 }
 
+bool RtspConnection::handleAuthentication()
+{
+	if (_authInfoPtr != nullptr && !_hasAuth)
+	{
+		std::string cmd = _rtspRequestPtr->MethodToString[_rtspRequestPtr->getMethod()];
+		std::string url = _rtspRequestPtr->getRtspUrl();
+
+		if (_nonce.size() > 0 && (_authInfoPtr->getResponse(_nonce, cmd, url) == _rtspRequestPtr->getAuthResponse()))
+		{
+			_nonce.clear();
+			_hasAuth = true;
+		}
+		else
+		{
+			std::shared_ptr<char> res(new char[4096]);
+			_nonce = _authInfoPtr->getNonce();
+			int size = _rtspRequestPtr->buildUnauthorizedRes(res.get(), 4096, _authInfoPtr->getRealm().c_str(), _nonce.c_str());
+			sendMessage(res, size);
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void RtspConnection::sendOptions(ConnectionMode mode)
 {
+	if (_rtpConnPtr == nullptr)
+	{
+		_rtpConnPtr.reset(new RtpConnection(shared_from_this()));
+	}
+
     _connMode = mode;
     _rtspResponsePtr->setUserAgent(USER_AGENT);
     _rtspResponsePtr->setRtspUrl(_pRtsp->getRtspUrl().c_str());
@@ -416,7 +476,7 @@ void RtspConnection::sendAnnounce()
     }
     else
     {
-        // 关联媒体会话
+        /* 关联媒体会话 */
         _sessionId = mediaSessionPtr->getMediaSessionId();
         mediaSessionPtr->addClient(this->fd(), _rtpConnPtr);
 
@@ -425,14 +485,14 @@ void RtspConnection::sendAnnounce()
             MediaSource* source = mediaSessionPtr->getMediaSource((MediaChannelId)chn);
             if (source != nullptr)
             {
-                // 设置时钟频率
+                /* 设置时钟频率 */
                 _rtpConnPtr->setClockRate((MediaChannelId)chn, source->getClockRate());
-                // 设置媒体负载类型
+				/* 设置媒体负载类型 */
                 _rtpConnPtr->setPayloadType((MediaChannelId)chn, source->getPayloadType());
             }
         }
     }
-
+	_pRtsp->getVersion();
     std::string sdp = mediaSessionPtr->getSdpMessage(_pRtsp->getVersion());
     if (sdp == "")
     {
@@ -484,5 +544,6 @@ void RtspConnection::sendSetup()
 
 void RtspConnection::handleRecord()
 {
+	_connState = START_PUSH;
 	_rtpConnPtr->record();
 }

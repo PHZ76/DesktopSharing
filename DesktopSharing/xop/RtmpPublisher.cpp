@@ -107,28 +107,29 @@ int RtmpPublisher::setMediaInfo(MediaInfo mediaInfo)
 int RtmpPublisher::openUrl(std::string url, int msec)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-
+	
+	static xop::Timestamp tp;
 	int timeout = msec;
 	if (timeout <= 0)
 	{
-		timeout = 5000;
+		timeout = 10000;
 	}
+
+	tp.reset();
 
 	if (this->parseRtmpUrl(url) != 0)
 	{
-		LOG_INFO("[RtmpPublisher] rtmp url:%s was illegal.\n", url.c_str());
+		LOG_INFO("[RtmpPublisher] rtmp url(%s) was illegal.\n", url.c_str());
 		return -1;
 	}
 
 	//LOG_INFO("[RtmpPublisher] ip:%s, port:%hu, stream path:%s\n", m_ip.c_str(), m_port, m_streamPath.c_str());
 
-	SOCKET sockfd = 0;
-
 	if (m_rtmpConn != nullptr)
 	{		
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		sockfd = rtmpConn->fd();
-		m_eventLoop->addTriggerEvent([sockfd, rtmpConn]() {
+		SOCKET sockfd = rtmpConn->fd();
+		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
 			rtmpConn->disconnect();
 		});
 		m_rtmpConn = nullptr;
@@ -136,27 +137,49 @@ int RtmpPublisher::openUrl(std::string url, int msec)
 
 	TcpSocket tcpSocket;
 	tcpSocket.create();
-	if (!tcpSocket.connect(m_ip, m_port, timeout)) // 3s timeout
+	if (!tcpSocket.connect(m_ip, m_port, timeout))
 	{
 		tcpSocket.close();
 		return -1;
 	}
 
-	m_rtmpConn.reset(new RtmpConnection((RtmpPublisher*)this, m_eventLoop->getTaskScheduler().get(), tcpSocket.fd()));
-	m_eventLoop->addTriggerEvent([sockfd, this]() {
+	m_taskScheduler = m_eventLoop->getTaskScheduler().get();
+	m_rtmpConn.reset(new RtmpConnection((RtmpPublisher*)this, m_taskScheduler, tcpSocket.fd()));
+	m_taskScheduler->addTriggerEvent([this]() {
 		m_rtmpConn->handshake();
 	});
 
+	timeout -= (int)tp.elapsed();
+	if (timeout < 0)
+	{
+		timeout = 1000;
+	}
+
+	do
+	{
+		xop::Timer::sleep(100);
+		timeout -= 100;	
+	} while (!m_rtmpConn->isPublisher() && timeout>0);
+	
+	if (!m_rtmpConn->isPublisher())
+	{
+		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
+		SOCKET sockfd = rtmpConn->fd();
+		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
+			rtmpConn->disconnect();
+		});
+		m_rtmpConn = nullptr;
+		return -1;
+	}
+
 	m_videoTimestamp = 0;
 	m_audioTimestamp = 0;
+	m_hasKeyFrame = true;
 	if (m_mediaIinfo.videoCodecId == RTMP_CODEC_ID_H264)
 	{
 		m_hasKeyFrame = false;
 	}
-	else
-	{
-		m_hasKeyFrame = true;
-	}
+
 	return 0;
 }
 
@@ -168,7 +191,7 @@ void RtmpPublisher::close()
 	{		
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
 		SOCKET sockfd = rtmpConn->fd();
-		m_eventLoop->addTriggerEvent([sockfd, rtmpConn]() {
+		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
 			rtmpConn->disconnect();
 		});
 		m_rtmpConn = nullptr;
@@ -229,10 +252,10 @@ int RtmpPublisher::pushVideoFrame(uint8_t *data, uint32_t size)
 			{
 				m_hasKeyFrame = true;
 				m_timestamp.reset();
-				m_eventLoop->addTriggerEvent([=]() {
+				//m_taskScheduler->addTriggerEvent([=]() {
 					m_rtmpConn->sendVideoData(0, m_avcSequenceHeader, m_avcSequenceHeaderSize);
 					m_rtmpConn->sendAudioData(0, m_aacSequenceHeader, m_aacSequenceHeaderSize);
-				});
+				//});
 			}
 			else
 			{
@@ -269,9 +292,9 @@ int RtmpPublisher::pushVideoFrame(uint8_t *data, uint32_t size)
 		memcpy(buffer + index, data, size);
 		index += size;
 		payloadSize = index;
-		m_eventLoop->addTriggerEvent([=]() {
+		//m_taskScheduler->addTriggerEvent([=]() {
 			m_rtmpConn->sendVideoData(timestamp, payload, payloadSize);
-		});
+		//});
 	}
 
 	return 0;
@@ -302,9 +325,9 @@ int RtmpPublisher::pushAudioFrame(uint8_t *data, uint32_t size)
 		payload.get()[0] = m_audioTag;
 		payload.get()[1] = 1; // 0: aac sequence header, 1: aac raw data
 		memcpy(payload.get() + 2, data, size);
-		m_eventLoop->addTriggerEvent([=]() {
+		//m_taskScheduler->addTriggerEvent([=]() {
 			m_rtmpConn->sendAudioData(timestamp, payload, payloadSize);
-		});
+		//});
 	}
 
 	return 0;

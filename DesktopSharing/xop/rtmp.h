@@ -43,6 +43,38 @@
 namespace xop
 {
 
+// chunk header: basic_header + rtmp_message_header 
+struct RtmpMessageHeader
+{
+	uint8_t timestamp[3];
+	uint8_t length[3];
+	uint8_t typeId;
+	uint8_t streamId[4]; //–°∂À∏Ò Ω
+};
+
+struct RtmpMessage
+{
+	uint32_t timestamp = 0;
+	uint32_t length = 0;
+	uint8_t  typeId = 0;
+	uint32_t streamId = 0;
+	uint32_t extTimestamp = 0;
+
+	uint64_t _timestamp = 0;
+	uint8_t  codecId = 0;
+
+	uint8_t  csid = 0;
+	uint32_t index = 0;
+	std::shared_ptr<char> payload = nullptr;
+
+	void reset()
+	{
+		index = 0;
+		timestamp = 0;
+		extTimestamp = 0;
+	}
+};
+
 struct MediaInfo
 {
 	uint8_t  videoCodecId = RTMP_CODEC_ID_H264;

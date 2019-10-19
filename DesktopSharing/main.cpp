@@ -1,10 +1,10 @@
-﻿// 2019-9-24
+﻿// 2019-10-19
 // PHZ
 
 #include "DesktopSharing.h"
 
-#define RTSP_PUSH_TEST "rtsp://192.168.43.213:554/test" 
-#define RTMP_PUSH_TEST "rtmp://127.0.0.1/live/01"  
+#define RTSP_PUSH_TEST "rtsp://10.11.165.203:554/test" 
+#define RTMP_PUSH_TEST "rtmp://127.0.0.1:1935/live/01"  
 
 int main(int argc, char **argv)
 {

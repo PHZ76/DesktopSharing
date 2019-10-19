@@ -79,13 +79,13 @@ RtmpSession::Ptr RtmpServer::getSession(std::string streamPath)
 
 bool RtmpServer::hasPublisher(std::string streamPath)
 {
-    auto sessionPtr = getSession(streamPath);
+    auto sessionPtr = this->getSession(streamPath);
     if(sessionPtr == nullptr)
     {
        return false;
     }
     
-    return sessionPtr->isPublishing();
+    return (sessionPtr->getPublisher()!=nullptr);
 }
 
 

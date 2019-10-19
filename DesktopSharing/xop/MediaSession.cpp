@@ -60,17 +60,20 @@ bool MediaSession::addMediaSource(MediaChannelId channelId, MediaSource* source)
                 else
                 {				
                     int id = conn->getId();
-                    if (packets.find(id) == packets.end())
-                    {
-						RtpPacket tmpPkt;
-						memcpy(tmpPkt.data.get(), pkt.data.get(), pkt.size);
-						tmpPkt.size = pkt.size;
-						tmpPkt.last = pkt.last;
-						tmpPkt.timestamp = pkt.timestamp;
-						tmpPkt.type = pkt.type;
-						packets.emplace(id, tmpPkt);
-                    }
-                    clients.emplace_front(conn);
+					if (id >= 0)
+					{
+						if (packets.find(id) == packets.end())
+						{
+							RtpPacket tmpPkt;
+							memcpy(tmpPkt.data.get(), pkt.data.get(), pkt.size);
+							tmpPkt.size = pkt.size;
+							tmpPkt.last = pkt.last;
+							tmpPkt.timestamp = pkt.timestamp;
+							tmpPkt.type = pkt.type;
+							packets.emplace(id, tmpPkt);
+						}
+						clients.emplace_front(conn);
+					}
                     iter++;
                 }
             }
@@ -81,14 +84,17 @@ bool MediaSession::addMediaSource(MediaChannelId channelId, MediaSource* source)
         {
             int ret = 0;
             int id = iter->getId();
-            auto iter2 = packets.find(id);
-            if (iter2 != packets.end())
-            {
-                count++;
-                ret = iter->sendRtpPacket(channelId, iter2->second);
-                if (_isMulticast && ret==0)
-                    break; 
-            }						
+			if (id >= 0)
+			{
+				auto iter2 = packets.find(id);
+				if (iter2 != packets.end())
+				{
+					count++;
+					ret = iter->sendRtpPacket(channelId, iter2->second);
+					if (_isMulticast && ret == 0)
+						break;
+				}
+			}					
         }
         return true;
     });
@@ -225,7 +231,7 @@ bool MediaSession::addClient(SOCKET rtspfd, std::shared_ptr<RtpConnection> rtpCo
         _clients.emplace(rtspfd, rtpConnWeakPtr);
         if (_notifyCallback)
         {
-            _notifyCallback(_sessionId, (uint32_t)_clients.size()); //回调通知当前客户端数量
+            _notifyCallback(_sessionId, (uint32_t)_clients.size()); /* 回调通知当前客户端数量 */
         }
         
         _hasNewClient = true;
@@ -243,7 +249,7 @@ void MediaSession::removeClient(SOCKET rtspfd)
         _clients.erase(rtspfd);
         if (_notifyCallback)
         {
-            _notifyCallback(_sessionId, (uint32_t)_clients.size());  //回调通知当前客户端数量
+            _notifyCallback(_sessionId, (uint32_t)_clients.size());  /* 回调通知当前客户端数量 */
         }
     }
 }
