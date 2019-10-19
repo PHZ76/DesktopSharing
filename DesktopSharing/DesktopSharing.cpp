@@ -91,11 +91,6 @@ bool DesktopSharing::init(AVConfig *config)
 		return false;
 	}
 
-	std::thread t([this] {
-		_eventLoop->loop();
-	});
-	t.detach();
-
 	_isInitialized = true;
 	return true;
 }
@@ -136,7 +131,6 @@ void DesktopSharing::exit()
 
 	if (_rtspServer != nullptr)
 	{
-		_eventLoop->quit();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		_rtspServer->removeMeidaSession(_sessionId);
 		_rtspServer = nullptr;
@@ -234,16 +228,13 @@ void DesktopSharing::startRtspPusher(const char* url)
 	xop::MediaSession *session = xop::MediaSession::createNew();
 	session->addMediaSource(xop::channel_0, xop::H264Source::createNew());
 	session->addMediaSource(xop::channel_1, xop::AACSource::createNew(_audioConfig.samplerate, _audioConfig.channels, false));
-
-	if (_rtspPusher->addMeidaSession(session) > 0)
+	_rtspPusher->addMeidaSession(session);
+	if (_rtspPusher->openUrl(url, 3000) != 0)
 	{
-		if (_rtspPusher->openUrl(url) != 0)
-		{
-			_rtspPusher = nullptr;
-			std::cout << "Open " << url << " failed." << std::endl;
-			return;
-		}		
-	}
+		_rtspPusher = nullptr;
+		std::cout << "Open " << url << " failed." << std::endl;
+		return;
+	}		
 
 	std::cout << "Push rtsp stream to " << url << " ..." << std::endl;
 }
@@ -413,7 +404,7 @@ void DesktopSharing::pushVideo()
 				// RTSP视频推流
 				if (_rtspPusher != nullptr && _rtspPusher->isConnected())
 				{
-					_rtspPusher->pushFrame(_sessionId, xop::channel_0, vidoeFrame);
+					_rtspPusher->pushFrame(xop::channel_0, vidoeFrame);
 				}
 
 				// RTMP视频推流
@@ -464,7 +455,7 @@ void DesktopSharing::pushAudio()
 					// RTSP音频推流
 					if (_rtspPusher && _rtspPusher->isConnected())
 					{
-						_rtspPusher->pushFrame(_sessionId, xop::channel_1, audioFrame);
+						_rtspPusher->pushFrame(xop::channel_1, audioFrame);
 					}
 
 					// RTMP音频推流

@@ -13,38 +13,6 @@ namespace xop
 class RtmpServer;
 class RtmpPublisher;
 
-// chunk header: basic_header + rtmp_message_header 
-struct RtmpMessageHeader
-{
-    uint8_t timestamp[3];
-    uint8_t length[3];
-    uint8_t typeId;
-    uint8_t streamId[4]; //小端格式
-};
-
-struct RtmpMessage 
-{
-    uint32_t timestamp = 0;
-    uint32_t length = 0;
-    uint8_t  typeId = 0;
-    uint32_t streamId = 0;
-    uint32_t extTimestamp = 0;   
-	
-	uint64_t _timestamp = 0;
-	uint8_t  codecId = 0;
-
-    uint8_t  csid = 0; 
-    uint32_t index = 0;
-    std::shared_ptr<char> payload = nullptr;
-
-    void reset()
-    {        
-        index = 0;    
-		timestamp = 0;
-		extTimestamp = 0;
-    }
-};
-
 class RtmpConnection : public TcpConnection
 {
 public:    
@@ -95,6 +63,9 @@ public:
     bool isPublisher() const 
     { return m_connState == START_PUBLISH; }
     
+	bool isPlaying() const
+	{ return m_isPlaying; }
+
 private:
     friend class RtmpSession;
 	friend class RtmpServer;
@@ -134,10 +105,11 @@ private:
     void setPeerBandwidth();
     void sendAcknowledgement();
     void setChunkSize();
-
+	
     bool sendInvokeMessage(uint32_t csid, std::shared_ptr<char> payload, uint32_t payloadSize);
     bool sendNotifyMessage(uint32_t csid, std::shared_ptr<char> payload, uint32_t payloadSize);   
-    bool sendMetaData(AmfObjects& metaData);
+    bool sendMetaData(AmfObjects metaData);
+	bool isKeyFrame(std::shared_ptr<char> payload, uint32_t payloadSize);
     bool sendMediaData(uint8_t type, uint64_t timestamp, std::shared_ptr<char> payload, uint32_t payloadSize);
 	bool sendVideoData(uint64_t timestamp, std::shared_ptr<char> payload, uint32_t payloadSize);
 	bool sendAudioData(uint64_t timestamp, std::shared_ptr<char> payload, uint32_t payloadSize);
@@ -170,8 +142,8 @@ private:
 	ChunkParseState m_chunkParseState = PARSE_HEADER;
 	int m_chunkStreamId = 0;
 
+	bool m_isPlaying = false;
 	bool m_hasKeyFrame = false;
-	std::map<uint64_t, RtmpMessage> m_gopCache;
 	std::shared_ptr<char> m_avcSequenceHeader;
 	std::shared_ptr<char> m_aacSequenceHeader;
 	uint32_t m_avcSequenceHeaderSize = 0;

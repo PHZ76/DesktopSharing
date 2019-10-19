@@ -7,6 +7,7 @@ using namespace xop;
 HttpFlvConnection::HttpFlvConnection(RtmpServer *rtmpServer, TaskScheduler* taskScheduler, SOCKET sockfd)
 	: TcpConnection(taskScheduler, sockfd)
 	, m_rtmpServer(rtmpServer)
+	, m_taskScheduler(taskScheduler)
 {
 	this->setReadCallback([this](std::shared_ptr<TcpConnection> conn, xop::BufferReader& buffer) {
 		return this->onRead(buffer);
@@ -85,11 +86,13 @@ void HttpFlvConnection::onClose()
 
 
 bool HttpFlvConnection::sendMediaData(uint8_t type, uint64_t timestamp, std::shared_ptr<char> payload, uint32_t payloadSize)
-{
+{	 
 	if (payloadSize == 0)
 	{
 		return false;
 	}
+
+	m_isPlaying = true;
 
 	if (type == RTMP_AVC_SEQUENCE_HEADER)
 	{
@@ -103,41 +106,51 @@ bool HttpFlvConnection::sendMediaData(uint8_t type, uint64_t timestamp, std::sha
 		m_aacSequenceHeaderSize = payloadSize;
 		return true;
 	}
-	else if (type == RTMP_VIDEO)
-	{
-		if (!m_hasKeyFrame)
+
+	auto conn = std::dynamic_pointer_cast<HttpFlvConnection>(shared_from_this());
+	m_taskScheduler->addTriggerEvent([conn, type, timestamp, payload, payloadSize] {		
+		if (type == RTMP_VIDEO)
 		{
-			uint8_t frameType = (payload.get()[0] >> 4) & 0x0f;
-			uint8_t codecId = payload.get()[0] & 0x0f;
-			if (frameType == 1 && codecId == RTMP_CODEC_ID_H264)
+			if (!conn->m_hasKeyFrame)
 			{
-				m_hasKeyFrame = true;
+				uint8_t frameType = (payload.get()[0] >> 4) & 0x0f;
+				uint8_t codecId = payload.get()[0] & 0x0f;
+				if (frameType == 1 && codecId == RTMP_CODEC_ID_H264)
+				{
+					conn->m_hasKeyFrame = true;
+				}
+				else
+				{
+					return ;
+				}
 			}
-			else
+
+			if (!conn->m_hasFlvHeader)
 			{
-				return true;
+				conn->sendFlvHeader();
+				conn->sendFlvTag(conn->FLV_TAG_TYPE_VIDEO, 0, conn->m_avcSequenceHeader, conn->m_avcSequenceHeaderSize);
+				conn->sendFlvTag(conn->FLV_TAG_TYPE_AUDIO, 0, conn->m_aacSequenceHeader, conn->m_aacSequenceHeaderSize);
 			}
-		}
 
-		if (!m_hasFlvHeader)
+			conn->sendFlvTag(conn->FLV_TAG_TYPE_VIDEO, timestamp, payload, payloadSize);
+		}
+		else if (type == RTMP_AUDIO)
 		{
-			this->sendFlvHeader();
-			this->sendFlvTag(FLV_TAG_TYPE_VIDEO, 0, m_avcSequenceHeader, m_avcSequenceHeaderSize);
-			this->sendFlvTag(FLV_TAG_TYPE_AUDIO, 0, m_aacSequenceHeader, m_aacSequenceHeaderSize);
-		}
+			if (!conn->m_hasKeyFrame && conn->m_avcSequenceHeaderSize>0)
+			{
+				return ;
+			}
 
-		this->sendFlvTag(FLV_TAG_TYPE_VIDEO, timestamp, payload, payloadSize);
-	}
-	else if (type == RTMP_AUDIO)
-	{
-		if (!m_hasKeyFrame)
-		{
-			return true;
-		}
+			if (!conn->m_hasFlvHeader)
+			{
+				conn->sendFlvHeader();
+				conn->sendFlvTag(conn->FLV_TAG_TYPE_AUDIO, 0, conn->m_aacSequenceHeader, conn->m_aacSequenceHeaderSize);
+			}
 
-		this->sendFlvTag(FLV_TAG_TYPE_AUDIO, timestamp, payload, payloadSize);
-	}
-	
+			conn->sendFlvTag(conn->FLV_TAG_TYPE_AUDIO, timestamp, payload, payloadSize);
+		}
+	});
+
 	return true;
 }
 

@@ -64,7 +64,7 @@ bool H264Encoder::init(struct VideoConfig vc)
 	_vCodecCtx->bit_rate = _videoConfig.bitrate;
 	_vCodecCtx->rc_min_rate = _videoConfig.bitrate;
 	_vCodecCtx->rc_max_rate = _videoConfig.bitrate;
-	_vCodecCtx->rc_buffer_size = _vCodecCtx->bit_rate;
+	_vCodecCtx->rc_buffer_size = (int)_vCodecCtx->bit_rate;
 
 	_vCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	//_vCodecCtx->flags |= AV_CODEC_FLAG2_LOCAL_HEADER;

@@ -118,6 +118,7 @@
     <ClCompile Include="wasapi\WASAPIPlayer.cpp" />
     <ClCompile Include="xop\AACSource.cpp" />
     <ClCompile Include="xop\amf.cpp" />
+    <ClCompile Include="xop\DigestAuthentication.cpp" />
     <ClCompile Include="xop\G711ASource.cpp" />
     <ClCompile Include="xop\H264Parser.cpp" />
     <ClCompile Include="xop\H264Source.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="DesktopSharing.h" />
     <ClInclude Include="encoder_info.h" />
     <ClInclude Include="H264Encoder.h" />
+    <ClInclude Include="md5\md5.hpp" />
     <ClInclude Include="net\Acceptor.h" />
     <ClInclude Include="net\BufferReader.h" />
     <ClInclude Include="net\BufferWriter.h" />
@@ -173,6 +175,7 @@
     <ClInclude Include="wasapi\WASAPIPlayer.h" />
     <ClInclude Include="xop\AACSource.h" />
     <ClInclude Include="xop\amf.h" />
+    <ClInclude Include="xop\DigestAuthentication.h" />
     <ClInclude Include="xop\G711ASource.h" />
     <ClInclude Include="xop\H264Parser.h" />
     <ClInclude Include="xop\H264Source.h" />
