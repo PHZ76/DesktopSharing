@@ -105,7 +105,7 @@ int DXGIScreenCapture::init(int displayIndex)
 
 	m_dxgi0utputDuplication->GetDesc(&m_dxgiDesc);
 
-	if (createSharedTexture())
+	if (createSharedTexture() < 0)
 	{
 		return -1;
 	}
@@ -138,7 +138,20 @@ int DXGIScreenCapture::createSharedTexture()
 	desc.Usage = D3D11_USAGE_STAGING;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	desc.MiscFlags = 0;
+
 	hr = m_d3d11device->CreateTexture2D(&desc, nullptr, m_rgbaTexture.GetAddressOf());
+	if (FAILED(hr))
+	{
+		printf("[DXGIScreenCapture] Failed to create texture.\n");
+		return -1;
+	}
+
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = 0;
+	desc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_RENDER_TARGET;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
+
+	hr = m_d3d11device->CreateTexture2D(&desc, nullptr, m_gdiTexture.GetAddressOf());
 	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to create texture.\n");
@@ -255,7 +268,31 @@ int DXGIScreenCapture::aquireFrame()
 	m_bgraSize = m_dxgiDesc.ModeDesc.Width * m_dxgiDesc.ModeDesc.Height * 4;
 
 	D3D11_MAPPED_SUBRESOURCE dsec = { 0 };
-	m_d3d11DeviceContext->CopyResource(m_rgbaTexture.Get(), outputTexture.Get());
+	m_d3d11DeviceContext->CopyResource(m_gdiTexture.Get(), outputTexture.Get());
+	
+	Microsoft::WRL::ComPtr<IDXGISurface1> surface1;
+	hr = m_gdiTexture->QueryInterface(__uuidof(IDXGISurface1), reinterpret_cast<void **>(surface1.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		return -1;
+	}
+
+	CURSORINFO cursorInfo = { 0 };
+	cursorInfo.cbSize = sizeof(CURSORINFO);
+	if (GetCursorInfo(&cursorInfo) == TRUE)
+	{
+		if (cursorInfo.flags == CURSOR_SHOWING)
+		{
+			auto cursorPosition = cursorInfo.ptScreenPos;
+			auto lCursorSize = cursorInfo.cbSize;
+			HDC  hdc;
+			surface1->GetDC(FALSE, &hdc);
+			DrawIconEx(hdc, cursorPosition.x, cursorPosition.y, cursorInfo.hCursor, 0, 0, 0, 0, DI_NORMAL | DI_DEFAULTSIZE);
+			surface1->ReleaseDC(nullptr);
+		}
+	}
+
+	m_d3d11DeviceContext->CopyResource(m_rgbaTexture.Get(), m_gdiTexture.Get());
 	hr = m_d3d11DeviceContext->Map(m_rgbaTexture.Get(), 0, D3D11_MAP_READ, 0, &dsec);
 	if (SUCCEEDED(hr))
 	{
@@ -267,7 +304,7 @@ int DXGIScreenCapture::aquireFrame()
 		m_d3d11DeviceContext->Unmap(m_rgbaTexture.Get(), 0);
 	}
 
-	m_d3d11DeviceContext->CopyResource(m_sharedTexture.Get(), outputTexture.Get());
+	m_d3d11DeviceContext->CopyResource(m_sharedTexture.Get(), m_rgbaTexture.Get());
 	return 0;
 }
 

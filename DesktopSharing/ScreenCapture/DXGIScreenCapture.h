@@ -57,6 +57,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Device> m_d3d11device;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_sharedTexture;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_rgbaTexture;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_gdiTexture;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3d11DeviceContext;
 	Microsoft::WRL::ComPtr<IDXGIOutputDuplication> m_dxgi0utputDuplication;
 };
