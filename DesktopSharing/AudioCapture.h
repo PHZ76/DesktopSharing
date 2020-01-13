@@ -16,7 +16,7 @@ public:
 	static AudioCapture& instance();
 	~AudioCapture();
 
-	int init();
+	int init(uint32_t bufferSize = 20480);
 	int exit();
 	int start();
 	int stop();
@@ -46,7 +46,7 @@ private:
 
 	WASAPIPlayer m_player;
 	WASAPICapture m_capture;
-	AudioBuffer m_audioBuffer;
+	std::shared_ptr<AudioBuffer> m_audioBuffer;
 };
 
 #endif

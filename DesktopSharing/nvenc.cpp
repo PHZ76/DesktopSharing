@@ -31,14 +31,10 @@ struct nvenc_data
 
 static bool is_supported(void)
 {
-#if defined(_WIN32)
 #if defined(_WIN64)
 	HMODULE hModule = LoadLibrary(TEXT("nvEncodeAPI64.dll"));
-#else
+#elif defined(_WIN32)
 	HMODULE hModule = LoadLibrary(TEXT("nvEncodeAPI.dll"));
-#endif
-#else
-	return false;
 #endif
 
 	if (hModule == NULL)

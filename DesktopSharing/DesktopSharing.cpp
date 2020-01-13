@@ -77,6 +77,7 @@ bool DesktopSharing::init(AVConfig *config)
 			}
 		}
 	}
+
 	
 	if(_nvenc_data == nullptr)
 	{
@@ -420,17 +421,16 @@ void DesktopSharing::pushVideo()
 
 void DesktopSharing::pushAudio()
 {
-	std::shared_ptr<uint8_t> pcmBuf(new uint8_t[48000 * 8]);
+	std::shared_ptr<uint8_t> pcmBuf(new uint8_t[48000 * 8]);	
 	uint32_t frameSamples = AACEncoder::instance().getFrameSamples();
 	uint32_t channel = AudioCapture::instance().getChannels();
 	uint32_t samplerate = AudioCapture::instance().getSamplerate();
-
+	
 	while (this->_isRunning)
 	{
 		uint32_t timestamp = xop::AACSource::getTimeStamp(samplerate);
-	
 		if (AudioCapture::instance().getSamples() >= (int)frameSamples)
-		{
+		{		
 			if (AudioCapture::instance().readSamples(pcmBuf.get(), frameSamples) != frameSamples)
 			{
 				continue;
