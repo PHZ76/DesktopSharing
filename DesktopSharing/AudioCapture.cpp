@@ -18,7 +18,7 @@ AudioCapture& AudioCapture::instance()
 	return s_ac;
 }
 
-int AudioCapture::init()
+int AudioCapture::init(uint32_t bufferSize)
 {
 	if (m_isInitialized)
 	{
@@ -38,6 +38,7 @@ int AudioCapture::init()
 		m_player.init();
 	}
 
+	m_audioBuffer.reset(new AudioBuffer(bufferSize));
 	m_isInitialized = true;
 	return 0;
 }
@@ -83,10 +84,10 @@ int AudioCapture::start()
 		m_channels = mixFormat->nChannels;
 		m_samplerate = mixFormat->nSamplesPerSec;
 		m_bitsPerSample = mixFormat->wBitsPerSample;
-		m_audioBuffer.write((char*)data, mixFormat->nBlockAlign * samples);
+		m_audioBuffer->write((char*)data, mixFormat->nBlockAlign * samples);
 	});
 
-	m_audioBuffer.clear();
+	m_audioBuffer->clear();
 	if (m_capture.start() < 0)
 	{
 		return -1;
@@ -126,13 +127,13 @@ int AudioCapture::readSamples(uint8_t *data, uint32_t samples)
 		return 0;
 	}
 
-	m_audioBuffer.read((char*)data, samples * m_bitsPerSample / 8 * m_channels);
+	m_audioBuffer->read((char*)data, samples * m_bitsPerSample / 8 * m_channels);
 	return samples;
 }
 
 int AudioCapture::getSamples()
 {
-	return m_audioBuffer.size() * 8 / m_bitsPerSample / m_channels;
+	return m_audioBuffer->size() * 8 / m_bitsPerSample / m_channels;
 }
 
 int AudioCapture::getSamplerate()

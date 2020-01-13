@@ -10,12 +10,11 @@
 class AudioBuffer
 {
 public:
-	static const uint32_t kInitialSize = 48000 * 8;
-
-	AudioBuffer(uint32_t initialSize = kInitialSize)
-		: _buffer(new std::vector<char>(initialSize))
+	AudioBuffer(uint32_t size = 10240) 
+		: _buffer(new std::vector<char>(size))
+		, _bufferSize(size)
 	{
-		_buffer->resize(initialSize);
+		_buffer->resize(size);
 	}
 
 	~AudioBuffer()
@@ -26,30 +25,29 @@ public:
 	int write(const char *data, uint32_t size)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
-		if (writableBytes() < size)
-		{
-			if (_buffer->size() + size > MAX_BUFFER_SIZE)
-			{
-				return -1;
-			}
-			else
-			{
-				uint32_t bufferSize = _buffer->size();
-				_buffer->resize(bufferSize + size);
-			}
+		uint32_t bytes = writableBytes();
+
+		if (bytes < size)
+		{			
+			size = bytes;
 		}
 
-		memcpy(beginWrite(), data, size);
-		_writerIndex += size;
+		if (size > 0)
+		{
+			memcpy(beginWrite(), data, size);
+			_writerIndex += size;
+		}
+
+		retrieve(0);
 		return size;
 	}
-
 
 	int read(char *data, uint32_t size)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
 		if (size > readableBytes())
-		{
+		{		
+			retrieve(0);
 			return -1;
 		}
 
@@ -100,18 +98,25 @@ private:
 
 	void retrieve(size_t len)
 	{
-		if (len <= readableBytes())
+		if (len > 0)
 		{
-			_readerIndex += len;
-			if (_readerIndex == _writerIndex)
+			if (len <= readableBytes())
 			{
-				_readerIndex = 0;
-				_writerIndex = 0;
+				_readerIndex += len;
+				if (_readerIndex == _writerIndex)
+				{
+					_readerIndex = 0;
+					_writerIndex = 0;
+				}
 			}
 		}
-		else
+
+		if (_readerIndex > 0 && _writerIndex > 0)
 		{
-			retrieveAll();
+			_buffer->erase(_buffer->begin(), _buffer->begin() + _readerIndex);
+			_buffer->resize(_bufferSize);
+			_writerIndex -= _readerIndex;
+			_readerIndex = 0;		
 		}
 	}
 
@@ -141,10 +146,10 @@ private:
 	}
 
 	std::mutex _mutex;
+	uint32_t _bufferSize = 0;
 	std::shared_ptr<std::vector<char>> _buffer;
 	size_t _readerIndex = 0;
 	size_t _writerIndex = 0;
-	static const uint32_t MAX_BUFFER_SIZE = 48000 * 8 * 2;
 };
 
 #endif
