@@ -18,6 +18,10 @@ struct nvenc_data
 	Microsoft::WRL::ComPtr<IDXGIFactory1>       factory;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>     texture;
 
+	HANDLE inputHandle = NULL;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> inputTexture;
+	Microsoft::WRL::ComPtr<IDXGIKeyedMutex> keyedMutex;
+
 	std::mutex mutex;
 	uint32_t width;
 	uint32_t height;
@@ -269,6 +273,63 @@ int nvenc_encode_texture(void *nvenc_data, ID3D11Texture2D *texture, uint8_t* bu
 	return frameSize;
 }
 
+int nvenc_encode_handle(void *nvenc_data, HANDLE handle, int lock_key, int unlock_key, uint8_t* buf, uint32_t maxBufSize)
+{
+	if (nvenc_data == nullptr || handle == nullptr)
+	{
+		return 0;
+	}
+
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+	ID3D11Texture2D* inputTexture = enc->inputTexture.Get();
+	IDXGIKeyedMutex* keyedMutex = enc->keyedMutex.Get();
+	int frameSize = 0;
+
+	if (enc->inputHandle != handle)
+	{		
+		if (enc->inputTexture.Get())
+		{
+			enc->inputTexture->Release();
+		}
+
+		if (enc->keyedMutex.Get())
+		{
+			enc->keyedMutex->Release();
+		}
+
+		HRESULT hr = enc->device->OpenSharedResource((HANDLE)(uintptr_t)handle, __uuidof(ID3D11Texture2D),
+			reinterpret_cast<void **>(enc->inputTexture.GetAddressOf()));
+		if (FAILED(hr))
+		{
+			return -1;
+		}
+				
+		inputTexture = enc->inputTexture.Get();
+		
+		hr = inputTexture->QueryInterface(_uuidof(IDXGIKeyedMutex), reinterpret_cast<void **>(enc->keyedMutex.GetAddressOf()));
+		if (FAILED(hr)) 
+		{
+			enc->inputTexture->Release();
+			return -1;
+		}
+		
+		enc->inputHandle = handle;
+	}
+
+	if (inputTexture != nullptr && keyedMutex != nullptr)
+	{
+		HRESULT hr = keyedMutex->AcquireSync(lock_key, 1000);
+		if (hr != S_OK)
+		{
+			return -1;
+		}
+		frameSize = nvenc_encode_texture(enc, inputTexture, buf, maxBufSize);
+		keyedMutex->ReleaseSync(unlock_key);
+	}
+
+	return frameSize;
+}
+
 int nvenc_get_sequence_params(void *nvenc_data, uint8_t* buf, uint32_t maxBufSize)
 {
 	if (nvenc_data == nullptr)
@@ -319,13 +380,29 @@ static ID3D11Texture2D* get_texture(void *nvenc_data)
 	return enc->texture.Get();
 }
 
+
+static ID3D11DeviceContext* get_context(void *nvenc_data)
+{
+	if (nvenc_data == nullptr)
+	{
+		return nullptr;
+	}
+
+	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
+	return enc->context.Get();
+}
+
 struct encoder_info nvenc_info = {
 	is_supported,
 	nvenc_create,
 	nvenc_destroy,
 	nvenc_init,
 	nvenc_encode_texture,
+	nvenc_encode_handle,
 	nvenc_get_sequence_params,
 	get_device,
-	get_texture
+	get_texture,
+	get_context
 };

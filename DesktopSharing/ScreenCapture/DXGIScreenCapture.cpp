@@ -19,6 +19,7 @@ DXGIScreenCapture::DXGIScreenCapture()
 	, m_textureHandle(nullptr)
 	, m_bgraPtr(nullptr)
 	, m_bgraSize(0)
+	, m_key(0)
 {
 	memset(&m_dxgiDesc, 0, sizeof(m_dxgiDesc));
 }
@@ -126,12 +127,19 @@ int DXGIScreenCapture::createSharedTexture()
 	desc.SampleDesc.Count = 1;
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED; 
+	desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX; //D3D11_RESOURCE_MISC_SHARED; 
 
 	HRESULT hr = m_d3d11device->CreateTexture2D(&desc, nullptr, m_sharedTexture.GetAddressOf());
 	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to create texture.\n");
+		return -1;
+	}
+	
+	hr = m_sharedTexture->QueryInterface(_uuidof(IDXGIKeyedMutex), reinterpret_cast<void **>(m_keyedMutex.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		printf("[DXGIScreenCapture] Failed to create key mutex.\n");
 		return -1;
 	}
 
@@ -294,7 +302,7 @@ int DXGIScreenCapture::aquireFrame()
 
 	m_d3d11DeviceContext->CopyResource(m_rgbaTexture.Get(), m_gdiTexture.Get());
 	hr = m_d3d11DeviceContext->Map(m_rgbaTexture.Get(), 0, D3D11_MAP_READ, 0, &dsec);
-	if (SUCCEEDED(hr))
+	if (!FAILED(hr))
 	{
 		if (dsec.pData != NULL)
 		{
@@ -304,7 +312,13 @@ int DXGIScreenCapture::aquireFrame()
 		m_d3d11DeviceContext->Unmap(m_rgbaTexture.Get(), 0);
 	}
 
+	hr = m_keyedMutex->AcquireSync(0, 16);
+	if (hr != S_OK)
+	{
+		return 0;
+	}
 	m_d3d11DeviceContext->CopyResource(m_sharedTexture.Get(), m_rgbaTexture.Get());
+	m_keyedMutex->ReleaseSync(m_key);
 	return 0;
 }
 
@@ -327,51 +341,64 @@ int DXGIScreenCapture::captureFrame(std::shared_ptr<uint8_t>& bgraPtr, uint32_t&
 	return 0;
 }
 
-int DXGIScreenCapture::captureFrame(ID3D11Device* device, ID3D11Texture2D* texture)
+//int DXGIScreenCapture::captureFrame(ID3D11Device* device, ID3D11Texture2D* texture)
+//{
+//	std::lock_guard<std::mutex> locker(m_mutex);
+//
+//	if (device==nullptr || texture==nullptr)
+//	{
+//		return -1;
+//	}
+//
+//	if (!m_isEnabeld)
+//	{
+//		return -1;
+//	}
+//
+//	if (m_bgraSize == 0)
+//	{
+//		return -1;
+//	}
+//
+//	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
+//	device->GetImmediateContext(deviceContext.GetAddressOf());
+//	if (deviceContext.Get() == nullptr)
+//	{
+//		printf("[DXGIScreenCapture] Failed to get context from device.\n");
+//		return -1;
+//	}
+//
+//	Microsoft::WRL::ComPtr<ID3D11Texture2D> inputTexture;
+//	HRESULT hr = device->OpenSharedResource((HANDLE)(uintptr_t)m_textureHandle, __uuidof(ID3D11Texture2D),
+//											reinterpret_cast<void **>(inputTexture.GetAddressOf()));
+//	if (FAILED(hr)) /* 不同设备创建的device? */
+//	{
+//		//printf("[DXGIScreenCapture] Failed to open shared resource from device.\n");
+//		//return -1;
+//
+//		D3D11_MAPPED_SUBRESOURCE map;
+//		deviceContext->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
+//		memcpy((uint8_t *)map.pData, m_bgraPtr.get(), m_bgraSize);
+//		deviceContext->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
+//	}
+//	else
+//	{
+//		deviceContext->CopyResource(texture, inputTexture.Get());
+//	}
+//	
+//	return 0;
+//}
+
+int DXGIScreenCapture::getTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey)
 {
-	std::lock_guard<std::mutex> locker(m_mutex);
-
-	if (device==nullptr || texture==nullptr)
+	if (m_textureHandle == NULL)
 	{
 		return -1;
 	}
 
-	if (!m_isEnabeld)
-	{
-		return -1;
-	}
-
-	if (m_bgraSize == 0)
-	{
-		return -1;
-	}
-
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
-	device->GetImmediateContext(deviceContext.GetAddressOf());
-	if (deviceContext.Get() == nullptr)
-	{
-		printf("[DXGIScreenCapture] Failed to get context from device.\n");
-		return -1;
-	}
-
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> inputTexture;
-	HRESULT hr = device->OpenSharedResource((HANDLE)(uintptr_t)m_textureHandle, __uuidof(ID3D11Texture2D),
-											reinterpret_cast<void **>(inputTexture.GetAddressOf()));
-	if (FAILED(hr)) /* 不同设备创建的device? */
-	{
-		//printf("[DXGIScreenCapture] Failed to open shared resource from device.\n");
-		//return -1;
-
-		D3D11_MAPPED_SUBRESOURCE map;
-		deviceContext->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
-		memcpy((uint8_t *)map.pData, m_bgraPtr.get(), m_bgraSize);
-		deviceContext->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
-	}
-	else
-	{
-		deviceContext->CopyResource(texture, inputTexture.Get());
-	}
-	
+	*handle = m_textureHandle;
+	m_key = *lockKey = 1;
+	*unlockKey = 0;
 	return 0;
 }
 

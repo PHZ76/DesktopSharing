@@ -32,10 +32,10 @@ public:
 	inline int getHeight() { return m_dxgiDesc.ModeDesc.Height; }
 
 	int captureFrame(std::shared_ptr<uint8_t>& bgraPtr, uint32_t& size);
-	int captureFrame(ID3D11Device* device, ID3D11Texture2D* texture);	
-
+	//int captureFrame(ID3D11Device* device, ID3D11Texture2D* texture);	
+	int getTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
 	int captureImage(std::string pathname);
-
+	
 	inline ID3D11Device* getID3D11Device() { return m_d3d11device.Get(); }
 	inline ID3D11DeviceContext* getID3D11DeviceContext() { return m_d3d11DeviceContext.Get(); }
 
@@ -54,8 +54,10 @@ private:
 	uint32_t m_bgraSize;
 	DXGI_OUTDUPL_DESC m_dxgiDesc;
 	HANDLE m_textureHandle;
+	int m_key;
 	Microsoft::WRL::ComPtr<ID3D11Device> m_d3d11device;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_sharedTexture;
+	Microsoft::WRL::ComPtr<IDXGIKeyedMutex> m_keyedMutex;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_rgbaTexture;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_gdiTexture;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3d11DeviceContext;
