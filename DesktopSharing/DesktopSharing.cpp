@@ -300,8 +300,7 @@ void DesktopSharing::startRtmpPusher(const char* url)
 
 void DesktopSharing::pushVideo()
 {
-	static xop::Timestamp tp, tp2;
-	
+	static xop::Timestamp tp, tp2;	
 	uint32_t fps = 0;
 	uint32_t msec = 1000 / _videoConfig.framerate;
 	tp.reset();
@@ -321,13 +320,9 @@ void DesktopSharing::pushVideo()
 		uint32_t delay = msec;
 		uint32_t elapsed = (uint32_t)tp.elapsed(); /*编码耗时计算*/
 		if (elapsed > delay)
-		{
 			delay = 0;
-		}
 		else
-		{
 			delay -= elapsed;
-		}
 		
 		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 		tp.reset();
@@ -343,24 +338,45 @@ void DesktopSharing::pushVideo()
 
 			if (_nvenc_data != nullptr)
 			{
-				ID3D11Device* device = nvenc_info.get_device(_nvenc_data);
-				ID3D11Texture2D* texture = nvenc_info.get_texture(_nvenc_data);
-				if (_screenCapture.captureFrame(device, texture) == 0)
+				int frameSize = 0;
+				HANDLE handle = nullptr;
+				int lockKey = 0, unlockKey = 0;
+				if (_screenCapture.getTextureHandle(&handle, &lockKey, &unlockKey) == 0)
 				{
-					int frameSize = nvenc_info.encode_texture(_nvenc_data, texture, buffer.get(), bufferSize);
-					if (frameSize > 0)
+					frameSize = nvenc_info.encode_handle(_nvenc_data, handle, lockKey, unlockKey, buffer.get(), bufferSize);					
+					if (frameSize < 0)
 					{
-						vidoeFrame.buffer.reset(new uint8_t[frameSize]);
-						vidoeFrame.type = xop::VIDEO_FRAME_P;
-						vidoeFrame.timestamp = timestamp;						
-						if (buffer.get()[4] == 0x67 || buffer.get()[4] == 0x65 || buffer.get()[4] == 0x6)
+						if (_screenCapture.captureFrame(bgraData, bgraSize) == 0)
 						{
-							vidoeFrame.type = xop::VIDEO_FRAME_I;
+							ID3D11Device* device = nvenc_info.get_device(_nvenc_data);
+							ID3D11Texture2D* texture = nvenc_info.get_texture(_nvenc_data);
+							ID3D11DeviceContext *context = nvenc_info.get_context(_nvenc_data);
+							D3D11_MAPPED_SUBRESOURCE map;
+							context->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
+							memcpy((uint8_t *)map.pData, bgraData.get(), bgraSize);
+							context->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
+							frameSize = nvenc_info.encode_texture(_nvenc_data, texture, buffer.get(), bufferSize);
 						}
-
-						memcpy(vidoeFrame.buffer.get(), buffer.get() + 4, frameSize - 4);
-						vidoeFrame.size = frameSize - 4;
 					}
+				}
+				else
+				{
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					continue;
+				}
+			
+				if (frameSize > 0)
+				{
+					vidoeFrame.buffer.reset(new uint8_t[frameSize]);
+					vidoeFrame.type = xop::VIDEO_FRAME_P;
+					vidoeFrame.timestamp = timestamp;						
+					if (buffer.get()[4] == 0x67 || buffer.get()[4] == 0x65 || buffer.get()[4] == 0x6)
+					{
+						vidoeFrame.type = xop::VIDEO_FRAME_I;
+					}
+
+					memcpy(vidoeFrame.buffer.get(), buffer.get() + 4, frameSize - 4);
+					vidoeFrame.size = frameSize - 4;
 				}
 			}
 			else 
@@ -414,8 +430,7 @@ void DesktopSharing::pushVideo()
 					_rtmpPublisher->pushVideoFrame(vidoeFrame.buffer.get(), vidoeFrame.size);
 				}
 			}
-		}
-		
+		}		
 	}
 }
 
