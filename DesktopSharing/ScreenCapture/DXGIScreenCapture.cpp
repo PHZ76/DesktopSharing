@@ -136,13 +136,6 @@ int DXGIScreenCapture::createSharedTexture()
 		return -1;
 	}
 	
-	hr = m_sharedTexture->QueryInterface(_uuidof(IDXGIKeyedMutex), reinterpret_cast<void **>(m_keyedMutex.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		printf("[DXGIScreenCapture] Failed to create key mutex.\n");
-		return -1;
-	}
-
 	desc.Usage = D3D11_USAGE_STAGING;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	desc.MiscFlags = 0;
@@ -156,7 +149,7 @@ int DXGIScreenCapture::createSharedTexture()
 
 	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.CPUAccessFlags = 0;
-	desc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_RENDER_TARGET;
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET;
 	desc.MiscFlags = D3D11_RESOURCE_MISC_GDI_COMPATIBLE;
 
 	hr = m_d3d11device->CreateTexture2D(&desc, nullptr, m_gdiTexture.GetAddressOf());
@@ -178,6 +171,13 @@ int DXGIScreenCapture::createSharedTexture()
 	if (FAILED(hr))
 	{
 		printf("[DXGIScreenCapture] Failed to get shared handle.\n");
+		return -1;
+	}
+
+	hr = m_sharedTexture->QueryInterface(_uuidof(IDXGIKeyedMutex), reinterpret_cast<void **>(m_keyedMutex.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		printf("[DXGIScreenCapture] Failed to create key mutex.\n");
 		return -1;
 	}
 
