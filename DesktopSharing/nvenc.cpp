@@ -312,7 +312,8 @@ int nvenc_encode_handle(void *nvenc_data, HANDLE handle, int lock_key, int unloc
 			enc->inputTexture->Release();
 			return -1;
 		}
-		
+
+		keyedMutex = enc->keyedMutex.Get();
 		enc->inputHandle = handle;
 	}
 
