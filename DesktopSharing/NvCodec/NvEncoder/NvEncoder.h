@@ -211,6 +211,11 @@ public:
     */
     void GetSequenceParams(std::vector<uint8_t> &seqParams);
 
+	/**
+	*  @brief request idr
+	*/
+	void ForceIDR() { m_forceIDR = true; }
+
     /**
     *  @brief  NvEncoder class virtual destructor.
     */
@@ -404,4 +409,5 @@ private:
     int32_t m_iGot = 0;
     int32_t m_nEncoderBuffer = 0;
     int32_t m_nOutputDelay = 0;
+	bool m_forceIDR = false;
 };

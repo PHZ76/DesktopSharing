@@ -198,7 +198,7 @@ void RtmpSession::saveGop(uint8_t type, uint64_t timestamp, std::shared_ptr<char
 void RtmpSession::addRtmpClient(std::shared_ptr<RtmpConnection> conn)
 {
     std::lock_guard<std::mutex> lock(m_mutex);   
-	m_rtmpClients[conn->fd()] = conn;
+	m_rtmpClients[conn->GetSocket()] = conn;
     if(conn->isPublisher())
     {
 		m_avcSequenceHeader = nullptr;
@@ -226,19 +226,19 @@ void RtmpSession::removeRtmpClient(std::shared_ptr<RtmpConnection> conn)
 		m_gopIndex = 0;
         m_hasPublisher = false;
     }
-	m_rtmpClients.erase(conn->fd());
+	m_rtmpClients.erase(conn->GetSocket());
 }
 
 void RtmpSession::addHttpClient(std::shared_ptr<HttpFlvConnection> conn)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	m_httpClients[conn->fd()] = conn;
+	m_httpClients[conn->GetSocket()] = conn;
 }
 
 void RtmpSession::removeHttpClient(std::shared_ptr<HttpFlvConnection> conn)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	m_httpClients.erase(conn->fd());
+	m_httpClients.erase(conn->GetSocket());
 }
 
 void addHttpClient(std::shared_ptr<RtmpConnection> conn)

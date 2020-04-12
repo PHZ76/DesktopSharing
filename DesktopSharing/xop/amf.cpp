@@ -147,19 +147,19 @@ int AmfDecoder::decodeBoolean(const char *data, int size, bool& amf_boolean)
 
 uint16_t AmfDecoder::decodeInt16(const char *data, int size)
 {
-    uint16_t val = readUint16BE((char*)data);
+    uint16_t val = ReadUint16BE((char*)data);
     return val;
 }
 
 uint32_t AmfDecoder::decodeInt24(const char *data, int size)
 {
-    uint32_t val = readUint24BE((char*)data);
+    uint32_t val = ReadUint24BE((char*)data);
     return val;
 }
 
 uint32_t AmfDecoder::decodeInt32(const char *data, int size)
 {
-    uint32_t val = readUint32BE((char*)data);
+    uint32_t val = ReadUint32BE((char*)data);
     return val;
 }
 
@@ -192,7 +192,7 @@ void AmfEncoder::encodeInt16(int16_t value)
         this->realloc(m_size + 1024);
     }
 
-    writeUint16BE(m_data.get()+m_index, value);
+    WriteUint16BE(m_data.get()+m_index, value);
     m_index += 2; 
 }
 
@@ -203,7 +203,7 @@ void AmfEncoder::encodeInt24(int32_t value)
         this->realloc(m_size + 1024);
     }
 
-    writeUint24BE(m_data.get()+m_index, value);
+    WriteUint24BE(m_data.get()+m_index, value);
     m_index += 3; 
 }
 
@@ -215,7 +215,7 @@ void AmfEncoder::encodeInt32(int32_t value)
         this->realloc(m_size + 1024);
     }
 
-    writeUint32BE(m_data.get()+m_index, value);
+    WriteUint32BE(m_data.get()+m_index, value);
     m_index += 4; 
 }
 

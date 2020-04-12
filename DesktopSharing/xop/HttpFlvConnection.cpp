@@ -9,11 +9,11 @@ HttpFlvConnection::HttpFlvConnection(RtmpServer *rtmpServer, TaskScheduler* task
 	, m_rtmpServer(rtmpServer)
 	, m_taskScheduler(taskScheduler)
 {
-	this->setReadCallback([this](std::shared_ptr<TcpConnection> conn, xop::BufferReader& buffer) {
+	this->SetReadCallback([this](std::shared_ptr<TcpConnection> conn, xop::BufferReader& buffer) {
 		return this->onRead(buffer);
 	});
 
-	this->setCloseCallback([this](std::shared_ptr<TcpConnection> conn) {
+	this->SetCloseCallback([this](std::shared_ptr<TcpConnection> conn) {
 		this->onClose();
 	});
 }
@@ -25,19 +25,18 @@ HttpFlvConnection::~HttpFlvConnection()
 
 bool HttpFlvConnection::onRead(BufferReader& buffer)
 {
-	if (buffer.findLastCrlfCrlf() == nullptr)
+	if (buffer.FindLastCrlfCrlf() == nullptr)
 	{
-		return (buffer.readableBytes() >= 4096) ? false : true;
+		return (buffer.ReadableBytes() >= 4096) ? false : true;
 	}
 
-	const char *firstCrlf = buffer.findFirstCrlf();
+	const char *firstCrlf = buffer.FindFirstCrlf();
 	if (firstCrlf == nullptr)
 	{
 		return false;
 	}
 
-	std::string buf(buffer.peek(), firstCrlf - buffer.peek());
-	//printf("%s\n", buf.c_str());
+	std::string buf(buffer.Peek(), firstCrlf - buffer.Peek());
 
 	auto pos1 = buf.find("GET");
 	auto pos2 = buf.find(".flv");
@@ -56,7 +55,7 @@ bool HttpFlvConnection::onRead(BufferReader& buffer)
 	if (m_rtmpServer != nullptr)
 	{
 		std::string httpFlvHeader = "HTTP/1.1 200 OK\r\nContent-Type: video/x-flv\r\n\r\n";
-		this->send(httpFlvHeader.c_str(), (uint32_t)httpFlvHeader.size());
+		this->Send(httpFlvHeader.c_str(), (uint32_t)httpFlvHeader.size());
 
 		auto sessionPtr = m_rtmpServer->getSession(m_streamPath);
 		if (sessionPtr != nullptr)
@@ -76,7 +75,7 @@ void HttpFlvConnection::onClose()
 		if (sessionPtr != nullptr)
 		{
 			auto conn = std::dynamic_pointer_cast<HttpFlvConnection>(shared_from_this());
-			_taskScheduler->addTimer([sessionPtr, conn] {
+			task_scheduler_->AddTimer([sessionPtr, conn] {
 				sessionPtr->removeHttpClient(conn);
 				return false;
 			}, 1);
@@ -108,7 +107,7 @@ bool HttpFlvConnection::sendMediaData(uint8_t type, uint64_t timestamp, std::sha
 	}
 
 	auto conn = std::dynamic_pointer_cast<HttpFlvConnection>(shared_from_this());
-	m_taskScheduler->addTriggerEvent([conn, type, timestamp, payload, payloadSize] {		
+	m_taskScheduler->AddTriggerEvent([conn, type, timestamp, payload, payloadSize] {		
 		if (type == RTMP_VIDEO)
 		{
 			if (!conn->m_hasKeyFrame)
@@ -168,9 +167,9 @@ void HttpFlvConnection::sendFlvHeader()
 		flvHeader[4] |= 0x4;
 	}
 
-	this->send(flvHeader, 9);
+	this->Send(flvHeader, 9);
 	char previousTagSize[4] = { 0x0, 0x0, 0x0, 0x0 };
-	this->send(previousTagSize, 4);
+	this->Send(previousTagSize, 4);
 
 	m_hasFlvHeader = true;
 }
@@ -186,17 +185,17 @@ int HttpFlvConnection::sendFlvTag(uint8_t type, uint64_t timestamp, std::shared_
 	char previousTagSize[4] = { 0x0, 0x0, 0x0, 0x0 };
 
 	tagHeader[0] = type;
-	writeUint24BE(tagHeader + 1, payloadSize);
+	WriteUint24BE(tagHeader + 1, payloadSize);
 	tagHeader[4] = (timestamp >> 16) & 0xff;
 	tagHeader[5] = (timestamp >> 8) & 0xff;
 	tagHeader[6] = timestamp & 0xff;
 	tagHeader[7] = (timestamp >> 24) & 0xff;
 
-	writeUint32BE(previousTagSize, payloadSize + 11);
+	WriteUint32BE(previousTagSize, payloadSize + 11);
 
-	this->send(tagHeader, 11);
-	this->send(payload.get(), payloadSize);
-	this->send(previousTagSize, 4);
+	this->Send(tagHeader, 11);
+	this->Send(payload.get(), payloadSize);
+	this->Send(previousTagSize, 4);
 
 	return 0;
 }

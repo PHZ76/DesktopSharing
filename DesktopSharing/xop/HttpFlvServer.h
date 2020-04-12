@@ -12,13 +12,13 @@ class RtmpServer;
 class HttpFlvServer : public TcpServer
 {
 public:
-	HttpFlvServer(xop::EventLoop *loop, std::string ip, uint16_t port = 8000);
+	HttpFlvServer(xop::EventLoop *loop);
 	~HttpFlvServer();
 
 	void attach(RtmpServer *rtmpServer);
 
 private:
-	TcpConnection::Ptr newConnection(SOCKET sockfd);
+	TcpConnection::Ptr OnConnect(SOCKET sockfd);
 
 	std::mutex m_mutex;
 	RtmpServer *m_rtmpServer = nullptr;

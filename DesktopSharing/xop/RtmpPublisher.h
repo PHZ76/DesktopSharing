@@ -10,15 +10,15 @@
 namespace xop
 {
 
-class RtmpPublisher : public Rtmp
+class RtmpPublisher : public Rtmp, public std::enable_shared_from_this<RtmpPublisher>
 {
 public:
-	RtmpPublisher(xop::EventLoop *loop);
+	static std::shared_ptr<RtmpPublisher> create(xop::EventLoop* loop);
 	~RtmpPublisher();
 
 	int setMediaInfo(MediaInfo mediaInfo);
 
-	int openUrl(std::string url, int msec = 0);
+	int openUrl(std::string url, int msec, std::string& status);
 	void close();
 	bool isConnected();
 
@@ -29,7 +29,7 @@ public:
 private:
 	friend class RtmpConnection;
 
-	RtmpPublisher() {}
+	RtmpPublisher(xop::EventLoop *loop);
 	bool isKeyFrame(uint8_t *data, uint32_t size);
 
 	xop::EventLoop *m_eventLoop = nullptr;

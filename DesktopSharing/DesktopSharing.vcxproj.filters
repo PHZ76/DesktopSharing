@@ -34,21 +34,12 @@
     <Filter Include="源文件\md5">
       <UniqueIdentifier>{6f86d385-535f-48be-9e29-2a2b6cd33f39}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\avcodec">
+      <UniqueIdentifier>{8115ea6d-2b3e-43cb-80ad-0ee6ff13e1de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="H264Encoder.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioCapture.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AACEncoder.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DesktopSharing.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="net\Acceptor.cpp">
@@ -171,26 +162,29 @@
     <ClCompile Include="wasapi\WASAPIPlayer.cpp">
       <Filter>源文件\wasapi</Filter>
     </ClCompile>
-    <ClCompile Include="nvenc.cpp">
+    <ClCompile Include="xop\DigestAuthentication.cpp">
+      <Filter>源文件\xop</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenLive.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="xop\DigestAuthentication.cpp">
+    <ClCompile Include="avcodec\aac_encoder.cpp">
+      <Filter>源文件\avcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="avcodec\h264_encoder.cpp">
+      <Filter>源文件\avcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="wasapi\audio_capture.cpp">
+      <Filter>源文件\wasapi</Filter>
+    </ClCompile>
+    <ClCompile Include="NvCodec\nvenc.cpp">
+      <Filter>源文件\NvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="xop\RtmpClient.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="H264Encoder.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioCapture.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AACEncoder.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DesktopSharing.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="net\Acceptor.h">
       <Filter>源文件\net</Filter>
     </ClInclude>
@@ -305,9 +299,6 @@
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h">
       <Filter>源文件\ScreenCapture</Filter>
     </ClInclude>
-    <ClInclude Include="AudioBuffer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="xop\amf.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
@@ -347,17 +338,38 @@
     <ClInclude Include="wasapi\WASAPIPlayer.h">
       <Filter>源文件\wasapi</Filter>
     </ClInclude>
-    <ClInclude Include="nvenc.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="encoder_info.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="xop\DigestAuthentication.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
     <ClInclude Include="md5\md5.hpp">
       <Filter>源文件\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="avcodec\aac_encoder.h">
+      <Filter>源文件\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="avcodec\av_encoder.h">
+      <Filter>源文件\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="avcodec\h264_encoder.h">
+      <Filter>源文件\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="wasapi\audio_buffer.h">
+      <Filter>源文件\wasapi</Filter>
+    </ClInclude>
+    <ClInclude Include="wasapi\audio_capture.h">
+      <Filter>源文件\wasapi</Filter>
+    </ClInclude>
+    <ClInclude Include="NvCodec\encoder_info.h">
+      <Filter>源文件\NvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="NvCodec\nvenc.h">
+      <Filter>源文件\NvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenLive.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="xop\RtmpClient.h">
+      <Filter>源文件\xop</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

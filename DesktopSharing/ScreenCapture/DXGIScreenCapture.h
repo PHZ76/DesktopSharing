@@ -1,5 +1,5 @@
 // PHZ
-// 2019-7-22
+// 2020-4-7
 
 #ifndef DXGI_SCREEN_CAPTURE_H
 #define DXGI_SCREEN_CAPTURE_H
@@ -10,6 +10,7 @@
 #include <mutex>
 #include <thread>
 #include <memory>
+#include <vector>
 #include <wrl.h>
 #include <dxgi.h>
 #include <d3d11.h>
@@ -20,48 +21,48 @@ class DXGIScreenCapture
 public:
 	DXGIScreenCapture();
 	virtual ~DXGIScreenCapture();
-	DXGIScreenCapture &operator=(const DXGIScreenCapture &) = delete;
-	DXGIScreenCapture(const DXGIScreenCapture &) = delete;
 
-	int init(int displayIndex = 0);
-	int exit();
-	int start();
-	int stop();
+	bool Init(int displayIndex = 0);
+	bool Destroy();
 
-	inline int getWidth()  { return m_dxgiDesc.ModeDesc.Width; }
-	inline int getHeight() { return m_dxgiDesc.ModeDesc.Height; }
+	uint32_t GetWidth()  const { return dxgi_desc_.ModeDesc.Width; }
+	uint32_t GetHeight() const { return dxgi_desc_.ModeDesc.Height; }
 
-	int captureFrame(std::shared_ptr<uint8_t>& bgraPtr, uint32_t& size);
-	//int captureFrame(ID3D11Device* device, ID3D11Texture2D* texture);	
-	int getTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
-	int captureImage(std::string pathname);
+	bool CaptureFrame(std::vector<uint8_t>& bgra_image);
+	bool GetTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
+	bool CaptureImage(std::string pathname);
 	
-	inline ID3D11Device* getID3D11Device() { return m_d3d11device.Get(); }
-	inline ID3D11DeviceContext* getID3D11DeviceContext() { return m_d3d11DeviceContext.Get(); }
+	inline ID3D11Device* GetD3D11Device() { return d3d11_device_.Get(); }
+	inline ID3D11DeviceContext* GetD3D11DeviceContext() { return d3d11_context_.Get(); }
 
-	bool isCapturing() const
-	{ return m_isEnabeld; }
+	bool CaptureStarted() const
+	{ return is_started_; }
 
 private:
-	int createSharedTexture();
-	int aquireFrame();
+	int StartCapture();
+	int StopCapture();
+	int CreateSharedTexture();
+	int AquireFrame();
 
-	bool m_initialized;
-	bool m_isEnabeld;
-	std::mutex m_mutex;
-	std::shared_ptr<std::thread> m_threadPtr;
-	std::shared_ptr<uint8_t> m_bgraPtr;
-	uint32_t m_bgraSize;
-	DXGI_OUTDUPL_DESC m_dxgiDesc;
-	HANDLE m_textureHandle;
-	int m_key;
-	Microsoft::WRL::ComPtr<ID3D11Device> m_d3d11device;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_sharedTexture;
-	Microsoft::WRL::ComPtr<IDXGIKeyedMutex> m_keyedMutex;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_rgbaTexture;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> m_gdiTexture;
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3d11DeviceContext;
-	Microsoft::WRL::ComPtr<IDXGIOutputDuplication> m_dxgi0utputDuplication;
+	bool is_initialized_;
+	bool is_started_;
+	std::unique_ptr<std::thread> thread_ptr_;
+
+	std::mutex mutex_;
+	std::shared_ptr<uint8_t> image_ptr_; // bgra
+	uint32_t image_size_;
+
+	// d3d resource
+	DXGI_OUTDUPL_DESC dxgi_desc_;
+	HANDLE texture_handle_;
+	int key_;
+	Microsoft::WRL::ComPtr<ID3D11Device> d3d11_device_;
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext> d3d11_context_;
+	Microsoft::WRL::ComPtr<IDXGIOutputDuplication> dxgi_output_duplication_;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> shared_texture_;
+	Microsoft::WRL::ComPtr<IDXGIKeyedMutex> keyed_mutex_;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> rgba_texture_;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> gdi_texture_;
 };
 
 #endif
