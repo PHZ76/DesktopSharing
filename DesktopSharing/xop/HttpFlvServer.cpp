@@ -5,17 +5,10 @@
 
 using namespace xop;
 
-HttpFlvServer::HttpFlvServer(xop::EventLoop *loop, std::string ip, uint16_t port)
-	: TcpServer(loop, ip, port)
+HttpFlvServer::HttpFlvServer(xop::EventLoop *loop)
+	: TcpServer(loop)
 {
-	if (this->start() != 0)
-	{
-		LOG_INFO("HTTP-FLV Server listening on %u failed.", port);
-	}
-	else
-	{
-		LOG_INFO("HTTP-FLV Server listen on %u.\n", port);
-	}
+
 }
 
 HttpFlvServer::~HttpFlvServer()
@@ -29,8 +22,8 @@ void HttpFlvServer::attach(RtmpServer *rtmpServer)
 	m_rtmpServer = rtmpServer;
 }
 
-TcpConnection::Ptr HttpFlvServer::newConnection(SOCKET sockfd)
+TcpConnection::Ptr HttpFlvServer::OnConnect(SOCKET sockfd)
 {
-	return std::make_shared<HttpFlvConnection>(m_rtmpServer, _eventLoop->getTaskScheduler().get(), sockfd);
+	return std::make_shared<HttpFlvConnection>(m_rtmpServer, event_loop_->GetTaskScheduler().get(), sockfd);
 }
 

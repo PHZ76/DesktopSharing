@@ -15,6 +15,12 @@ RtmpPublisher::~RtmpPublisher()
 
 }
 
+std::shared_ptr<RtmpPublisher> RtmpPublisher::create(xop::EventLoop* loop)
+{
+	std::shared_ptr<RtmpPublisher> publisher(new RtmpPublisher(loop));
+	return publisher;
+}
+
 int RtmpPublisher::setMediaInfo(MediaInfo mediaInfo)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
@@ -104,7 +110,7 @@ int RtmpPublisher::setMediaInfo(MediaInfo mediaInfo)
 	return 0;
 }
 
-int RtmpPublisher::openUrl(std::string url, int msec)
+int RtmpPublisher::openUrl(std::string url, int msec, std::string& status)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	
@@ -128,24 +134,24 @@ int RtmpPublisher::openUrl(std::string url, int msec)
 	if (m_rtmpConn != nullptr)
 	{		
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->fd();
-		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->disconnect();
+		SOCKET sockfd = rtmpConn->GetSocket();
+		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+			rtmpConn->Disconnect();
 		});
 		m_rtmpConn = nullptr;
 	}
 
 	TcpSocket tcpSocket;
-	tcpSocket.create();
-	if (!tcpSocket.connect(m_ip, m_port, timeout))
+	tcpSocket.Create();
+	if (!tcpSocket.Connect(m_ip, m_port, timeout))
 	{
-		tcpSocket.close();
+		tcpSocket.Close();
 		return -1;
 	}
 
-	m_taskScheduler = m_eventLoop->getTaskScheduler().get();
-	m_rtmpConn.reset(new RtmpConnection((RtmpPublisher*)this, m_taskScheduler, tcpSocket.fd()));
-	m_taskScheduler->addTriggerEvent([this]() {
+	m_taskScheduler = m_eventLoop->GetTaskScheduler().get();
+	m_rtmpConn.reset(new RtmpConnection(shared_from_this(), m_taskScheduler, tcpSocket.GetSocket()));
+	m_taskScheduler->AddTriggerEvent([this]() {
 		m_rtmpConn->handshake();
 	});
 
@@ -157,16 +163,17 @@ int RtmpPublisher::openUrl(std::string url, int msec)
 
 	do
 	{
-		xop::Timer::sleep(100);
+		xop::Timer::Sleep(100);
 		timeout -= 100;	
-	} while (!m_rtmpConn->isPublisher() && timeout>0);
+	} while (!m_rtmpConn->IsClosed() && !m_rtmpConn->isPublishing() && timeout>0);
 	
-	if (!m_rtmpConn->isPublisher())
+	status = m_rtmpConn->getStatus();
+	if (!m_rtmpConn->isPublishing())
 	{
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->fd();
-		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->disconnect();
+		SOCKET sockfd = rtmpConn->GetSocket();
+		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+			rtmpConn->Disconnect();
 		});
 		m_rtmpConn = nullptr;
 		return -1;
@@ -190,9 +197,9 @@ void RtmpPublisher::close()
 	if (m_rtmpConn != nullptr)
 	{		
 		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->fd();
-		m_taskScheduler->addTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->disconnect();
+		SOCKET sockfd = rtmpConn->GetSocket();
+		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+			rtmpConn->Disconnect();
 		});
 		m_rtmpConn = nullptr;
 		m_videoTimestamp = 0;
@@ -207,7 +214,7 @@ bool RtmpPublisher::isConnected()
 
 	if (m_rtmpConn != nullptr)
 	{
-		return (!m_rtmpConn->isClosed());
+		return (!m_rtmpConn->IsClosed());
 	}
 
 	return false;
@@ -238,7 +245,7 @@ int RtmpPublisher::pushVideoFrame(uint8_t *data, uint32_t size)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	if (m_rtmpConn == nullptr || m_rtmpConn->isClosed() || size <= 5)
+	if (m_rtmpConn == nullptr || m_rtmpConn->IsClosed() || size <= 5)
 	{
 		return -1;
 	}
@@ -304,7 +311,7 @@ int RtmpPublisher::pushAudioFrame(uint8_t *data, uint32_t size)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	if (m_rtmpConn == nullptr || m_rtmpConn->isClosed() || size <= 0)
+	if (m_rtmpConn == nullptr || m_rtmpConn->IsClosed() || size <= 0)
 	{
 		return -1;
 	}

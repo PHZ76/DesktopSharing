@@ -5,20 +5,11 @@
 
 using namespace xop;
 
-RtmpServer::RtmpServer(EventLoop* loop, std::string ip, uint16_t port)
-	: TcpServer(loop, ip, port)
+RtmpServer::RtmpServer(EventLoop* loop)
+	: TcpServer(loop)
 	, m_eventLoop(loop)
 {
-    if (this->start() != 0)
-    {
-        LOG_INFO("RTSP Server listening on %u failed.", port);
-    }
-    else
-    {
-        LOG_INFO("RTMP Server listen on %u.\n", port);
-    }
-
-	m_eventLoop->addTimer([this] {
+	m_eventLoop->AddTimer([this] {
 		std::lock_guard<std::mutex> lock(m_mutex);
 		for (auto iter = m_rtmpSessions.begin(); iter != m_rtmpSessions.end(); )
 		{
@@ -40,9 +31,15 @@ RtmpServer::~RtmpServer()
     
 }
 
-TcpConnection::Ptr RtmpServer::newConnection(SOCKET sockfd)
+std::shared_ptr<RtmpServer> RtmpServer::create(xop::EventLoop* loop)
 {
-    return std::make_shared<RtmpConnection>((RtmpServer*)this, _eventLoop->getTaskScheduler().get(), sockfd);
+	std::shared_ptr<RtmpServer> server(new RtmpServer(loop));
+	return server;
+}
+
+TcpConnection::Ptr RtmpServer::OnConnect(SOCKET sockfd)
+{
+    return std::make_shared<RtmpConnection>(shared_from_this(), event_loop_->GetTaskScheduler().get(), sockfd);
 }
 
 void RtmpServer::addSession(std::string streamPath)

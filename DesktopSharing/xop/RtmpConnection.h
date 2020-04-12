@@ -12,10 +12,13 @@ namespace xop
 
 class RtmpServer;
 class RtmpPublisher;
+class RtmpClient;
 
 class RtmpConnection : public TcpConnection
 {
 public:    
+	using PlayCallback = std::function<void(uint8_t* payload, uint32_t length, uint8_t codecId, uint32_t timestamp)>;
+
     enum ConnectionState
     {
         HANDSHAKE_C0C1, 
@@ -26,7 +29,7 @@ public:
 		START_CREATE_STREAM,
 		START_DELETE_STREAM,
         START_PLAY,
-        START_PUBLISH
+        START_PUBLISH,
     };
       
 	enum ChunkParseState
@@ -39,10 +42,12 @@ public:
 	{
 		RTMP_SERVER, 
 		RTMP_PUBLISHER,
+		RTMP_CLIENT
 	};
 
-    RtmpConnection(RtmpServer* rtmpServer, TaskScheduler* taskScheduler, SOCKET sockfd);
-	RtmpConnection(RtmpPublisher *rtmpPublisher, TaskScheduler *taskScheduler, SOCKET sockfd);
+    RtmpConnection(std::shared_ptr<RtmpServer> rtmpServer, TaskScheduler* taskScheduler, SOCKET sockfd);
+	RtmpConnection(std::shared_ptr<RtmpPublisher> rtmpPublisher, TaskScheduler *taskScheduler, SOCKET sockfd);
+	RtmpConnection(std::shared_ptr<RtmpClient> rtmpClient, TaskScheduler *taskScheduler, SOCKET sockfd);
     ~RtmpConnection();
 
     std::string getStreamPath() const
@@ -66,10 +71,23 @@ public:
 	bool isPlaying() const
 	{ return m_isPlaying; }
 
+	bool isPublishing() const
+	{ return m_isPublishing; }
+
+	std::string getStatus()
+	{ 
+		if (m_status == "")
+		{
+			return "unknown error";
+		}
+		return m_status; 
+	}
+
 private:
     friend class RtmpSession;
 	friend class RtmpServer;
 	friend class RtmpPublisher;
+	friend class RtmpClient;
 
 	RtmpConnection(TaskScheduler *taskScheduler, SOCKET sockfd);
 
@@ -91,6 +109,7 @@ private:
 	bool connect();
 	bool cretaeStream();
 	bool publish();
+	bool play();
 	bool deleteStream();
 
     bool handleConnect();
@@ -105,7 +124,8 @@ private:
     void setPeerBandwidth();
     void sendAcknowledgement();
     void setChunkSize();
-	
+	void setPlayCB(const PlayCallback& cb);
+
     bool sendInvokeMessage(uint32_t csid, std::shared_ptr<char> payload, uint32_t payloadSize);
     bool sendNotifyMessage(uint32_t csid, std::shared_ptr<char> payload, uint32_t payloadSize);   
     bool sendMetaData(AmfObjects metaData);
@@ -117,8 +137,10 @@ private:
     int createChunkBasicHeader(uint8_t fmt, uint32_t csid, char* buf);
     int createChunkMessageHeader(uint8_t fmt, RtmpMessage& rtmpMsg, char* buf);   
 
-	RtmpServer *m_rtmpServer = nullptr;
-	RtmpPublisher *m_rtmpPublisher = nullptr;
+	std::weak_ptr<RtmpServer> m_rtmpServer;
+	std::weak_ptr<RtmpPublisher> m_rtmpPublisher;
+	std::weak_ptr<RtmpClient> m_rtmpClient;
+
 	ConnectionMode m_connMode = RTMP_SERVER;
 	TaskScheduler *m_taskScheduler;
 	std::shared_ptr<xop::Channel> m_channelPtr;
@@ -134,6 +156,7 @@ private:
 	std::string m_app;
 	std::string m_streamName;
 	std::string m_streamPath;
+	std::string m_status;
 	AmfObjects m_metaData;
 	AmfDecoder m_amfDec;
 	AmfEncoder m_amfEnc;
@@ -143,11 +166,13 @@ private:
 	int m_chunkStreamId = 0;
 
 	bool m_isPlaying = false;
+	bool m_isPublishing = false;
 	bool m_hasKeyFrame = false;
 	std::shared_ptr<char> m_avcSequenceHeader;
 	std::shared_ptr<char> m_aacSequenceHeader;
 	uint32_t m_avcSequenceHeaderSize = 0;
 	uint32_t m_aacSequenceHeaderSize = 0;
+	PlayCallback m_playCB;
 
 	const uint32_t kStreamId = 1;
 	const int kChunkMessageLen[4] = { 11, 7, 3, 0 };

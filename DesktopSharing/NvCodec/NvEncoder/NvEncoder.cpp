@@ -12,7 +12,7 @@
 #ifndef WIN32
 //#include <dlfcn.h>
 #endif
-#include "NvEncoder/NvEncoder.h"
+#include "NvEncoder.h"
 
 #ifndef _WIN32
 #include <cstring>
@@ -460,6 +460,12 @@ void NvEncoder::DoEncode(NV_ENC_INPUT_PTR inputBuffer, std::vector<std::vector<u
     picParams.inputHeight = GetEncodeHeight();
     picParams.outputBitstream = m_vBitstreamOutputBuffer[m_iToSend % m_nEncoderBuffer];
     picParams.completionEvent = m_vpCompletionEvent[m_iToSend % m_nEncoderBuffer];
+
+	if (m_forceIDR) {
+		picParams.pictureType = NV_ENC_PIC_TYPE_IDR;
+		m_forceIDR = false;
+	}
+
     NVENCSTATUS nvStatus = m_nvenc.nvEncEncodePicture(m_hEncoder, &picParams);
     if (nvStatus == NV_ENC_SUCCESS || nvStatus == NV_ENC_ERR_NEED_MORE_INPUT)
     {
