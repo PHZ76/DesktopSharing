@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 	AVConfig avconfig;
 	avconfig.bitrate_bps = 4000000; // video bitrate
 	avconfig.framerate = 25;        // video framerate
-	avconfig.codec = "h264_nvenc";  // hardware encoder: "h264_nvenc";        
+	avconfig.codec = "h264";  // hardware encoder: "h264_nvenc";        
 
 	LiveConfig live_config;
 
