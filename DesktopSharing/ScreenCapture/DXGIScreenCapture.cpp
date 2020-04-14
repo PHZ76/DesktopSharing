@@ -301,7 +301,7 @@ int DXGIScreenCapture::AquireFrame()
 		d3d11_context_->Unmap(rgba_texture_.Get(), 0);
 	}
 
-	hr = keyed_mutex_->AcquireSync(0, 16);
+	hr = keyed_mutex_->AcquireSync(0, 5);
 	if (hr != S_OK) {
 		return 0;
 	}
