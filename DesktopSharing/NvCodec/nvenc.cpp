@@ -302,7 +302,7 @@ int nvenc_encode_handle(void *nvenc_data, HANDLE handle, int lock_key, int unloc
 
 	if (inputTexture != nullptr && keyedMutex != nullptr)
 	{
-		HRESULT hr = keyedMutex->AcquireSync(lock_key, 1000);
+		HRESULT hr = keyedMutex->AcquireSync(lock_key, 3);
 		if (hr != S_OK)
 		{
 			return -1;
