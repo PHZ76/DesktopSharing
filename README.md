@@ -20,7 +20,7 @@
 编译环境
 -
 * win10, vs2017, windows-sdk-version-10.0.17134.0
-* 项目使用的模块都是开源项目, 在vs2017下编译通过。
+* 项目使用的模块都是开源项目, 在vs2017/vs2019下编译通过。
 
 模块说明
 -
@@ -30,6 +30,10 @@
 * 硬件编码器: 使用 [Video-Codec-SDK](https://developer.nvidia.com/nvidia-video-codec-sdk), Version: 8.2。
 * RTMP推流器: [rtmp](https://github.com/PHZ76/rtmp)。
 * RTSP服务器,推流器: [RtspServer](https://github.com/PHZ76/RtspServer)。
+
+**使用**
+-
+打包后将生成的exe放入run-env中，即可运行。
 
 VLC播放效果
 -
