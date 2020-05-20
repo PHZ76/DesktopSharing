@@ -5,20 +5,17 @@
 
 using namespace xop;
 
-RtmpServer::RtmpServer(EventLoop* loop)
-	: TcpServer(loop)
-	, m_eventLoop(loop)
+RtmpServer::RtmpServer(EventLoop* event_loop)
+	: TcpServer(event_loop)
+	, event_loop_(event_loop)
 {
-	m_eventLoop->AddTimer([this] {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		for (auto iter = m_rtmpSessions.begin(); iter != m_rtmpSessions.end(); )
-		{
-			if (iter->second->getClients() == 0)
-			{
-				m_rtmpSessions.erase(iter++);
+	event_loop_->AddTimer([this] {
+		std::lock_guard<std::mutex> lock(mutex_);
+		for (auto iter = rtmp_sessions_.begin(); iter != rtmp_sessions_.end(); ) {
+			if (iter->second->GetClients() == 0) {
+				rtmp_sessions_.erase(iter++);
 			}
-			else
-			{
+			else {
 				iter++;
 			}
 		}
@@ -31,9 +28,9 @@ RtmpServer::~RtmpServer()
     
 }
 
-std::shared_ptr<RtmpServer> RtmpServer::create(xop::EventLoop* loop)
+std::shared_ptr<RtmpServer> RtmpServer::Create(xop::EventLoop* event_loop)
 {
-	std::shared_ptr<RtmpServer> server(new RtmpServer(loop));
+	std::shared_ptr<RtmpServer> server(new RtmpServer(event_loop));
 	return server;
 }
 
@@ -42,47 +39,44 @@ TcpConnection::Ptr RtmpServer::OnConnect(SOCKET sockfd)
     return std::make_shared<RtmpConnection>(shared_from_this(), event_loop_->GetTaskScheduler().get(), sockfd);
 }
 
-void RtmpServer::addSession(std::string streamPath)
+void RtmpServer::AddSession(std::string stream_path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if(m_rtmpSessions.find(streamPath) == m_rtmpSessions.end())
-    {
-        m_rtmpSessions[streamPath] = std::make_shared<RtmpSession>();
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(rtmp_sessions_.find(stream_path) == rtmp_sessions_.end()) {
+        rtmp_sessions_[stream_path] = std::make_shared<RtmpSession>();
     }
 }
 
-void RtmpServer::removeSession(std::string streamPath)
+void RtmpServer::RemoveSession(std::string stream_path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_rtmpSessions.erase(streamPath);
+    std::lock_guard<std::mutex> lock(mutex_);
+    rtmp_sessions_.erase(stream_path);
 }
 
-bool RtmpServer::hasSession(std::string streamPath)
+bool RtmpServer::HasSession(std::string stream_path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return (m_rtmpSessions.find(streamPath) != m_rtmpSessions.end());
+    std::lock_guard<std::mutex> lock(mutex_);
+    return (rtmp_sessions_.find(stream_path) != rtmp_sessions_.end());
 }
 
-RtmpSession::Ptr RtmpServer::getSession(std::string streamPath)
+RtmpSession::Ptr RtmpServer::GetSession(std::string stream_path)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if(m_rtmpSessions.find(streamPath) == m_rtmpSessions.end())
-    {
-        m_rtmpSessions[streamPath] = std::make_shared<RtmpSession>();        
+    std::lock_guard<std::mutex> lock(mutex_);
+    if(rtmp_sessions_.find(stream_path) == rtmp_sessions_.end()) {
+        rtmp_sessions_[stream_path] = std::make_shared<RtmpSession>();        
     }
     
-    return m_rtmpSessions[streamPath];
+    return rtmp_sessions_[stream_path];
 }
 
-bool RtmpServer::hasPublisher(std::string streamPath)
+bool RtmpServer::HasPublisher(std::string stream_path)
 {
-    auto sessionPtr = this->getSession(streamPath);
-    if(sessionPtr == nullptr)
-    {
+    auto session = GetSession(stream_path);
+    if(session == nullptr) {
        return false;
     }
     
-    return (sessionPtr->getPublisher()!=nullptr);
+    return (session->getPublisher()!=nullptr);
 }
 
 

@@ -3,8 +3,8 @@
 
 using namespace xop;
 
-RtmpClient::RtmpClient(xop::EventLoop *loop)
-	: m_eventLoop(loop)
+RtmpClient::RtmpClient(xop::EventLoop *event_loop)
+	: event_loop_(event_loop)
 {
 
 }
@@ -14,70 +14,64 @@ RtmpClient::~RtmpClient()
 
 }
 
-std::shared_ptr<RtmpClient> RtmpClient::create(xop::EventLoop* loop)
+std::shared_ptr<RtmpClient> RtmpClient::Create(xop::EventLoop* event_loop)
 {
-	std::shared_ptr<RtmpClient> client(new RtmpClient(loop));
+	std::shared_ptr<RtmpClient> client(new RtmpClient(event_loop));
 	return client;
 }
 
-void RtmpClient::setFrameCB(const FrameCallback& cb)
+void RtmpClient::SetFrameCB(const FrameCallback& cb)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	m_frameCB = cb;
+	std::lock_guard<std::mutex> lock(mutex_);
+	frame_cb_ = cb;
 }
 
-int RtmpClient::openUrl(std::string url, int msec, std::string& status)
+int RtmpClient::OpenUrl(std::string url, int msec, std::string& status)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
 	static xop::Timestamp tp;
 	int timeout = msec;
-	if (timeout <= 0)
-	{
-		timeout = 10000;
+	if (timeout <= 0) {
+		timeout = 5000;
 	}
 
 	tp.reset();
 
-	if (this->parseRtmpUrl(url) != 0)
-	{
+	if (this->ParseRtmpUrl(url) != 0) {
 		LOG_INFO("[RtmpPublisher] rtmp url(%s) was illegal.\n", url.c_str());
 		return -1;
 	}
 
-	//LOG_INFO("[RtmpPublisher] ip:%s, port:%hu, stream path:%s\n", m_ip.c_str(), m_port, m_streamPath.c_str());
+	//LOG_INFO("[RtmpPublisher] ip:%s, port:%hu, stream path:%s\n", ip_.c_str(), port_, stream_path_.c_str());
 
-	if (m_rtmpConn != nullptr)
-	{
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->Disconnect();
+	if (rtmp_conn_ != nullptr) {
+		std::shared_ptr<RtmpConnection> rtmp_conn = rtmp_conn_;
+		SOCKET sockfd = rtmp_conn->GetSocket();
+		task_scheduler_->AddTriggerEvent([sockfd, rtmp_conn]() {
+			rtmp_conn->Disconnect();
 		});
-		m_rtmpConn = nullptr;
+		rtmp_conn_ = nullptr;
 	}
 
-	TcpSocket tcpSocket;
-	tcpSocket.Create();
-	if (!tcpSocket.Connect(m_ip, m_port, timeout))
-	{
-		tcpSocket.Close();
+	TcpSocket tcp_socket;
+	tcp_socket.Create();
+	if (!tcp_socket.Connect(ip_, port_, timeout)) {
+		tcp_socket.Close();
 		return -1;
 	}
 
-	m_taskScheduler = m_eventLoop->GetTaskScheduler().get();
-	m_rtmpConn.reset(new RtmpConnection(shared_from_this(), m_taskScheduler, tcpSocket.GetSocket()));
-	m_taskScheduler->AddTriggerEvent([this]() {
-		if (m_frameCB)
-		{
-			m_rtmpConn->setPlayCB(m_frameCB);
+	task_scheduler_ = event_loop_->GetTaskScheduler().get();
+	rtmp_conn_.reset(new RtmpConnection(shared_from_this(), task_scheduler_, tcp_socket.GetSocket()));
+	task_scheduler_->AddTriggerEvent([this]() {
+		if (frame_cb_) {
+			rtmp_conn_->setPlayCB(frame_cb_);
 		}
-		m_rtmpConn->handshake();
+		rtmp_conn_->Handshake();
 	});
 
 	timeout -= (int)tp.elapsed();
-	if (timeout < 0)
-	{
+	if (timeout < 0) {
 		timeout = 1000;
 	}
 
@@ -85,46 +79,42 @@ int RtmpClient::openUrl(std::string url, int msec, std::string& status)
 	{
 		xop::Timer::Sleep(100);
 		timeout -= 100;
-	} while (!m_rtmpConn->IsClosed() && !m_rtmpConn->isPlaying() && timeout > 0);
+	} while (!rtmp_conn_->IsClosed() && !rtmp_conn_->IsPlaying() && timeout > 0);
 
-	status = m_rtmpConn->getStatus();
-	if (!m_rtmpConn->isPlaying())
-	{
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->Disconnect();
+	status = rtmp_conn_->GetStatus();
+	if (!rtmp_conn_->IsPlaying()) {
+		std::shared_ptr<RtmpConnection> rtmp_conn = rtmp_conn_;
+		SOCKET sockfd = rtmp_conn->GetSocket();
+		task_scheduler_->AddTriggerEvent([sockfd, rtmp_conn]() {
+			rtmp_conn->Disconnect();
 		});
-		m_rtmpConn = nullptr;
+		rtmp_conn_ = nullptr;
 		return -1;
 	}
 
 	return 0;
 }
 
-void RtmpClient::close()
+void RtmpClient::Close()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn != nullptr)
-	{
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
-		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->Disconnect();
+	if (rtmp_conn_ != nullptr) {
+		std::shared_ptr<RtmpConnection> rtmp_conn = rtmp_conn_;
+		SOCKET sockfd = rtmp_conn->GetSocket();
+		task_scheduler_->AddTriggerEvent([sockfd, rtmp_conn]() {
+			rtmp_conn->Disconnect();
 		});
 	}
 }
 
-bool RtmpClient::isConnected()
+bool RtmpClient::IsConnected()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn != nullptr)
-	{
-		return (!m_rtmpConn->IsClosed());
+	if (rtmp_conn_ != nullptr) {
+		return (!rtmp_conn_->IsClosed());
 	}
-
 	return false;
 }
 

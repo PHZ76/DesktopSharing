@@ -12,17 +12,16 @@ class RtmpServer;
 class HttpFlvServer : public TcpServer
 {
 public:
-	HttpFlvServer(xop::EventLoop *loop);
+	HttpFlvServer(xop::EventLoop* event_loop);
 	~HttpFlvServer();
 
-	void attach(RtmpServer *rtmpServer);
+	void Attach(std::shared_ptr<RtmpServer> rtmp_server);
 
 private:
 	TcpConnection::Ptr OnConnect(SOCKET sockfd);
 
-	std::mutex m_mutex;
-	RtmpServer *m_rtmpServer = nullptr;
-	xop::EventLoop *m_eventLoop = nullptr;
+	std::mutex mutex_;
+	std::weak_ptr<RtmpServer> rtmp_server_;
 };
 
 }

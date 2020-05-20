@@ -1,5 +1,3 @@
-// 参考librtmp
-
 #ifndef XOP_AMF_OBJECT_H
 #define XOP_AMF_OBJECT_H
 
@@ -16,75 +14,75 @@ namespace xop
 
 typedef enum
 { 
-    AMF0_NUMBER = 0, 
-    AMF0_BOOLEAN, 
-    AMF0_STRING, 
-    AMF0_OBJECT,
-    AMF0_MOVIECLIP,		/* reserved, not used */
-    AMF0_NULL, 
-    AMF0_UNDEFINED, 
-    AMF0_REFERENCE, 
-    AMF0_ECMA_ARRAY, 
-    AMF0_OBJECT_END,
-    AMF0_STRICT_ARRAY, 
-    AMF0_DATE, 
-    AMF0_LONG_STRING, 
-    AMF0_UNSUPPORTED,
-    AMF0_RECORDSET,		/* reserved, not used */
-    AMF0_XML_DOC, 
-    AMF0_TYPED_OBJECT,
-    AMF0_AVMPLUS,		/* switch to AMF3 */
-    AMF0_INVALID = 0xff
+	AMF0_NUMBER = 0, 
+	AMF0_BOOLEAN, 
+	AMF0_STRING, 
+	AMF0_OBJECT,
+	AMF0_MOVIECLIP,		/* reserved, not used */
+	AMF0_NULL, 
+	AMF0_UNDEFINED, 
+	AMF0_REFERENCE, 
+	AMF0_ECMA_ARRAY, 
+	AMF0_OBJECT_END,
+	AMF0_STRICT_ARRAY, 
+	AMF0_DATE, 
+	AMF0_LONG_STRING, 
+	AMF0_UNSUPPORTED,
+	AMF0_RECORDSET,		/* reserved, not used */
+	AMF0_XML_DOC, 
+	AMF0_TYPED_OBJECT,
+	AMF0_AVMPLUS,		/* switch to AMF3 */
+	AMF0_INVALID = 0xff
 } AMF0DataType;
 
 typedef enum
 { 
-    AMF3_UNDEFINED = 0,
-    AMF3_NULL, 
-    AMF3_FALSE, 
-    AMF3_TRUE,
-    AMF3_INTEGER, 
-    AMF3_DOUBLE, 
-    AMF3_STRING, 
-    AMF3_XML_DOC, 
-    AMF3_DATE,
-    AMF3_ARRAY, 
-    AMF3_OBJECT, 
-    AMF3_XML, 
-    AMF3_BYTE_ARRAY
+	AMF3_UNDEFINED = 0,
+	AMF3_NULL, 
+	AMF3_FALSE, 
+	AMF3_TRUE,
+	AMF3_INTEGER, 
+	AMF3_DOUBLE, 
+	AMF3_STRING, 
+	AMF3_XML_DOC, 
+	AMF3_DATE,
+	AMF3_ARRAY, 
+	AMF3_OBJECT, 
+	AMF3_XML, 
+	AMF3_BYTE_ARRAY
 } AMF3DataType;
     
 typedef enum
 {
-    AMF_NUMBER,
-    AMF_BOOLEAN,
-    AMF_STRING,
+	AMF_NUMBER,
+	AMF_BOOLEAN,
+	AMF_STRING,
 } AmfObjectType;
 
 struct AmfObject
 {  
-    AmfObjectType type;
+	AmfObjectType type;
 
-    std::string amf_string;
-    double amf_number;
-    bool amf_boolean;    
+	std::string amf_string;
+	double amf_number;
+	bool amf_boolean;    
 
-    AmfObject()
-    {
+	AmfObject()
+	{
         
-    }
+	}
 
-    AmfObject(std::string str)
-    {
-       this->type = AMF_STRING; 
-       this->amf_string = str; 
-    }
+	AmfObject(std::string str)
+	{
+		this->type = AMF_STRING; 
+		this->amf_string = str; 
+	}
 
-    AmfObject(double number)
-    {
-       this->type = AMF_NUMBER; 
-       this->amf_number = number; 
-    }
+	AmfObject(double number)
+	{
+		this->type = AMF_NUMBER; 
+		this->amf_number = number; 
+	}
 };
 
 typedef std::unordered_map<std::string, AmfObject> AmfObjects;
@@ -92,7 +90,8 @@ typedef std::unordered_map<std::string, AmfObject> AmfObjects;
 class AmfDecoder
 {
 public:    
-    int decode(const char *data, int size, int n=-1); //n: 解码次数
+	/* n: 解码次数 */
+    int decode(const char *data, int size, int n=-1);
 
     void reset()
     {
@@ -135,40 +134,40 @@ private:
 class AmfEncoder
 {
 public:
-    AmfEncoder(uint32_t size = 1024);
-    ~AmfEncoder();
+	AmfEncoder(uint32_t size = 1024);
+	virtual ~AmfEncoder();
      
-    void reset()
-    {
-     m_index = 0;
-    }
+	void reset()
+	{
+		m_index = 0;
+	}
      
-    std::shared_ptr<char> data()
-    {
-     return m_data;
-    }
+	std::shared_ptr<char> data()
+	{
+		return m_data;
+	}
 
-    uint32_t size() const 
-    {
-     return m_index;
-    }
+	uint32_t size() const 
+	{
+		return m_index;
+	}
      
-    void encodeString(const char* str, int len, bool isObject=true);
-    void encodeNumber(double value);
-    void encodeBoolean(int value);
-    void encodeObjects(AmfObjects& objs);
-    void encodeECMA(AmfObjects& objs);
+	void encodeString(const char* str, int len, bool isObject=true);
+	void encodeNumber(double value);
+	void encodeBoolean(int value);
+	void encodeObjects(AmfObjects& objs);
+	void encodeECMA(AmfObjects& objs);
      
 private:
-    void encodeInt8(int8_t value);
-    void encodeInt16(int16_t value);
-    void encodeInt24(int32_t value);
-    void encodeInt32(int32_t value); 
-    void realloc(uint32_t size);
+	void encodeInt8(int8_t value);
+	void encodeInt16(int16_t value);
+	void encodeInt24(int32_t value);
+	void encodeInt32(int32_t value); 
+	void realloc(uint32_t size);
 
-    std::shared_ptr<char> m_data;    
-    uint32_t m_size  = 0;
-    uint32_t m_index = 0;
+	std::shared_ptr<char> m_data;    
+	uint32_t m_size  = 0;
+	uint32_t m_index = 0;
 };
 
 }

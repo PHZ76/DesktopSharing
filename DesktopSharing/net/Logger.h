@@ -45,12 +45,12 @@ private:
 }
 
 #ifdef _DEBUG
-#define LOG_DEBUG(fmt, ...) xop::Logger::instance().log(LOG_DEBUG, __FILE__, __FUNCTION__,__LINE__, fmt, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) xop::Logger::instance().log(xop::LOG_DEBUG, __FILE__, __FUNCTION__,__LINE__, fmt, ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(fmt, ...)
 #endif
-#define LOG_INFO(fmt, ...) xop::Logger::instance().log2(LOG_INFO, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...) xop::Logger::instance().log(LOG_ERROR, __FILE__, __FUNCTION__,__LINE__, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...) xop::Logger::instance().log2(xop::LOG_INFO, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...) xop::Logger::instance().log(xop::LOG_ERROR, __FILE__, __FUNCTION__,__LINE__, fmt, ##__VA_ARGS__)
 
 #endif
 

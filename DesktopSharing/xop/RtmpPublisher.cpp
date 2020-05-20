@@ -4,8 +4,8 @@
 
 using namespace xop;
 
-RtmpPublisher::RtmpPublisher(xop::EventLoop *loop)
-	: m_eventLoop(loop)
+RtmpPublisher::RtmpPublisher(xop::EventLoop* event_loop)
+	: event_loop_(event_loop)
 {
 
 }
@@ -15,55 +15,50 @@ RtmpPublisher::~RtmpPublisher()
 
 }
 
-std::shared_ptr<RtmpPublisher> RtmpPublisher::create(xop::EventLoop* loop)
+std::shared_ptr<RtmpPublisher> RtmpPublisher::Create(xop::EventLoop* event_loop)
 {
-	std::shared_ptr<RtmpPublisher> publisher(new RtmpPublisher(loop));
+	std::shared_ptr<RtmpPublisher> publisher(new RtmpPublisher(event_loop));
 	return publisher;
 }
 
-int RtmpPublisher::setMediaInfo(MediaInfo mediaInfo)
+int RtmpPublisher::SetMediaInfo(MediaInfo media_info)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	m_mediaIinfo = mediaInfo;
+	media_info_ = media_info;
 
-	if (m_mediaIinfo.audioCodecId == RTMP_CODEC_ID_AAC)
-	{
-		if (m_mediaIinfo.audioSpecificConfigSize > 0)
-		{
-			m_aacSequenceHeaderSize = m_mediaIinfo.audioSpecificConfigSize + 2;
-			m_aacSequenceHeader.reset(new char[m_aacSequenceHeaderSize]);
-			uint8_t *data = (uint8_t *)m_aacSequenceHeader.get();
-			uint8_t soundRate = 3; //for aac awlays 3
-			uint8_t soundSize = 1; //0:8bit , 1:16bit
-			uint8_t soundType = 1; //for aac awlays 1
+	if (media_info_.audio_codec_id == RTMP_CODEC_ID_AAC) {
+		if (media_info_.audio_specific_config_size > 0) {
+			aac_sequence_header_size_ = media_info_.audio_specific_config_size + 2;
+			aac_sequence_header_.reset(new char[aac_sequence_header_size_]);
+			uint8_t *data = (uint8_t *)aac_sequence_header_.get();
+			uint8_t sound_rate = 3; //for aac awlays 3
+			uint8_t soundz_size = 1; //0:8bit , 1:16bit
+			uint8_t sound_type = 1; //for aac awlays 1
 
 			// audio tag data
-			m_audioTag = data[0] = (((RTMP_CODEC_ID_AAC & 0xf) << 4) | ((soundRate & 0x3) << 2) | ((soundSize & 0x1) << 1) | (soundType & 0x1));
+			audio_tag_ = data[0] = (((RTMP_CODEC_ID_AAC & 0xf) << 4) | ((sound_rate & 0x3) << 2) | ((soundz_size & 0x1) << 1) | (sound_type & 0x1));
 
 			// aac packet type 
 			data[1] = 0; // 0: aac sequence header, 1: aac raw data
 
-			memcpy(data+2, m_mediaIinfo.audioSpecificConfig.get(), m_mediaIinfo.audioSpecificConfigSize);
+			memcpy(data+2, media_info_.audio_specific_config.get(), media_info_.audio_specific_config_size);
 
 			// 11 90 -- 48000 2, 12 10 -- 44100 2
 			uint32_t samplingFrequencyIndex = ((data[2] & 0x07) << 1) | ((data[3] & 0x80) >> 7);
 			uint32_t channel = (data[3] & 0x78) >> 3;
-			m_mediaIinfo.audioChannel = channel;
-			m_mediaIinfo.audioSamplerate = kSamplingFrequency[samplingFrequencyIndex];
+			media_info_.audio_channel = channel;
+			media_info_.audio_samplerate = kSamplingFrequency[samplingFrequencyIndex];
 		}
-		else
-		{
-			m_mediaIinfo.audioCodecId = 0;
+		else {
+			media_info_.audio_codec_id = 0;
 		}
 	}
 
-	if (m_mediaIinfo.videoCodecId == RTMP_CODEC_ID_H264)
-	{
-		if (m_mediaIinfo.spsSize > 0 && m_mediaIinfo.pps > 0)
-		{
-			m_avcSequenceHeader.reset(new char[4096]);
-			uint8_t *data = (uint8_t *)m_avcSequenceHeader.get();
+	if (media_info_.video_codec_id == RTMP_CODEC_ID_H264) {
+		if (media_info_.sps_size > 0 && media_info_.pps > 0) {
+			avc_sequence_header_.reset(new char[4096]);
+			uint8_t *data = (uint8_t *)avc_sequence_header_.get();
 			uint32_t index = 0;
 
 			data[index++] = 0x17; // 1:keyframe  7:avc
@@ -75,89 +70,85 @@ int RtmpPublisher::setMediaInfo(MediaInfo mediaInfo)
 
 			// AVCDecoderConfigurationRecord
 			data[index++] = 0x01; // configurationVersion
-			data[index++] = m_mediaIinfo.sps.get()[1]; // AVCProfileIndication
-			data[index++] = m_mediaIinfo.sps.get()[2]; // profile_compatibility
-			data[index++] = m_mediaIinfo.sps.get()[3]; // AVCLevelIndication
+			data[index++] = media_info_.sps.get()[1]; // AVCProfileIndication
+			data[index++] = media_info_.sps.get()[2]; // profile_compatibility
+			data[index++] = media_info_.sps.get()[3]; // AVCLevelIndication
 			data[index++] = 0xff; // lengthSizeMinusOne
 
 			// sps nums
 			data[index++] = 0xE1; //&0x1f
 
 			// sps data length
-			data[index++] = m_mediaIinfo.spsSize >> 8;
-			data[index++] = m_mediaIinfo.spsSize & 0xff;
+			data[index++] = media_info_.sps_size >> 8;
+			data[index++] = media_info_.sps_size & 0xff;
 			// sps data
-			memcpy(data + index, m_mediaIinfo.sps.get(), m_mediaIinfo.spsSize);
-			index += m_mediaIinfo.spsSize;
+			memcpy(data + index, media_info_.sps.get(), media_info_.sps_size);
+			index += media_info_.sps_size;
 
 			// pps nums
 			data[index++] = 0x01; //&0x1f
 			 // pps data length
-			data[index++] = m_mediaIinfo.ppsSize >> 8;
-			data[index++] = m_mediaIinfo.ppsSize & 0xff;
+			data[index++] = media_info_.pps_size >> 8;
+			data[index++] = media_info_.pps_size & 0xff;
 			// sps data
-			memcpy(data + index, m_mediaIinfo.pps.get(), m_mediaIinfo.ppsSize);
-			index += m_mediaIinfo.ppsSize;
+			memcpy(data + index, media_info_.pps.get(), media_info_.pps_size);
+			index += media_info_.pps_size;
 
-			m_avcSequenceHeaderSize = index;
+			avc_sequence_header_size_ = index;
 		}
-		else
-		{
-			m_mediaIinfo.videoCodecId = 0;
+		else {
+			media_info_.video_codec_id = 0;
 		}
 	}
 
 	return 0;
 }
 
-int RtmpPublisher::openUrl(std::string url, int msec, std::string& status)
+int RtmpPublisher::OpenUrl(std::string url, int msec, std::string& status)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 	
 	static xop::Timestamp tp;
 	int timeout = msec;
-	if (timeout <= 0)
-	{
+	if (timeout <= 0) {
 		timeout = 10000;
 	}
 
 	tp.reset();
 
-	if (this->parseRtmpUrl(url) != 0)
-	{
+	if (this->ParseRtmpUrl(url) != 0) {
 		LOG_INFO("[RtmpPublisher] rtmp url(%s) was illegal.\n", url.c_str());
 		return -1;
 	}
 
-	//LOG_INFO("[RtmpPublisher] ip:%s, port:%hu, stream path:%s\n", m_ip.c_str(), m_port, m_streamPath.c_str());
+	//LOG_INFO("[RtmpPublisher] ip:%s, port:%hu, stream path:%s\n", ip_.c_str(), port_, stream_path_.c_str());
 
-	if (m_rtmpConn != nullptr)
+	if (rtmp_conn_ != nullptr)
 	{		
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
+		std::shared_ptr<RtmpConnection> rtmpConn = rtmp_conn_;
 		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+		task_scheduler_->AddTriggerEvent([sockfd, rtmpConn]() {
 			rtmpConn->Disconnect();
 		});
-		m_rtmpConn = nullptr;
+		rtmp_conn_ = nullptr;
 	}
 
-	TcpSocket tcpSocket;
-	tcpSocket.Create();
-	if (!tcpSocket.Connect(m_ip, m_port, timeout))
+	TcpSocket tcp_socket;
+	tcp_socket.Create();
+	if (!tcp_socket.Connect(ip_, port_, timeout))
 	{
-		tcpSocket.Close();
+		tcp_socket.Close();
 		return -1;
 	}
 
-	m_taskScheduler = m_eventLoop->GetTaskScheduler().get();
-	m_rtmpConn.reset(new RtmpConnection(shared_from_this(), m_taskScheduler, tcpSocket.GetSocket()));
-	m_taskScheduler->AddTriggerEvent([this]() {
-		m_rtmpConn->handshake();
+	task_scheduler_ = event_loop_->GetTaskScheduler().get();
+	rtmp_conn_.reset(new RtmpConnection(shared_from_this(), task_scheduler_, tcp_socket.GetSocket()));
+	task_scheduler_->AddTriggerEvent([this]() {
+		rtmp_conn_->Handshake();
 	});
 
 	timeout -= (int)tp.elapsed();
-	if (timeout < 0)
-	{
+	if (timeout < 0) {
 		timeout = 1000;
 	}
 
@@ -165,126 +156,113 @@ int RtmpPublisher::openUrl(std::string url, int msec, std::string& status)
 	{
 		xop::Timer::Sleep(100);
 		timeout -= 100;	
-	} while (!m_rtmpConn->IsClosed() && !m_rtmpConn->isPublishing() && timeout>0);
+	} while (!rtmp_conn_->IsClosed() && !rtmp_conn_->IsPublishing() && timeout>0);
 	
-	status = m_rtmpConn->getStatus();
-	if (!m_rtmpConn->isPublishing())
-	{
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
+	status = rtmp_conn_->GetStatus();
+	if (!rtmp_conn_->IsPublishing()) {
+		std::shared_ptr<RtmpConnection> rtmpConn = rtmp_conn_;
 		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+		task_scheduler_->AddTriggerEvent([sockfd, rtmpConn]() {
 			rtmpConn->Disconnect();
 		});
-		m_rtmpConn = nullptr;
+		rtmp_conn_ = nullptr;
 		return -1;
 	}
 
-	m_videoTimestamp = 0;
-	m_audioTimestamp = 0;
-	m_hasKeyFrame = true;
-	if (m_mediaIinfo.videoCodecId == RTMP_CODEC_ID_H264)
-	{
-		m_hasKeyFrame = false;
+	video_timestamp_ = 0;
+	audio_timestamp_ = 0;
+	has_key_frame_ = true;
+	if (media_info_.video_codec_id == RTMP_CODEC_ID_H264) {
+		has_key_frame_ = false;
 	}
 
 	return 0;
 }
 
-void RtmpPublisher::close()
+void RtmpPublisher::Close()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn != nullptr)
-	{		
-		std::shared_ptr<RtmpConnection> rtmpConn = m_rtmpConn;
+	if (rtmp_conn_ != nullptr) {		
+		std::shared_ptr<RtmpConnection> rtmpConn = rtmp_conn_;
 		SOCKET sockfd = rtmpConn->GetSocket();
-		m_taskScheduler->AddTriggerEvent([sockfd, rtmpConn]() {
+		task_scheduler_->AddTriggerEvent([sockfd, rtmpConn]() {
 			rtmpConn->Disconnect();
 		});
-		m_rtmpConn = nullptr;
-		m_videoTimestamp = 0;
-		m_audioTimestamp = 0;
-		m_hasKeyFrame = false;
+		rtmp_conn_ = nullptr;
+		video_timestamp_ = 0;
+		audio_timestamp_ = 0;
+		has_key_frame_ = false;
 	}
 }
 
-bool RtmpPublisher::isConnected()
+bool RtmpPublisher::IsConnected()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn != nullptr)
-	{
-		return (!m_rtmpConn->IsClosed());
+	if (rtmp_conn_ != nullptr) {
+		return (!rtmp_conn_->IsClosed());
 	}
-
 	return false;
 }
 
-bool RtmpPublisher::isKeyFrame(uint8_t *data, uint32_t size)
+bool RtmpPublisher::IsKeyFrame(uint8_t *data, uint32_t size)
 {
 	int startCode = 0;
-	if (data[0] == 0 && data[1] == 0 && data[2] == 1)
-	{
+	if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
 		startCode = 3;
 	}
-	else if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 1)
-	{
+	else if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 1) {
 		startCode = 4;
 	}
 
 	int type = data[startCode] & 0x1f;
-	if (type == 5 || type == 7) /* sps_pps_idr or idr */
-	{
+	if (type == 5 || type == 7)  {  // sps_pps_idr or idr 
 		return true;
 	}
 	
 	return false;
 }
 
-int RtmpPublisher::pushVideoFrame(uint8_t *data, uint32_t size)
+int RtmpPublisher::PushVideoFrame(uint8_t *data, uint32_t size)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn == nullptr || m_rtmpConn->IsClosed() || size <= 5)
-	{
+	if (rtmp_conn_ == nullptr || rtmp_conn_->IsClosed() || size <= 5) {
 		return -1;
 	}
 
-	if (m_mediaIinfo.videoCodecId == RTMP_CODEC_ID_H264)
+	if (media_info_.video_codec_id == RTMP_CODEC_ID_H264)
 	{
-		if (!m_hasKeyFrame)
-		{
-
-			if (this->isKeyFrame(data, size))
-			{
-				m_hasKeyFrame = true;
-				m_timestamp.reset();
-				//m_taskScheduler->addTriggerEvent([=]() {
-					m_rtmpConn->sendVideoData(0, m_avcSequenceHeader, m_avcSequenceHeaderSize);
-					m_rtmpConn->sendAudioData(0, m_aacSequenceHeader, m_aacSequenceHeaderSize);
+		if (!has_key_frame_) {
+			if (this->IsKeyFrame(data, size)) {
+				has_key_frame_ = true;
+				timestamp_.reset();
+				//task_scheduler_->addTriggerEvent([=]() {
+					rtmp_conn_->SendVideoData(0, avc_sequence_header_, avc_sequence_header_size_);
+					rtmp_conn_->SendAudioData(0, aac_sequence_header_, aac_sequence_header_size_);
 				//});
 			}
-			else
-			{
+			else {
 				return 0;
 			}
 		}
 
-		uint64_t timestamp = m_timestamp.elapsed();
+		uint64_t timestamp = timestamp_.elapsed();
 		//uint64_t timestamp_delta = 0;
-		//if (timestamp < m_videoTimestamp)
+		//if (timestamp < video_timestamp_)
 		//{
-		//	timestamp = m_videoTimestamp;
+		//	timestamp = video_timestamp_;
 		//}
-		//timestamp_delta = timestamp - m_videoTimestamp;
-		//m_videoTimestamp = timestamp;
+		//timestamp_delta = timestamp - video_timestamp_;
+		//video_timestamp_ = timestamp;
 
 		std::shared_ptr<char> payload(new char[size + 4096]);
-		uint32_t payloadSize = 0;
+		uint32_t payload_size = 0;
 
 		uint8_t *buffer = (uint8_t *)payload.get();
 		uint32_t index = 0;
-		buffer[index++] = this->isKeyFrame(data, size) ? 0x17: 0x27;
+		buffer[index++] = this->IsKeyFrame(data, size) ? 0x17: 0x27;
 		buffer[index++] = 1;
 
 		buffer[index++] = 0;
@@ -298,42 +276,40 @@ int RtmpPublisher::pushVideoFrame(uint8_t *data, uint32_t size)
 
 		memcpy(buffer + index, data, size);
 		index += size;
-		payloadSize = index;
-		//m_taskScheduler->addTriggerEvent([=]() {
-			m_rtmpConn->sendVideoData(timestamp, payload, payloadSize);
+		payload_size = index;
+		//task_scheduler_->addTriggerEvent([=]() {
+			rtmp_conn_->SendVideoData(timestamp, payload, payload_size);
 		//});
 	}
 
 	return 0;
 }
 
-int RtmpPublisher::pushAudioFrame(uint8_t *data, uint32_t size)
+int RtmpPublisher::PushAudioFrame(uint8_t *data, uint32_t size)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (m_rtmpConn == nullptr || m_rtmpConn->IsClosed() || size <= 0)
-	{
+	if (rtmp_conn_ == nullptr || rtmp_conn_->IsClosed() || size <= 0) {
 		return -1;
 	}
 
-	if (m_hasKeyFrame && m_mediaIinfo.audioCodecId == RTMP_CODEC_ID_AAC)
-	{
-		uint64_t timestamp = m_timestamp.elapsed();
+	if (has_key_frame_ && media_info_.audio_codec_id == RTMP_CODEC_ID_AAC) {
+		uint64_t timestamp = timestamp_.elapsed();
 		//uint64_t timestamp_delta = 0;
-		//if (timestamp < m_audioTimestamp)
+		//if (timestamp < audio_timestamp_)
 		//{
-		//	timestamp = m_audioTimestamp;
+		//	timestamp = audio_timestamp_;
 		//}
-		//timestamp_delta = timestamp - m_audioTimestamp;
-		//m_audioTimestamp = timestamp;
+		//timestamp_delta = timestamp - audio_timestamp_;
+		//audio_timestamp_ = timestamp;
 		
-		uint32_t payloadSize = size + 2;
+		uint32_t payload_size = size + 2;
 		std::shared_ptr<char> payload(new char[size + 2]);
-		payload.get()[0] = m_audioTag;
+		payload.get()[0] = audio_tag_;
 		payload.get()[1] = 1; // 0: aac sequence header, 1: aac raw data
 		memcpy(payload.get() + 2, data, size);
-		//m_taskScheduler->addTriggerEvent([=]() {
-			m_rtmpConn->sendAudioData(timestamp, payload, payloadSize);
+		//task_scheduler_->addTriggerEvent([=]() {
+			rtmp_conn_->SendAudioData(timestamp, payload, payload_size);
 		//});
 	}
 

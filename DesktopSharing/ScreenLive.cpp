@@ -52,8 +52,8 @@ void ScreenLive::Destroy()
 			rtsp_pusher_ = nullptr;
 		}
 
-		if (rtmp_pusher_ != nullptr && rtmp_pusher_->isConnected()) {
-			rtmp_pusher_->close();
+		if (rtmp_pusher_ != nullptr && rtmp_pusher_->IsConnected()) {
+			rtmp_pusher_->Close();
 			rtmp_pusher_ = nullptr;
 		}
 
@@ -123,15 +123,15 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 	}
 	else if (type == SCREEN_LIVE_RTMP_PUSHER) {
 
-		auto rtmp_pusher = xop::RtmpPublisher::create(event_loop_.get());
+		auto rtmp_pusher = xop::RtmpPublisher::Create(event_loop_.get());
 
 		xop::MediaInfo mediaInfo;
 		uint8_t* extradata = aac_encoder_.GetAVCodecContext()->extradata;
 		uint8_t  extradata_size = aac_encoder_.GetAVCodecContext()->extradata_size;
 
-		mediaInfo.audioSpecificConfigSize = extradata_size;
-		mediaInfo.audioSpecificConfig.reset(new uint8_t[mediaInfo.audioSpecificConfigSize]);
-		memcpy(mediaInfo.audioSpecificConfig.get(), extradata, extradata_size);
+		mediaInfo.audio_specific_config_size = extradata_size;
+		mediaInfo.audio_specific_config.reset(new uint8_t[mediaInfo.audio_specific_config_size]);
+		memcpy(mediaInfo.audio_specific_config.get(), extradata, extradata_size);
 
 		uint8_t extradata_buf[1024];
 		if (nvenc_data_ != nullptr) {
@@ -145,23 +145,23 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 
 		xop::Nal sps = xop::H264Parser::findNal(extradata, extradata_size);
 		if (sps.first != nullptr && sps.second != nullptr && *sps.first == 0x67) {
-			mediaInfo.spsSize = sps.second - sps.first + 1;
-			mediaInfo.sps.reset(new uint8_t[mediaInfo.spsSize]);
-			memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.spsSize);
+			mediaInfo.sps_size = sps.second - sps.first + 1;
+			mediaInfo.sps.reset(new uint8_t[mediaInfo.sps_size]);
+			memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.sps_size);
 
 			xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - extradata));
 			if (pps.first != nullptr && pps.second != nullptr && *pps.first == 0x68)
 			{
-				mediaInfo.ppsSize = pps.second - pps.first + 1;
-				mediaInfo.pps.reset(new uint8_t[mediaInfo.ppsSize]);
-				memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.ppsSize);
+				mediaInfo.pps_size = pps.second - pps.first + 1;
+				mediaInfo.pps.reset(new uint8_t[mediaInfo.pps_size]);
+				memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.pps_size);
 			}
 		}
 
-		rtmp_pusher->setMediaInfo(mediaInfo);
+		rtmp_pusher->SetMediaInfo(mediaInfo);
 
 		std::string status;
-		if (rtmp_pusher->openUrl(config.rtmp_url, 2000, status) < 0) {
+		if (rtmp_pusher->OpenUrl(config.rtmp_url, 2000, status) < 0) {
 			printf("RTMP Pusher: Open %s failed. \n", config.rtmp_url.c_str());
 			return false;
 		}
@@ -203,7 +203,7 @@ void ScreenLive::Stop(int type)
 
 	case SCREEN_LIVE_RTMP_PUSHER:
 		if (rtmp_pusher_ != nullptr) {
-			rtmp_pusher_->close();
+			rtmp_pusher_->Close();
 			rtmp_pusher_ = nullptr;
 		}
 		break;
@@ -234,7 +234,7 @@ bool ScreenLive::IsConnected(int type)
 
 	case SCREEN_LIVE_RTMP_PUSHER:
 		if (rtmp_pusher_ != nullptr) {
-			is_connected = rtmp_pusher_->isConnected();
+			is_connected = rtmp_pusher_->IsConnected();
 		}
 		break;
 
@@ -476,8 +476,8 @@ void ScreenLive::PushVideo(const uint8_t* data, uint32_t size, uint32_t timestam
 		}
 
 		/* RTMP推流 */
-		if (rtmp_pusher_ != nullptr && rtmp_pusher_->isConnected()) {
-			rtmp_pusher_->pushVideoFrame(vidoe_frame.buffer.get(), vidoe_frame.size);
+		if (rtmp_pusher_ != nullptr && rtmp_pusher_->IsConnected()) {
+			rtmp_pusher_->PushVideoFrame(vidoe_frame.buffer.get(), vidoe_frame.size);
 		}
 	}
 }
@@ -505,8 +505,8 @@ void ScreenLive::PushAudio(const uint8_t* data, uint32_t size, uint32_t timestam
 		}
 
 		/* RTMP推流 */
-		if (rtmp_pusher_ != nullptr && rtmp_pusher_->isConnected()) {
-			rtmp_pusher_->pushAudioFrame(audio_frame.buffer.get(), audio_frame.size);
+		if (rtmp_pusher_ != nullptr && rtmp_pusher_->IsConnected()) {
+			rtmp_pusher_->PushAudioFrame(audio_frame.buffer.get(), audio_frame.size);
 		}
 	}
 }

@@ -129,8 +129,10 @@
     <ClCompile Include="xop\HttpFlvConnection.cpp" />
     <ClCompile Include="xop\HttpFlvServer.cpp" />
     <ClCompile Include="xop\MediaSession.cpp" />
+    <ClCompile Include="xop\RtmpChunk.cpp" />
     <ClCompile Include="xop\RtmpClient.cpp" />
     <ClCompile Include="xop\RtmpConnection.cpp" />
+    <ClCompile Include="xop\RtmpHandshake.cpp" />
     <ClCompile Include="xop\RtmpPublisher.cpp" />
     <ClCompile Include="xop\RtmpServer.cpp" />
     <ClCompile Include="xop\RtmpSession.cpp" />
@@ -191,8 +193,11 @@
     <ClInclude Include="xop\MediaSession.h" />
     <ClInclude Include="xop\MediaSource.h" />
     <ClInclude Include="xop\rtmp.h" />
+    <ClInclude Include="xop\RtmpChunk.h" />
     <ClInclude Include="xop\RtmpClient.h" />
     <ClInclude Include="xop\RtmpConnection.h" />
+    <ClInclude Include="xop\RtmpHandshake.h" />
+    <ClInclude Include="xop\RtmpMessage.h" />
     <ClInclude Include="xop\RtmpPublisher.h" />
     <ClInclude Include="xop\RtmpServer.h" />
     <ClInclude Include="xop\RtmpSession.h" />

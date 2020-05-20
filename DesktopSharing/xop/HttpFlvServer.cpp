@@ -5,8 +5,8 @@
 
 using namespace xop;
 
-HttpFlvServer::HttpFlvServer(xop::EventLoop *loop)
-	: TcpServer(loop)
+HttpFlvServer::HttpFlvServer(xop::EventLoop* event_loop)
+	: TcpServer(event_loop)
 {
 
 }
@@ -16,14 +16,18 @@ HttpFlvServer::~HttpFlvServer()
 
 }
 
-void HttpFlvServer::attach(RtmpServer *rtmpServer)
+void HttpFlvServer::Attach(std::shared_ptr<RtmpServer> rtmp_server)
 {
-	std::lock_guard<std::mutex> locker(m_mutex);
-	m_rtmpServer = rtmpServer;
+	std::lock_guard<std::mutex> locker(mutex_);
+	rtmp_server_ = rtmp_server;
 }
 
 TcpConnection::Ptr HttpFlvServer::OnConnect(SOCKET sockfd)
 {
-	return std::make_shared<HttpFlvConnection>(m_rtmpServer, event_loop_->GetTaskScheduler().get(), sockfd);
+	auto rtmp_server = rtmp_server_.lock();
+	if (rtmp_server) {
+		return std::make_shared<HttpFlvConnection>(rtmp_server, event_loop_->GetTaskScheduler().get(), sockfd);
+	}
+	return nullptr;
 }
 

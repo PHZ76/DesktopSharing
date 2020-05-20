@@ -13,40 +13,40 @@ namespace xop
 class RtmpPublisher : public Rtmp, public std::enable_shared_from_this<RtmpPublisher>
 {
 public:
-	static std::shared_ptr<RtmpPublisher> create(xop::EventLoop* loop);
+	static std::shared_ptr<RtmpPublisher> Create(xop::EventLoop* loop);
 	~RtmpPublisher();
 
-	int setMediaInfo(MediaInfo mediaInfo);
+	int SetMediaInfo(MediaInfo media_info);
 
-	int openUrl(std::string url, int msec, std::string& status);
-	void close();
-	bool isConnected();
+	int  OpenUrl(std::string url, int msec, std::string& status);
+	void Close();
 
-	int pushVideoFrame(uint8_t *data, uint32_t size); /* (sps pps)idr frame or p frame */
+	bool IsConnected();
 
-	int pushAudioFrame(uint8_t *data, uint32_t size);
+	int PushVideoFrame(uint8_t *data, uint32_t size); /* (sps pps)idr frame or p frame */
+	int PushAudioFrame(uint8_t *data, uint32_t size);
 
 private:
 	friend class RtmpConnection;
 
-	RtmpPublisher(xop::EventLoop *loop);
-	bool isKeyFrame(uint8_t *data, uint32_t size);
+	RtmpPublisher(xop::EventLoop *event_loop);
+	bool IsKeyFrame(uint8_t* data, uint32_t size);
 
-	xop::EventLoop *m_eventLoop = nullptr;
-	TaskScheduler *m_taskScheduler = nullptr;
-	std::mutex m_mutex;
-	std::shared_ptr<RtmpConnection> m_rtmpConn;
+	xop::EventLoop *event_loop_ = nullptr;
+	TaskScheduler *task_scheduler_ = nullptr;
+	std::mutex mutex_;
+	std::shared_ptr<RtmpConnection> rtmp_conn_;
 
-	MediaInfo m_mediaIinfo;
-	std::shared_ptr<char> m_avcSequenceHeader;
-	std::shared_ptr<char> m_aacSequenceHeader;
-	uint32_t m_avcSequenceHeaderSize = 0;
-	uint32_t m_aacSequenceHeaderSize = 0;
-	uint8_t m_audioTag = 0;
-	bool m_hasKeyFrame = false;
-	xop::Timestamp m_timestamp;
-	uint64_t m_videoTimestamp = 0;
-	uint64_t m_audioTimestamp = 0;
+	MediaInfo media_info_;
+	std::shared_ptr<char> avc_sequence_header_;
+	std::shared_ptr<char> aac_sequence_header_;
+	uint32_t avc_sequence_header_size_ = 0;
+	uint32_t aac_sequence_header_size_ = 0;
+	uint8_t audio_tag_ = 0;
+	bool has_key_frame_ = false;
+	xop::Timestamp timestamp_;
+	uint64_t video_timestamp_ = 0;
+	uint64_t audio_timestamp_ = 0;
 
 	const uint32_t kSamplingFrequency[16] = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350, 0, 0, 0};
 };
