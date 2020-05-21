@@ -228,7 +228,7 @@ int RtmpChunk::CreateMessageHeader(uint8_t fmt, RtmpMessage& rtmp_msg, char* buf
 
 int RtmpChunk::CreateChunk(uint32_t csid, RtmpMessage& rtmp_msg, char* buf, uint32_t buf_size)
 {
-	uint32_t buf_offset = 0, payloadOffset = 0;
+	uint32_t buf_offset = 0, payload_offset = 0;
 	uint32_t capacity = rtmp_msg.length + rtmp_msg.length / out_chunk_size_ * 5;
 	if (buf_size < capacity) {
 		return -1;
@@ -244,8 +244,8 @@ int RtmpChunk::CreateChunk(uint32_t csid, RtmpMessage& rtmp_msg, char* buf, uint
 	while (rtmp_msg.length > 0)
 	{
 		if (rtmp_msg.length > out_chunk_size_) {
-			memcpy(buf + buf_offset, rtmp_msg.payload.get() + payloadOffset, out_chunk_size_);
-			payloadOffset += out_chunk_size_;
+			memcpy(buf + buf_offset, rtmp_msg.payload.get() + payload_offset, out_chunk_size_);
+			payload_offset += out_chunk_size_;
 			buf_offset += out_chunk_size_;
 			rtmp_msg.length -= out_chunk_size_;
 
@@ -256,7 +256,7 @@ int RtmpChunk::CreateChunk(uint32_t csid, RtmpMessage& rtmp_msg, char* buf, uint
 			}
 		}
 		else {
-			memcpy(buf + buf_offset, rtmp_msg.payload.get() + payloadOffset, rtmp_msg.length);
+			memcpy(buf + buf_offset, rtmp_msg.payload.get() + payload_offset, rtmp_msg.length);
 			buf_offset += rtmp_msg.length;
 			rtmp_msg.length = 0;
 			break;

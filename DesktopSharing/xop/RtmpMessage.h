@@ -35,34 +35,19 @@ struct RtmpMessage
 		index = 0;
 		timestamp = 0;
 		extend_timestamp = 0;
+		if (length > 0) {
+			payload.reset(new char[length]);
+		}
 	}
 
 	bool IsCompleted() const 
 	{
-		if (index == length && payload != nullptr) {
+		if (index == length && length > 0 &&
+			payload != nullptr) {
 			return true;
 		}
 
 		return false;
-	}
-
-	RtmpMessage &operator=(const RtmpMessage& rtmp_msg) 
-	{
-		if (this != &rtmp_msg) {
-			this->timestamp = rtmp_msg.timestamp;
-			this->length = rtmp_msg.length;
-			this->type_id = rtmp_msg.type_id;
-			this->stream_id = rtmp_msg.stream_id;
-			this->extend_timestamp = rtmp_msg.extend_timestamp;
-			this->_timestamp = rtmp_msg._timestamp;
-			this->codecId = rtmp_msg.codecId;
-			this->csid = rtmp_msg.csid;
-			this->index = rtmp_msg.index;
-			this->payload.reset(new char[this->length]);
-			memcpy(this->payload.get(), rtmp_msg.payload.get(), this->length);
-		}
-
-		return *this;
 	}
 };
 

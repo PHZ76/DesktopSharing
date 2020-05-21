@@ -107,18 +107,21 @@ void RtmpConnection::OnClose()
 bool RtmpConnection::HandleChunk(BufferReader& buffer)
 {
 	int ret = -1;
-	RtmpMessage rtmp_msg;
-
+	
 	do
 	{
+		RtmpMessage rtmp_msg;
 		ret = rtmp_chunk_->Parse(buffer, rtmp_msg);
-		if (ret > 0) {
+		if (ret >= 0) {
 			if (rtmp_msg.IsCompleted()) {
-				ret = HandleMessage(rtmp_msg);
+				if (!HandleMessage(rtmp_msg)) {
+					return false;
+				}
 			}
-		}
-		else if (ret == 0) {
-			break;
+
+			if (ret == 0) {
+				break;
+			}
 		}
 		else if (ret < 0) {
 			return false;
