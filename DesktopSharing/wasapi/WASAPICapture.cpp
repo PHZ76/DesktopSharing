@@ -11,10 +11,7 @@ WASAPICapture::WASAPICapture()
 
 WASAPICapture::~WASAPICapture()
 {
-	if (m_initialized)
-	{
-		CoUninitialize();
-	}
+
 }
 
 int WASAPICapture::init()
@@ -89,6 +86,11 @@ int WASAPICapture::init()
 
 int WASAPICapture::exit()
 {
+	if (m_initialized)
+	{
+		m_initialized = false;
+		CoUninitialize();
+	}
 	return 0;
 }
 
@@ -160,6 +162,7 @@ int WASAPICapture::stop()
 	{
 		m_isEnabeld = false;
 		m_threadPtr->join();
+		m_threadPtr = nullptr;
 
 		HRESULT hr = m_audioClient->Stop();
 		if (FAILED(hr))

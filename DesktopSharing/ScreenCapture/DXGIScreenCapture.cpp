@@ -32,7 +32,7 @@ DXGIScreenCapture::~DXGIScreenCapture()
 bool DXGIScreenCapture::Init(int displayIndex)
 {
 	if (is_initialized_) {
-		return false;
+		return true;
 	}
 
 	HRESULT hr = S_OK;

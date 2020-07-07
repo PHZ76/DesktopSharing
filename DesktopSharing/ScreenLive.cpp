@@ -21,19 +21,28 @@ ScreenLive& ScreenLive::Instance()
 	return s_screen_live;
 }
 
+bool ScreenLive::GetScreenImage(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height)
+{
+	if (screen_capture_.CaptureFrame(bgra_image)) {
+		width = screen_capture_.GetWidth();
+		height = screen_capture_.GetHeight();
+		return true;
+	}
+
+	return false;
+}
+
 bool ScreenLive::Init(AVConfig& config)
 {
 	if (is_initialized_) {
 		Destroy();
 	}
 	
-	av_config_ = config;
-
 	if (StartCapture() < 0) {
 		return false;
 	}
 
-	if (StartEncoder() < 0) {
+	if (StartEncoder(config) < 0) {
 		return false;
 	}
 
@@ -43,7 +52,6 @@ bool ScreenLive::Init(AVConfig& config)
 
 void ScreenLive::Destroy()
 {
-	if (is_initialized_)
 	{
 		std::lock_guard<std::mutex> locker(mutex_);
 
@@ -63,16 +71,14 @@ void ScreenLive::Destroy()
 		}
 	}
 
-	if (is_initialized_) {
-		StopEncoder();
-		StopCapture();
-		is_initialized_ = false;
-	}
+	StopEncoder();
+	StopCapture();
+	is_initialized_ = false;
 }
 
-bool ScreenLive::Start(int type, LiveConfig& config)
+bool ScreenLive::StartLive(int type, LiveConfig& config)
 {
-	if (!is_initialized_) {
+	if (!is_encoder_started_) {
 		return false;
 	}
 
@@ -90,12 +96,13 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 		session->AddSource(xop::channel_0, xop::H264Source::CreateNew());
 		session->AddSource(xop::channel_1, xop::AACSource::CreateNew(samplerate, channels, false));
 		session->SetNotifyCallback([this](xop::MediaSessionId sessionId, uint32_t clients) {
-			printf("client: %u\n", clients);
+			printf("RTSP Client: %u\n", clients);
 			this->rtsp_clients_ = clients;
 		});
 
 		session_id = rtsp_server->AddSession(session);
-		printf("RTSP Server: rtsp://%s:%hu/%s \n", xop::NetInterface::GetLocalIPAddress().c_str(), config.port, config.suffix.c_str());
+		//printf("RTSP Server: rtsp://%s:%hu/%s \n", xop::NetInterface::GetLocalIPAddress().c_str(), config.port, config.suffix.c_str());
+		printf("RTSP Server start: rtsp://%s:%hu/%s \n", config.ip.c_str(), config.port, config.suffix.c_str());
 
 		std::lock_guard<std::mutex> locker(mutex_);
 		rtsp_server_ = rtsp_server;
@@ -108,9 +115,9 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 		session->AddSource(xop::channel_1, xop::AACSource::CreateNew(audio_capture_.GetSamplerate(), audio_capture_.GetChannels(), false));
 		
 		rtsp_pusher->AddSession(session);
-		if (rtsp_pusher->OpenUrl(config.rtsp_url, 3000) != 0) {
+		if (rtsp_pusher->OpenUrl(config.rtsp_url, 1000) != 0) {
 			rtsp_pusher = nullptr;
-			printf("RTSP Pusher: Open %s failed. \n", config.rtsp_url.c_str());
+			printf("RTSP Pusher: Open url(%s) failed. \n", config.rtsp_url.c_str());
 			return false;
 		}
 
@@ -119,7 +126,7 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 		//	rtsp_pusher_->close();
 		//}
 		rtsp_pusher_ = rtsp_pusher;
-		printf("RTSP Pusher: Push stream to  %s ... \n", config.rtsp_url.c_str());
+		printf("RTSP Pusher start: Push stream to  %s ... \n", config.rtsp_url.c_str());
 	}
 	else if (type == SCREEN_LIVE_RTMP_PUSHER) {
 
@@ -161,8 +168,8 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 		rtmp_pusher->SetMediaInfo(mediaInfo);
 
 		std::string status;
-		if (rtmp_pusher->OpenUrl(config.rtmp_url, 2000, status) < 0) {
-			printf("RTMP Pusher: Open %s failed. \n", config.rtmp_url.c_str());
+		if (rtmp_pusher->OpenUrl(config.rtmp_url, 1000, status) < 0) {
+			printf("RTMP Pusher: Open url(%s) failed. \n", config.rtmp_url.c_str());
 			return false;
 		}
 
@@ -171,7 +178,7 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 		//	rtmp_pusher_->close();
 		//}
 		rtmp_pusher_ = rtmp_pusher;
-		printf("RTMP Pusher: Push stream to  %s ... \n", config.rtmp_url.c_str());
+		printf("RTMP Pusher start: Push stream to  %s ... \n", config.rtmp_url.c_str());
 	}
 	else {
 		return false;
@@ -180,7 +187,7 @@ bool ScreenLive::Start(int type, LiveConfig& config)
 	return true;
 }
 
-void ScreenLive::Stop(int type)
+void ScreenLive::StopLive(int type)
 {
 	std::lock_guard<std::mutex> locker(mutex_);
 
@@ -190,6 +197,7 @@ void ScreenLive::Stop(int type)
 		if (rtsp_server_ != nullptr) {
 			rtsp_server_->Stop();
 			rtsp_server_ = nullptr;
+			printf("RTSP Server stop. \n");
 		}
 		
 		break;
@@ -198,6 +206,7 @@ void ScreenLive::Stop(int type)
 		if (rtsp_pusher_ != nullptr) {
 			rtsp_pusher_->Close();
 			rtsp_pusher_ = nullptr;
+			printf("RTSP Pusher stop. \n");
 		}		
 		break;
 
@@ -205,6 +214,7 @@ void ScreenLive::Stop(int type)
 		if (rtmp_pusher_ != nullptr) {
 			rtmp_pusher_->Close();
 			rtmp_pusher_ = nullptr;
+			printf("RTMP Pusher stop. \n");
 		}
 		break;
 
@@ -255,20 +265,26 @@ int ScreenLive::StartCapture()
 		return -1;
 	}
 
+	is_capture_started_ = true;
 	return 0;
 }
 
 int ScreenLive::StopCapture()
 {
-	screen_capture_.Destroy();
-	audio_capture_.Destroy();
+	if (is_capture_started_) {
+		screen_capture_.Destroy();
+		audio_capture_.Destroy();
+		is_capture_started_ = false;
+	}
+
 	return 0;
 }
 
-int ScreenLive::StartEncoder() 
+int ScreenLive::StartEncoder(AVConfig& config)
 {
-	ffmpeg::AVConfig encoder_config;
+	av_config_ = config;
 
+	ffmpeg::AVConfig encoder_config;
 	encoder_config.video.framerate = av_config_.framerate;
 	encoder_config.video.bitrate = av_config_.bitrate_bps;
 	encoder_config.video.gop = av_config_.gop;
@@ -308,7 +324,7 @@ int ScreenLive::StartEncoder()
 		}
 	}
 
-	is_started_ = true;
+	is_encoder_started_ = true;
 	encode_video_thread_.reset(new std::thread(&ScreenLive::EncodeVideo, this));
 	encode_audio_thread_.reset(new std::thread(&ScreenLive::EncodeAudio, this));
 	return 0;
@@ -316,24 +332,27 @@ int ScreenLive::StartEncoder()
 
 int ScreenLive::StopEncoder() 
 {
-	is_started_ = false;
+	if (is_encoder_started_) {
+		is_encoder_started_ = false;
 
-	if (encode_video_thread_) {		
-		encode_video_thread_->join();
-		encode_video_thread_ = nullptr;
+		if (encode_video_thread_) {
+			encode_video_thread_->join();
+			encode_video_thread_ = nullptr;
+		}
+
+		if (encode_audio_thread_) {
+			encode_audio_thread_->join();
+			encode_audio_thread_ = nullptr;
+		}
+
+		h264_encoder.Destroy();
+		aac_encoder_.Destroy();
+		if (nvenc_data_ != nullptr) {
+			nvenc_info.destroy(&nvenc_data_);
+			nvenc_data_ = nullptr;
+		}
 	}
 
-	if (encode_audio_thread_) {
-		encode_audio_thread_->join();
-		encode_audio_thread_ = nullptr;
-	}
-
-	h264_encoder.Destroy();
-	aac_encoder_.Destroy();
-	if (nvenc_data_ != nullptr) {
-		nvenc_info.destroy(&nvenc_data_);
-		nvenc_data_ = nullptr;
-	}
 	return 0;
 }
 
@@ -358,7 +377,7 @@ void ScreenLive::EncodeVideo()
 	uint32_t buffer_size = 1920 * 1080 * 4;				    
 	std::shared_ptr<uint8_t> buffer(new uint8_t[buffer_size]);
 
-	while (is_started_)
+	while (is_encoder_started_)
 	{
 		if (tp2.elapsed() >= 1000) {
 			//printf("video fps: %d\n", fps); /*编码帧率统计*/
@@ -434,7 +453,7 @@ void ScreenLive::EncodeAudio()
 	uint32_t channel = audio_capture_.GetChannels();
 	uint32_t samplerate = audio_capture_.GetSamplerate();
 	
-	while (is_started_)
+	while (is_encoder_started_)
 	{		
 		if (audio_capture_.GetSamples() >= (int)frame_samples) {
 			if (audio_capture_.Read(pcm_buffer.get(), frame_samples) != frame_samples) {

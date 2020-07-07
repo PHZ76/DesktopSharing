@@ -47,17 +47,24 @@ public:
 
 	bool Init(AVConfig& config);
 	void Destroy();
+	bool IsInitialized() { return is_initialized_; };
 
-	bool Start(int type, LiveConfig& config);
-	void Stop(int type);
+	int StartCapture();
+	int StopCapture();
+
+	int StartEncoder(AVConfig& config);
+	int StopEncoder();
+	bool IsEncoderInitialized() { return is_encoder_started_; };
+
+	bool StartLive(int type, LiveConfig& config);
+	void StopLive(int type);
 	bool IsConnected(int type);
+
+	bool GetScreenImage(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height);
 
 private:
 	ScreenLive();
-	int StartCapture();
-	int StopCapture();
-	int StartEncoder();
-	int StopEncoder();
+	
 	void EncodeVideo();
 	void EncodeAudio();
 	void PushVideo(const uint8_t* data, uint32_t size, uint32_t timestamp);
@@ -67,7 +74,8 @@ private:
 	std::string _ip;
 
 	bool is_initialized_ = false;
-	bool is_started_ = false;
+	bool is_capture_started_ = false;
+	bool is_encoder_started_ = false;
 
 	AVConfig av_config_;
 

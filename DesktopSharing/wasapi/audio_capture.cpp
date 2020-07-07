@@ -15,7 +15,7 @@ AudioCapture::~AudioCapture()
 bool AudioCapture::Init(uint32_t buffer_size)
 {
 	if (is_initialized_) {
-		Destroy();
+		return true;
 	}
 
 	if (capture_.init() < 0) {
