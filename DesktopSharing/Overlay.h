@@ -45,6 +45,7 @@ public:
 	static void Process(SDL_Event* event);
 
 	void SetLiveState(int event_type, bool state);
+	void SetDebugInfo(std::string text);
 
 private:
 	bool Copy();
@@ -58,8 +59,11 @@ private:
 
 	OverlayCallack* callback_ = nullptr;
 
+	/* debug info */
+	std::string debug_info_text_;
+
 	/* live config */
-	int encoder_index_ = 1;
+	int  encoder_index_ = 1;
 	char encoder_bitrate_kbps_[8];
 	char encoder_framerate_[3];
 

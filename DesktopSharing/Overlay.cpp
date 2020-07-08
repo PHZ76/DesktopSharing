@@ -128,7 +128,6 @@ bool Overlay::Copy()
 	ImGui::Begin("screen-live-setting-widget", nullptr, widget_flag);
 
 	int input_flag = 0;
-
 	float start_x = 20.0, start_y = 20.0;
 
 	/* Encoder selection */
@@ -207,7 +206,7 @@ bool Overlay::Copy()
 	ImGui::SetNextWindowPos(ImVec2((float)rect_.x + (float)rect_.w * 3/4, (float)rect_.y), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2((float)rect_.w/4, (float)rect_.h), ImGuiCond_Always);
 	ImGui::Begin("screen-live-info-widget", nullptr, widget_flag);
-	ImGui::Text("%s", " ");
+	ImGui::Text("\n%s", debug_info_text_.c_str());
 	ImGui::End();
 
 	return true;
@@ -217,6 +216,11 @@ void Overlay::SetLiveState(int event_type, bool state)
 {
 	live_info_[event_type].state = state;
 	memset(live_info_[event_type].state_info, 0, sizeof(LiveInfo::state_info));
+}
+
+void Overlay::SetDebugInfo(std::string text)
+{
+	debug_info_text_ = text;
 }
 
 void Overlay::NotifyEvent(int event_type)
@@ -230,7 +234,7 @@ void Overlay::NotifyEvent(int event_type)
 		return;
 	}
 
-	encoder_settings[0] = std::string("h264");
+	encoder_settings[0] = std::string("x264");
 	if(encoder_index_ == 2) {
 		encoder_settings[0] = std::string("h264_nvenc");
 	}

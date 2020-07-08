@@ -161,6 +161,15 @@ void MainWindow::Porcess(SDL_Event& event)
 	}	
 }
 
+void MainWindow::SetDebugInfo(std::string text)
+{
+	if (IsWindow()) {
+		if (overlay_) {
+			debug_info_text_ = text;
+		}
+	}
+}
+
 bool MainWindow::UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height)
 {
 	if (!IsWindow()) {
@@ -203,10 +212,12 @@ bool MainWindow::UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height
 		SDL_Rect rect = { 0, 0, video_width_, video_height_ };
 		SDL_RenderCopy(renderer_, texture_, nullptr, &rect);
 		if (overlay_) {
+			if (!debug_info_text_.empty()) {
+				overlay_->SetDebugInfo(debug_info_text_);
+			}
 			overlay_->Render();
 		}
 		SDL_RenderPresent(renderer_);
-
 		return true;
 	}
 
@@ -223,7 +234,7 @@ bool MainWindow::StartLive(int& event_type,
 	avconfig.codec = encoder_settings[0];
 	if (avconfig.codec == "h264_nvenc") {
 		if (!nvenc_info.is_supported()) {
-			avconfig.codec = "h264";
+			avconfig.codec = "x264";
 		}
 	}
 

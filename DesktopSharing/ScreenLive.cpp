@@ -7,7 +7,8 @@
 ScreenLive::ScreenLive()
 	: event_loop_(new xop::EventLoop)
 {
-	
+	encoding_fps_ = 0;
+	rtsp_clients_ = 0;
 }
 
 ScreenLive::~ScreenLive()
@@ -30,6 +31,32 @@ bool ScreenLive::GetScreenImage(std::vector<uint8_t>& bgra_image, uint32_t& widt
 	}
 
 	return false;
+}
+
+std::string ScreenLive::GetStatusInfo()
+{
+	std::string info;
+
+	if (is_encoder_started_) {
+		info += "Encoder: " + av_config_.codec + " \n\n";
+		info += "Encoding framerate: " + std::to_string(encoding_fps_) + " \n\n";
+	}
+
+	if (rtsp_server_ != nullptr) {
+		info += "RTSP Server (connections): " + std::to_string(rtsp_clients_) + " \n\n";
+	}
+
+	if (rtsp_pusher_ != nullptr) {		
+		std::string status = rtsp_pusher_->IsConnected() ? "connected" : "disconnected";
+		info += "RTSP Pusher: " + status + " \n\n";
+	}
+
+	if (rtmp_pusher_ != nullptr) {
+		std::string status = rtmp_pusher_->IsConnected() ? "connected" : "disconnected";
+		info += "RTMP Pusher: " + status + " \n\n";
+	}
+
+	return info;
 }
 
 bool ScreenLive::Init(AVConfig& config)
@@ -197,6 +224,7 @@ void ScreenLive::StopLive(int type)
 		if (rtsp_server_ != nullptr) {
 			rtsp_server_->Stop();
 			rtsp_server_ = nullptr;
+			rtsp_clients_ = 0;
 			printf("RTSP Server stop. \n");
 		}
 		
@@ -370,8 +398,8 @@ bool ScreenLive::IsKeyFrame(const uint8_t* data, uint32_t size)
 
 void ScreenLive::EncodeVideo()
 {
-	static xop::Timestamp tp, tp2;	
-	uint32_t encode_fps = 0;
+	static xop::Timestamp encoding_ts, update_ts;	
+	uint32_t encoding_fps = 0;
 	uint32_t msec = 1000 / av_config_.framerate;
 
 	uint32_t buffer_size = 1920 * 1080 * 4;				    
@@ -379,14 +407,14 @@ void ScreenLive::EncodeVideo()
 
 	while (is_encoder_started_)
 	{
-		if (tp2.elapsed() >= 1000) {
-			//printf("video fps: %d\n", fps); /*编码帧率统计*/
-			tp2.reset();
-			encode_fps = 0;
+		if (update_ts.elapsed() >= 1000) {
+			update_ts.reset();
+			encoding_fps_ = encoding_fps;
+			encoding_fps = 0;
 		}
 
 		uint32_t delay = msec;
-		uint32_t elapsed = (uint32_t)tp.elapsed(); /*编码耗时计算*/
+		uint32_t elapsed = (uint32_t)encoding_ts.elapsed(); /*编码耗时计算*/
 		if (elapsed > delay) {
 			delay = 0;
 		}
@@ -395,7 +423,7 @@ void ScreenLive::EncodeVideo()
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-		tp.reset();
+		encoding_ts.reset();
 
 		std::vector<uint8_t> bgra_image;
 		uint32_t timestamp = xop::H264Source::GetTimestamp();
@@ -441,9 +469,12 @@ void ScreenLive::EncodeVideo()
 		}		
 
 		if (frame_size > 0) {
+			encoding_fps += 1;
 			PushVideo(buffer.get(), frame_size, timestamp);
 		}
 	}
+
+	encoding_fps_ = 0;
 }
 
 void ScreenLive::EncodeAudio()

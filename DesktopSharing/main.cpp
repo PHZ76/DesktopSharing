@@ -20,6 +20,8 @@ static void OnPaint(void *param)
 		uint32_t width = 0;
 		uint32_t height = 0;
 		if (ScreenLive::Instance().GetScreenImage(bgra_image, width, height)) {
+			std::string status_info = ScreenLive::Instance().GetStatusInfo();
+			window->SetDebugInfo(status_info);
 			window->UpdateARGB(&bgra_image[0], width, height);
 		}
 	}

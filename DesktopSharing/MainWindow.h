@@ -19,8 +19,10 @@ public:
 
 	void Porcess(SDL_Event& event);
 
-	bool UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height);
+	void SetDebugInfo(std::string text);
 
+	bool UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height);
+	
 private:
 	bool InitD3D();
 	void ClearD3D();
@@ -35,6 +37,8 @@ private:
 	HANDLE window_handle_ = nullptr;
 
 	Overlay* overlay_ = nullptr;
+	std::string debug_info_text_;
+
 	AVConfig avconfig_;
 
 	SDL_Renderer* renderer_   = nullptr;
