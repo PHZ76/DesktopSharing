@@ -20,9 +20,17 @@ struct AVConfig
 {
 	uint32_t bitrate_bps = 8000000;
 	uint32_t framerate = 25;
-	uint32_t gop = 25;
+	//uint32_t gop = 25;
 
 	std::string codec = "h264"; // [software codec: "h264"]  [hardware codec: "h264_nvenc"]
+
+	bool operator != (const AVConfig &src) const {
+		if (src.bitrate_bps != bitrate_bps || src.framerate != framerate ||
+			src.codec != codec) {
+			return true;
+		}
+		return false;
+	}
 };
 
 struct LiveConfig

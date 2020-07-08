@@ -3,6 +3,13 @@
 
 MainWindow::MainWindow()
 {
+	window_width_   = 960;
+	window_height_  = 740;
+	video_width_    = window_width_;
+	video_height_   = window_height_ - kOverlayHeight;
+	overlay_width_  = window_width_;
+	overlay_height_ = kOverlayHeight;
+
 	avconfig_.bitrate_bps = 4000000; // video bitrate
 	avconfig_.framerate = 25;        // video framerate
 	avconfig_.codec = "";  // hardware encoder: "h264_nvenc";    
@@ -20,9 +27,9 @@ bool MainWindow::Create()
 		SDL_assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 	});
 
-	int window_flag = SDL_WINDOW_ALLOW_HIGHDPI;
+	int window_flag = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
 	window_ = SDL_CreateWindow("Screen Live", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		kWindowWidth, kWindowHeight, window_flag);
+		window_width_, window_height_, window_flag);
 
 	SDL_SysWMinfo wm_info;
 	SDL_VERSION(&wm_info.version);
@@ -39,6 +46,8 @@ bool MainWindow::Create()
 	if (window_handle_) {
 		ImmAssociateContext((HWND)window_handle_, nullptr);
 	}
+
+	SDL_SetWindowMinimumSize(window_, window_width_, window_height_);
 
 	return (window_handle_ && window_);
 }
@@ -57,6 +66,24 @@ void MainWindow::Destroy()
 bool MainWindow::IsWindow() const
 {
 	return window_ != nullptr;
+}
+
+void MainWindow::Resize()
+{
+	if (IsWindow()) {
+		int width = 0, height = 0;
+		SDL_GetWindowSize(window_, &width, &height);
+
+		window_width_ = width;
+		window_height_ = height;
+		video_width_ = window_width_;
+		video_height_ = window_height_ - kOverlayHeight;
+		overlay_width_ = window_width_;
+		overlay_height_ = kOverlayHeight;
+
+		ClearD3D();
+		InitD3D();
+	}
 }
 
 bool MainWindow::InitD3D()
@@ -98,14 +125,20 @@ bool MainWindow::InitD3D()
 		delete overlay_;
 		overlay_ = nullptr;
 	}
-	overlay_->SetRect(0, 0 + kVideoHeight, kOverlayWidth, kOverlayHeight);
+	overlay_->SetRect(0, 0 + video_height_, video_width_, kOverlayHeight);
 	overlay_->RegisterObserver(this);
 	return true;
 }
 
 void MainWindow::ClearD3D()
 {
-	if (texture_ != nullptr) {
+	if (overlay_) {
+		overlay_->Destroy();
+		delete overlay_;
+		overlay_ = nullptr;
+	}
+
+	if (texture_) {
 		SDL_DestroyTexture(texture_);
 		texture_ = nullptr;
 		texture_format_ = SDL_PIXELFORMAT_UNKNOWN;
@@ -113,14 +146,9 @@ void MainWindow::ClearD3D()
 		texture_height_ = 0;
 	}
 
-	if (renderer_ != nullptr) {
+	if (renderer_) {
 		SDL_DestroyRenderer(renderer_);
 		renderer_ = nullptr;
-	}
-
-	if (overlay_) {
-		delete overlay_;
-		overlay_ = nullptr;
 	}
 }
 
@@ -161,15 +189,18 @@ bool MainWindow::UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height
 		int pitch = 0;
 
 		int ret = SDL_LockTexture(texture_, nullptr, (void**)&pixels, &pitch);
-		SDL_assert(ret >= 0);
-	
+		//SDL_assert(ret >= 0);
+		if (ret < 0) {
+			return false;
+		}
+		
 		memcpy(pixels, data, texture_width_ * texture_height_ * 4);
 		SDL_UnlockTexture(texture_);
 
 		//SDL_SetRenderDrawColor(renderer_, 114, 144, 154, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer_);
 
-		SDL_Rect rect = { 0, 0, kVideoWidth, kVideoHeight };
+		SDL_Rect rect = { 0, 0, video_width_, video_height_ };
 		SDL_RenderCopy(renderer_, texture_, nullptr, &rect);
 		if (overlay_) {
 			overlay_->Render();
@@ -182,29 +213,33 @@ bool MainWindow::UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height
 	return false;
 }
 
-bool MainWindow::StartLive(int& event_type, std::vector<std::string>& settings)
+bool MainWindow::StartLive(int& event_type, 
+	std::vector<std::string>& encoder_settings,
+	std::vector<std::string>& live_settings)
 {
 	AVConfig avconfig;
-	avconfig.bitrate_bps = avconfig_.bitrate_bps; 
-	avconfig.framerate = avconfig_.framerate;
-	avconfig.codec = "h264";  // hardware encoder: "h264_nvenc";    
-	if (settings[0] == "nvenc") {
-		if (nvenc_info.is_supported()) {
-			avconfig.codec = "h264_nvenc";
+	avconfig.framerate = atoi(encoder_settings[1].c_str());
+	avconfig.bitrate_bps = atoi(encoder_settings[2].c_str()) * 1000U;
+	avconfig.codec = encoder_settings[0];
+	if (avconfig.codec == "h264_nvenc") {
+		if (!nvenc_info.is_supported()) {
+			avconfig.codec = "h264";
 		}
 	}
 
 	/* reset video encoder */
-	if (avconfig_.codec != avconfig.codec) {
-		ScreenLive::Instance().StopEncoder();
-		ScreenLive::Instance().StartEncoder(avconfig);
+	if (avconfig_ != avconfig) {
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTSP_SERVER);
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTSP_PUSHER);
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTMP_PUSHER);
-		overlay_->SetLiveState(RTSP_SERVER_EVENT, false);
-		overlay_->SetLiveState(RTSP_PUSHER_EVENT, false);
-		overlay_->SetLiveState(RTMP_PUSHER_EVENT, false);
-		avconfig_.codec = avconfig.codec;		
+		overlay_->SetLiveState(EVENT_TYPE_RTSP_SERVER, false);
+		overlay_->SetLiveState(EVENT_TYPE_RTSP_PUSHER, false);
+		overlay_->SetLiveState(EVENT_TYPE_RTMP_PUSHER, false);
+		ScreenLive::Instance().StopEncoder();
+		if (ScreenLive::Instance().StartEncoder(avconfig) < 0) {
+			return false;
+		}
+		avconfig_ = avconfig;		
 	}
 
 	if (!ScreenLive::Instance().IsEncoderInitialized()) {
@@ -214,18 +249,18 @@ bool MainWindow::StartLive(int& event_type, std::vector<std::string>& settings)
 	LiveConfig live_config;
 	bool ret = false;
 
-	if (event_type == RTSP_SERVER_EVENT) {
-		live_config.ip = settings[1];
-		live_config.port = atoi(settings[2].c_str());
-		live_config.suffix = settings[3];
+	if (event_type == EVENT_TYPE_RTSP_SERVER) {
+		live_config.ip = live_settings[0];
+		live_config.port = atoi(live_settings[1].c_str());
+		live_config.suffix = live_settings[2];
 		ret = ScreenLive::Instance().StartLive(SCREEN_LIVE_RTSP_SERVER, live_config);
 	}
-	else if (event_type == RTSP_PUSHER_EVENT) {
-		live_config.rtsp_url = settings[1];		
+	else if (event_type == EVENT_TYPE_RTSP_PUSHER) {
+		live_config.rtsp_url = live_settings[0];
 		ret = ScreenLive::Instance().StartLive(SCREEN_LIVE_RTSP_PUSHER, live_config);
 	}
-	else if (event_type == RTMP_PUSHER_EVENT) {
-		live_config.rtmp_url = settings[1];
+	else if (event_type == EVENT_TYPE_RTMP_PUSHER) {
+		live_config.rtmp_url = live_settings[0];
 		ret = ScreenLive::Instance().StartLive(SCREEN_LIVE_RTMP_PUSHER, live_config);
 	}
 
@@ -234,13 +269,13 @@ bool MainWindow::StartLive(int& event_type, std::vector<std::string>& settings)
 
 void MainWindow::StopLive(int event_type)
 {
-	if (event_type == RTSP_SERVER_EVENT) {
+	if (event_type == EVENT_TYPE_RTSP_SERVER) {
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTSP_SERVER);
 	}
-	else if (event_type == RTSP_PUSHER_EVENT) {
+	else if (event_type == EVENT_TYPE_RTSP_PUSHER) {
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTSP_PUSHER);
 	}
-	else if (event_type == RTMP_PUSHER_EVENT) {
+	else if (event_type == EVENT_TYPE_RTMP_PUSHER) {
 		ScreenLive::Instance().StopLive(SCREEN_LIVE_RTMP_PUSHER);
 	}
 }

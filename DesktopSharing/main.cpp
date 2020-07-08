@@ -9,9 +9,12 @@
 #pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #endif
 
-static uint32_t OnPaint(uint32_t interval, void *param)
+static const int SDL_USEREVENT_PAINT = 0x001;
+
+static void OnPaint(void *param)
 {
 	MainWindow* window = reinterpret_cast<MainWindow*>(param);
+
 	if (window) {
 		std::vector<uint8_t> bgra_image;
 		uint32_t width = 0;
@@ -20,6 +23,18 @@ static uint32_t OnPaint(uint32_t interval, void *param)
 			window->UpdateARGB(&bgra_image[0], width, height);
 		}
 	}
+}
+
+static uint32_t TimerCallback(uint32_t interval, void *param)
+{
+	SDL_Event evt;
+	memset(&evt, 0, sizeof(evt));
+	evt.user.type = SDL_USEREVENT;
+	evt.user.timestamp = 0;
+	evt.user.code = SDL_USEREVENT_PAINT;
+	evt.user.data1 = param;
+	evt.user.data2 = nullptr;
+	SDL_PushEvent(&evt);
 
 	return 100;
 }
@@ -31,7 +46,7 @@ int main(int argc, char **argv)
 
 	if (window.Create()) {
 		if (ScreenLive::Instance().StartCapture() >= 0) {
-			timer_id = SDL_AddTimer(1000, OnPaint, &window);
+			timer_id = SDL_AddTimer(1000, TimerCallback, &window);
 		}		
 		else {
 			return -1;
@@ -46,6 +61,20 @@ int main(int argc, char **argv)
 
 			switch (event.type)
 			{
+				case SDL_WINDOWEVENT: {
+					if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+						window.Resize();
+					}
+					break;
+				}
+
+				case SDL_USEREVENT: {
+					if (event.user.code == SDL_USEREVENT_PAINT) {
+						OnPaint(event.user.data1);
+					}
+					break;
+				}
+
 				case SDL_QUIT: {
 					done = true;
 					break;

@@ -287,7 +287,7 @@ int ScreenLive::StartEncoder(AVConfig& config)
 	ffmpeg::AVConfig encoder_config;
 	encoder_config.video.framerate = av_config_.framerate;
 	encoder_config.video.bitrate = av_config_.bitrate_bps;
-	encoder_config.video.gop = av_config_.gop;
+	encoder_config.video.gop = av_config_.framerate * 2;
 	encoder_config.video.format = AV_PIX_FMT_BGRA;
 	encoder_config.video.width = screen_capture_.GetWidth();
 	encoder_config.video.height = screen_capture_.GetHeight();
@@ -314,9 +314,9 @@ int ScreenLive::StartEncoder(AVConfig& config)
 			nvenc_config.format = DXGI_FORMAT_B8G8R8A8_UNORM;
 			nvenc_config.width = screen_capture_.GetWidth();
 			nvenc_config.height = screen_capture_.GetHeight();
-			nvenc_config.framerate = av_config_.framerate;
-			nvenc_config.gop = av_config_.gop;
-			nvenc_config.bitrate = av_config_.bitrate_bps;
+			nvenc_config.framerate = encoder_config.video.framerate;
+			nvenc_config.gop = encoder_config.video.gop;
+			nvenc_config.bitrate = encoder_config.video.bitrate;
 			if (!nvenc_info.init(nvenc_data_, &nvenc_config)) {
 				nvenc_info.destroy(&nvenc_data_);
 				nvenc_data_ = nullptr;

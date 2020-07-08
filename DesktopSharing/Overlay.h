@@ -11,15 +11,18 @@
 
 enum OverlayEventType
 {
-	RTSP_SERVER_EVENT = 0x001,
-	RTSP_PUSHER_EVENT = 0x002,
-	RTMP_PUSHER_EVENT = 0x003,
+	EVENT_TYPE_RTSP_SERVER = 0x001,
+	EVENT_TYPE_RTSP_PUSHER = 0x002,
+	EVENT_TYPE_RTMP_PUSHER = 0x003,
 };
 
 class OverlayCallack
 {
 public:
-	virtual bool StartLive(int& event_type, std::vector<std::string>& settings) = 0;
+	virtual bool StartLive(int& event_type, 
+		std::vector<std::string>& encoder_settings,
+		std::vector<std::string>& live_settings) = 0;
+
 	virtual void StopLive(int event_type) = 0;
 
 //protected:
@@ -57,6 +60,8 @@ private:
 
 	/* live config */
 	int encoder_index_ = 1;
+	char encoder_bitrate_kbps_[8];
+	char encoder_framerate_[3];
 
 	struct LiveInfo {
 		char server_ip[16];
