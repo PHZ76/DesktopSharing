@@ -6,9 +6,9 @@ MainWindow::MainWindow()
 	window_width_   = 960;
 	window_height_  = 740;
 	video_width_    = window_width_;
-	video_height_   = window_height_ - kOverlayHeight;
+	video_height_   = window_height_ - kMinOverlayHeight;
 	overlay_width_  = window_width_;
-	overlay_height_ = kOverlayHeight;
+	overlay_height_ = kMinOverlayHeight;
 
 	avconfig_.bitrate_bps = 4000000; // video bitrate
 	avconfig_.framerate = 25;        // video framerate
@@ -47,7 +47,7 @@ bool MainWindow::Create()
 		ImmAssociateContext((HWND)window_handle_, nullptr);
 	}
 
-	SDL_SetWindowMinimumSize(window_, window_width_, window_height_);
+	SDL_SetWindowMinimumSize(window_, kMinOverlayWidth, kMinOverlayHeight + 100);
 
 	return (window_handle_ && window_);
 }
@@ -77,9 +77,9 @@ void MainWindow::Resize()
 		window_width_ = width;
 		window_height_ = height;
 		video_width_ = window_width_;
-		video_height_ = window_height_ - kOverlayHeight;
+		video_height_ = window_height_ - kMinOverlayHeight;
 		overlay_width_ = window_width_;
-		overlay_height_ = kOverlayHeight;
+		overlay_height_ = kMinOverlayHeight;
 
 		ClearD3D();
 		InitD3D();
@@ -125,7 +125,7 @@ bool MainWindow::InitD3D()
 		delete overlay_;
 		overlay_ = nullptr;
 	}
-	overlay_->SetRect(0, 0 + video_height_, video_width_, kOverlayHeight);
+	overlay_->SetRect(0, 0 + video_height_, video_width_, kMinOverlayHeight);
 	overlay_->RegisterObserver(this);
 	return true;
 }

@@ -216,6 +216,12 @@
     <ClCompile Include="Overlay.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ScreenCapture\ScreenCapture.cpp">
+      <Filter>源文件\ScreenCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenCapture\GDIScreenCapture.cpp">
+      <Filter>源文件\ScreenCapture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\Acceptor.h">
@@ -445,6 +451,12 @@
     </ClInclude>
     <ClInclude Include="Overlay.h">
       <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenCapture\ScreenCapture.h">
+      <Filter>源文件\ScreenCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenCapture\GDIScreenCapture.h">
+      <Filter>源文件\ScreenCapture</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

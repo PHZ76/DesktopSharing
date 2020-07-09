@@ -3,6 +3,9 @@
 #include "net/Timestamp.h"
 #include "xop/RtspServer.h"
 #include "xop/H264Parser.h"
+#include "ScreenCapture/DXGIScreenCapture.h"
+#include "ScreenCapture/GDIScreenCapture.h"
+#include <versionhelpers.h>
 
 ScreenLive::ScreenLive()
 	: event_loop_(new xop::EventLoop)
@@ -24,10 +27,10 @@ ScreenLive& ScreenLive::Instance()
 
 bool ScreenLive::GetScreenImage(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height)
 {
-	if (screen_capture_.CaptureFrame(bgra_image)) {
-		width = screen_capture_.GetWidth();
-		height = screen_capture_.GetHeight();
-		return true;
+	if (screen_capture_) {
+		if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
+			return true;
+		}
 	}
 
 	return false;
@@ -285,10 +288,22 @@ bool ScreenLive::IsConnected(int type)
 
 int ScreenLive::StartCapture()
 {
-	if (!screen_capture_.Init()) {
-		return -1;
-	}
+	if (!screen_capture_) {
+		if (IsWindows8OrGreater()) {
+			printf("DXGI Screen capture start ... \n");
+			screen_capture_ = new DXGIScreenCapture();
+		}
+		else {
+			printf("GDI Screen capture start ... \n");
+			screen_capture_ = new GDIScreenCapture();
+		}
 
+		if (!screen_capture_->Init()) {
+			printf("Screen capture start failed. \n");
+			return -1;
+		}
+	}
+	
 	if (!audio_capture_.Init()) {
 		return -1;
 	}
@@ -300,7 +315,11 @@ int ScreenLive::StartCapture()
 int ScreenLive::StopCapture()
 {
 	if (is_capture_started_) {
-		screen_capture_.Destroy();
+		if (screen_capture_) {
+			screen_capture_->Destroy();
+			delete screen_capture_;
+			screen_capture_ = nullptr;
+		}
 		audio_capture_.Destroy();
 		is_capture_started_ = false;
 	}
@@ -310,6 +329,10 @@ int ScreenLive::StopCapture()
 
 int ScreenLive::StartEncoder(AVConfig& config)
 {
+	if (!is_capture_started_) {
+		return -1;
+	}
+
 	av_config_ = config;
 
 	ffmpeg::AVConfig encoder_config;
@@ -317,8 +340,8 @@ int ScreenLive::StartEncoder(AVConfig& config)
 	encoder_config.video.bitrate = av_config_.bitrate_bps;
 	encoder_config.video.gop = av_config_.framerate * 2;
 	encoder_config.video.format = AV_PIX_FMT_BGRA;
-	encoder_config.video.width = screen_capture_.GetWidth();
-	encoder_config.video.height = screen_capture_.GetHeight();
+	encoder_config.video.width = screen_capture_->GetWidth();
+	encoder_config.video.height = screen_capture_->GetHeight();
 
 	encoder_config.audio.samplerate = audio_capture_.GetSamplerate();
 	encoder_config.audio.channels = audio_capture_.GetChannels();
@@ -340,8 +363,8 @@ int ScreenLive::StartEncoder(AVConfig& config)
 			nvenc_config nvenc_config;
 			nvenc_config.codec = "h264";
 			nvenc_config.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-			nvenc_config.width = screen_capture_.GetWidth();
-			nvenc_config.height = screen_capture_.GetHeight();
+			nvenc_config.width = screen_capture_->GetWidth();
+			nvenc_config.height = screen_capture_->GetHeight();
 			nvenc_config.framerate = encoder_config.video.framerate;
 			nvenc_config.gop = encoder_config.video.gop;
 			nvenc_config.bitrate = encoder_config.video.bitrate;
@@ -405,8 +428,7 @@ void ScreenLive::EncodeVideo()
 	uint32_t buffer_size = 1920 * 1080 * 4;				    
 	std::shared_ptr<uint8_t> buffer(new uint8_t[buffer_size]);
 
-	while (is_encoder_started_)
-	{
+	while (is_encoder_started_ && is_capture_started_) {
 		if (update_ts.elapsed() >= 1000) {
 			update_ts.reset();
 			encoding_fps_ = encoding_fps;
@@ -428,14 +450,15 @@ void ScreenLive::EncodeVideo()
 		std::vector<uint8_t> bgra_image;
 		uint32_t timestamp = xop::H264Source::GetTimestamp();
 		int frame_size = 0;
+		uint32_t width = 0, height = 0;
 
 		if (nvenc_data_ != nullptr) {
 			HANDLE handle = nullptr;
-			int lockKey = 0, unlockKey = 0;
-			if (screen_capture_.GetTextureHandle(&handle, &lockKey, &unlockKey)) {
-				frame_size = nvenc_info.encode_handle(nvenc_data_, handle, lockKey, unlockKey, buffer.get(), buffer_size);
-				if (frame_size < 0) {
-					if (screen_capture_.CaptureFrame(bgra_image)) {
+			//int lockKey = 0, unlockKey = 0;
+			//if (screen_capture_.GetTextureHandle(&handle, &lockKey, &unlockKey)) {
+			//	frame_size = nvenc_info.encode_handle(nvenc_data_, handle, lockKey, unlockKey, buffer.get(), buffer_size);
+			//	if (frame_size < 0) {
+					if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
 						ID3D11Device* device = nvenc_info.get_device(nvenc_data_);
 						ID3D11Texture2D* texture = nvenc_info.get_texture(nvenc_data_);
 						ID3D11DeviceContext *context = nvenc_info.get_context(nvenc_data_);
@@ -445,12 +468,13 @@ void ScreenLive::EncodeVideo()
 						context->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
 						frame_size = nvenc_info.encode_texture(nvenc_data_, texture, buffer.get(), buffer_size);
 					}
-				}
-			}		
+				//}
+			//}		
 		}
 		else {
-			if (screen_capture_.CaptureFrame(bgra_image)) {
-				ffmpeg::AVPacketPtr pkt_ptr = h264_encoder.Encode(&bgra_image[0], screen_capture_.GetWidth(), screen_capture_.GetHeight());				
+			if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
+				ffmpeg::AVPacketPtr pkt_ptr = h264_encoder.Encode(&bgra_image[0], 
+					screen_capture_->GetWidth(), screen_capture_->GetHeight());				
 				int extra_data_size = 0;
 				uint8_t* extra_data = nullptr;
 

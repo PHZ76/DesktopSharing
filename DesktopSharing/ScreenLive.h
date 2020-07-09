@@ -9,7 +9,7 @@
 #include "avcodec/aac_encoder.h"
 #include "NvCodec/nvenc.h"
 #include "wasapi/audio_capture.h"
-#include "ScreenCapture/DXGIScreenCapture.h"
+#include "ScreenCapture/ScreenCapture.h"
 #include <mutex>
 #include <atomic>
 #include <string>
@@ -94,7 +94,7 @@ private:
 	std::mutex mutex_;
 
 	// capture
-	DXGIScreenCapture screen_capture_;
+	ScreenCapture* screen_capture_ = nullptr;
 	AudioCapture audio_capture_;
 
 	// encoder

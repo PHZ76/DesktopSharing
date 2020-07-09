@@ -4,6 +4,7 @@
 #ifndef DXGI_SCREEN_CAPTURE_H
 #define DXGI_SCREEN_CAPTURE_H
 
+#include "ScreenCapture.h"
 #include <cstdio>
 #include <cstdint>
 #include <string>
@@ -16,24 +17,24 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 
-class DXGIScreenCapture
+class DXGIScreenCapture : public ScreenCapture
 {
 public:
 	DXGIScreenCapture();
 	virtual ~DXGIScreenCapture();
 
-	bool Init(int displayIndex = 0);
+	bool Init();
 	bool Destroy();
 
 	uint32_t GetWidth()  const { return dxgi_desc_.ModeDesc.Width; }
 	uint32_t GetHeight() const { return dxgi_desc_.ModeDesc.Height; }
 
-	bool CaptureFrame(std::vector<uint8_t>& bgra_image);
-	bool GetTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
-	bool CaptureImage(std::string pathname);
+	bool CaptureFrame(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height);
+	//bool GetTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
+	//bool CaptureImage(std::string pathname);
 	
-	inline ID3D11Device* GetD3D11Device() { return d3d11_device_.Get(); }
-	inline ID3D11DeviceContext* GetD3D11DeviceContext() { return d3d11_context_.Get(); }
+	//ID3D11Device* GetD3D11Device() { return d3d11_device_.Get(); }
+	//ID3D11DeviceContext* GetD3D11DeviceContext() { return d3d11_context_.Get(); }
 
 	bool CaptureStarted() const
 	{ return is_started_; }

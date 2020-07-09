@@ -9,7 +9,7 @@
 #pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"")
 #endif
 
-static const int SDL_USEREVENT_PAINT = 0x001;
+static const int SDL_USEREVENT_PAINT = 0x01;
 
 static void OnPaint(void *param)
 {

@@ -128,7 +128,7 @@ bool Overlay::Copy()
 	ImGui::Begin("screen-live-setting-widget", nullptr, widget_flag);
 
 	int input_flag = 0;
-	float start_x = 20.0, start_y = 20.0;
+	float start_x = 10.0, start_y = 20.0;
 
 	/* Encoder selection */
 	int encoder_index = 0;
@@ -163,7 +163,7 @@ bool Overlay::Copy()
 	ImGui::InputText("##rtsp-server-port", rtsp_server_info.server_port, sizeof(LiveInfo::server_port), input_flag); ImGui::SameLine(0, 10);
 	ImGui::Text("stream:"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(120);
-	ImGui::InputText("##rtsp-server-stream", rtsp_server_info.server_stream, sizeof(LiveInfo::server_stream), input_flag); ImGui::SameLine(0, 20);
+	ImGui::InputText("##rtsp-server-stream", rtsp_server_info.server_stream, sizeof(LiveInfo::server_stream), input_flag); ImGui::SameLine(0, 10);
 	if (ImGui::Button(!rtsp_server_info.state ? "start##rtsp-server" : "stop##rtsp-server", ImVec2(start_x + 30, start_y))) {
 		rtsp_server_info.state = !rtsp_server_info.state;
 		NotifyEvent(EVENT_TYPE_RTSP_SERVER);

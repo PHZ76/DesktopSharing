@@ -55,7 +55,8 @@ private:
 	int overlay_width_  = 0;
 	int overlay_height_ = 0;
 
-	static const int kOverlayHeight = 200;
+	static const int kMinOverlayWidth  = 860;
+	static const int kMinOverlayHeight = 200;
 };
 
 #endif

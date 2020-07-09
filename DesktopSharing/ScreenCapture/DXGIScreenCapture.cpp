@@ -29,7 +29,7 @@ DXGIScreenCapture::~DXGIScreenCapture()
 	Destroy();
 }
 
-bool DXGIScreenCapture::Init(int displayIndex)
+bool DXGIScreenCapture::Init()
 {
 	if (is_initialized_) {
 		return true;
@@ -55,7 +55,7 @@ bool DXGIScreenCapture::Init(int displayIndex)
 
 	Microsoft::WRL::ComPtr<IDXGIAdapter> dxgi_adapter;
 	Microsoft::WRL::ComPtr<IDXGIOutput> dxgi_output;
-	int index = displayIndex;
+	int index = 0;
 	do
 	{
 		if (dxgi_factory->EnumAdapters(index, dxgi_adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND) {
@@ -248,20 +248,18 @@ int DXGIScreenCapture::AquireFrame()
 		return -1;
 	}
 
-	if (frame_info.AccumulatedFrames == 0 || frame_info.LastPresentTime.QuadPart == 0)
-	{
+	if (frame_info.AccumulatedFrames == 0 || 
+		frame_info.LastPresentTime.QuadPart == 0) {
 		// No image update, only cursor moved.
 	}
 
-	if (!dxgi_resource.Get())
-	{
+	if (!dxgi_resource.Get()) {
 		return -1;
 	}
 
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> outputTexture;
 	hr = dxgi_resource->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void **>(outputTexture.GetAddressOf()));
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		return -1;
 	}
 
@@ -310,7 +308,7 @@ int DXGIScreenCapture::AquireFrame()
 	return 0;
 }
 
-bool DXGIScreenCapture::CaptureFrame(std::vector<uint8_t>& bgra_image)
+bool DXGIScreenCapture::CaptureFrame(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height)
 {
 	std::lock_guard<std::mutex> locker(mutex_);
 
@@ -329,72 +327,74 @@ bool DXGIScreenCapture::CaptureFrame(std::vector<uint8_t>& bgra_image)
 	}
 
 	bgra_image.assign(image_ptr_.get(), image_ptr_.get() + image_size_);
+	width = dxgi_desc_.ModeDesc.Width;
+	height = dxgi_desc_.ModeDesc.Height;
 	return true;
 }
 
-bool DXGIScreenCapture::GetTextureHandle(HANDLE* handle, int* lock_key, int* unlock_key)
-{
-	if (texture_handle_ == nullptr) {
-		return false;
-	}
+//bool DXGIScreenCapture::GetTextureHandle(HANDLE* handle, int* lock_key, int* unlock_key)
+//{
+//	if (texture_handle_ == nullptr) {
+//		return false;
+//	}
+//
+//	*handle = texture_handle_;
+//	key_ = *lock_key = 1;
+//	unlock_key = 0;
+//	return true;
+//}
 
-	*handle = texture_handle_;
-	key_ = *lock_key = 1;
-	unlock_key = 0;
-	return true;
-}
-
-bool DXGIScreenCapture::CaptureImage(std::string pathname)
-{
-	std::lock_guard<std::mutex> locker(mutex_);
-
-	if (!is_started_) {
-		return false;
-	}
-
-	if (image_ptr_ == nullptr || image_size_ == 0) {
-		return false;
-	}
-	
-	std::ofstream fpOut(pathname.c_str(), std::ios::out | std::ios::binary);
-	if (!fpOut) {
-		printf("[DXGIScreenCapture] capture image failed, open %s failed.\n", pathname.c_str());
-		return false;
-	}
-
-	unsigned char fileHeader[54] = {  
-		0x42, 0x4d, 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0,  /*file header*/
-		40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 32, 0, /*info header*/
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0
-	};
-
-	uint32_t imageWidth  = dxgi_desc_.ModeDesc.Width;
-	uint32_t imageHeight = dxgi_desc_.ModeDesc.Height;
-	uint32_t imageSize  = image_size_;
-	uint32_t fileSize = sizeof(fileHeader) + imageSize;
-
-	fileHeader[2] = (uint8_t)fileSize;
-	fileHeader[3] = fileSize >> 8;
-	fileHeader[4] = fileSize >> 16;
-	fileHeader[5] = fileSize >> 24;
-
-	fileHeader[18] = (uint8_t)imageWidth;
-	fileHeader[19] = imageWidth >> 8;
-	fileHeader[20] = imageWidth >> 16;
-	fileHeader[21] = imageWidth >> 24;
-
-	fileHeader[22] = (uint8_t)imageHeight;
-	fileHeader[23] = imageHeight >> 8;
-	fileHeader[24] = imageHeight >> 16;
-	fileHeader[25] = imageHeight >> 24;
-
-	fpOut.write((char*)fileHeader, 54);
-
-	char *imageData = (char *)image_ptr_.get();
-	for (int h = imageHeight-1; h >= 0; h--) {
-		fpOut.write(imageData+h*imageWidth*4, imageWidth *4);
-	}
-
-	fpOut.close();
-	return true;
-}
+//bool DXGIScreenCapture::CaptureImage(std::string pathname)
+//{
+//	std::lock_guard<std::mutex> locker(mutex_);
+//
+//	if (!is_started_) {
+//		return false;
+//	}
+//
+//	if (image_ptr_ == nullptr || image_size_ == 0) {
+//		return false;
+//	}
+//	
+//	std::ofstream fpOut(pathname.c_str(), std::ios::out | std::ios::binary);
+//	if (!fpOut) {
+//		printf("[DXGIScreenCapture] capture image failed, open %s failed.\n", pathname.c_str());
+//		return false;
+//	}
+//
+//	unsigned char fileHeader[54] = {  
+//		0x42, 0x4d, 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0,  /*file header*/
+//		40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 32, 0, /*info header*/
+//		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0
+//	};
+//
+//	uint32_t imageWidth  = dxgi_desc_.ModeDesc.Width;
+//	uint32_t imageHeight = dxgi_desc_.ModeDesc.Height;
+//	uint32_t imageSize  = image_size_;
+//	uint32_t fileSize = sizeof(fileHeader) + imageSize;
+//
+//	fileHeader[2] = (uint8_t)fileSize;
+//	fileHeader[3] = fileSize >> 8;
+//	fileHeader[4] = fileSize >> 16;
+//	fileHeader[5] = fileSize >> 24;
+//
+//	fileHeader[18] = (uint8_t)imageWidth;
+//	fileHeader[19] = imageWidth >> 8;
+//	fileHeader[20] = imageWidth >> 16;
+//	fileHeader[21] = imageWidth >> 24;
+//
+//	fileHeader[22] = (uint8_t)imageHeight;
+//	fileHeader[23] = imageHeight >> 8;
+//	fileHeader[24] = imageHeight >> 16;
+//	fileHeader[25] = imageHeight >> 24;
+//
+//	fpOut.write((char*)fileHeader, 54);
+//
+//	char *imageData = (char *)image_ptr_.get();
+//	for (int h = imageHeight-1; h >= 0; h--) {
+//		fpOut.write(imageData+h*imageWidth*4, imageWidth *4);
+//	}
+//
+//	fpOut.close();
+//	return true;
+//}
