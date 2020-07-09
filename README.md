@@ -16,7 +16,6 @@
 
 后续计划
 -
-* 显示调试信息。
 * 支持QSV编码器
 * 增加Windows客户端
 
@@ -27,8 +26,8 @@
 
 模块说明
 -
-* 屏幕采集: 使用DXGI抓屏技术, 所以项目只适合运行在win8以上的系统
-* 音频采集: 使用WASAPI捕获声卡音频数据
+* 屏幕采集: DXGI(win8以上), GDI
+* 音频采集: WASAPI
 * 编码器: [ffmpeg4.0](https://ffmpeg.org/), Version: 4.0
 * 硬件编码器: [Video-Codec-SDK](https://developer.nvidia.com/nvidia-video-codec-sdk), Version: 8.2
 * RTMP推流器: [rtmp](https://github.com/PHZ76/rtmp)
