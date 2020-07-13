@@ -83,8 +83,6 @@ private:
 	void PushAudio(const uint8_t* data, uint32_t size, uint32_t timestamp);
 	bool IsKeyFrame(const uint8_t* data, uint32_t size);
 
-	std::string _ip;
-
 	bool is_initialized_ = false;
 	bool is_capture_started_ = false;
 	bool is_encoder_started_ = false;
@@ -99,7 +97,7 @@ private:
 
 	// encoder
 	void* nvenc_data_ = nullptr;
-	ffmpeg::H264Encoder h264_encoder;
+	ffmpeg::H264Encoder h264_encoder_;
 	ffmpeg::AACEncoder  aac_encoder_;
 	std::shared_ptr<std::thread> encode_video_thread_ = nullptr;
 	std::shared_ptr<std::thread> encode_audio_thread_ = nullptr;

@@ -176,8 +176,8 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 			extradata = extradata_buf;
 		}
 		else {
-			extradata = h264_encoder.GetAVCodecContext()->extradata;
-			extradata_size = h264_encoder.GetAVCodecContext()->extradata_size;
+			extradata = h264_encoder_.GetAVCodecContext()->extradata;
+			extradata_size = h264_encoder_.GetAVCodecContext()->extradata_size;
 		}
 
 		xop::Nal sps = xop::H264Parser::findNal(extradata, extradata_size);
@@ -292,6 +292,13 @@ int ScreenLive::StartCapture()
 		if (IsWindows8OrGreater()) {
 			printf("DXGI Screen capture start ... \n");
 			screen_capture_ = new DXGIScreenCapture();
+			if (!screen_capture_->Init()) {
+				printf("DXGI Screen capture start failed. \n");
+				delete screen_capture_;
+
+				printf("GDI Screen capture start ... \n");
+				screen_capture_ = new GDIScreenCapture();
+			}
 		}
 		else {
 			printf("GDI Screen capture start ... \n");
@@ -300,6 +307,8 @@ int ScreenLive::StartCapture()
 
 		if (!screen_capture_->Init()) {
 			printf("Screen capture start failed. \n");
+			delete screen_capture_;
+			screen_capture_ = nullptr;
 			return -1;
 		}
 	}
@@ -346,7 +355,7 @@ int ScreenLive::StartEncoder(AVConfig& config)
 	encoder_config.audio.samplerate = audio_capture_.GetSamplerate();
 	encoder_config.audio.channels = audio_capture_.GetChannels();
 
-	if (!h264_encoder.Init(encoder_config) ) {
+	if (!h264_encoder_.Init(encoder_config) ) {
 		return -1;
 	}
 
@@ -396,7 +405,7 @@ int ScreenLive::StopEncoder()
 			encode_audio_thread_ = nullptr;
 		}
 
-		h264_encoder.Destroy();
+		h264_encoder_.Destroy();
 		aac_encoder_.Destroy();
 		if (nvenc_data_ != nullptr) {
 			nvenc_info.destroy(&nvenc_data_);
@@ -473,7 +482,7 @@ void ScreenLive::EncodeVideo()
 		}
 		else {
 			if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
-				ffmpeg::AVPacketPtr pkt_ptr = h264_encoder.Encode(&bgra_image[0], 
+				ffmpeg::AVPacketPtr pkt_ptr = h264_encoder_.Encode(&bgra_image[0], 
 					screen_capture_->GetWidth(), screen_capture_->GetHeight());				
 				int extra_data_size = 0;
 				uint8_t* extra_data = nullptr;
@@ -481,8 +490,8 @@ void ScreenLive::EncodeVideo()
 				if (pkt_ptr != nullptr){
 					if (IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
 						/* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
-						extra_data = h264_encoder.GetAVCodecContext()->extradata;
-						extra_data_size = h264_encoder.GetAVCodecContext()->extradata_size;
+						extra_data = h264_encoder_.GetAVCodecContext()->extradata;
+						extra_data_size = h264_encoder_.GetAVCodecContext()->extradata_size;
 						memcpy(buffer.get(), extra_data, extra_data_size);
 					}
 					
