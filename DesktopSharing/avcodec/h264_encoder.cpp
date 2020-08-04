@@ -1,6 +1,11 @@
 ﻿#include "h264_encoder.h"
 #include "net/log.h"
 
+#define USE_LIBYUV 1
+#if USE_LIBYUV
+#include "libyuv.h"
+#endif
+
 using namespace ffmpeg;
 
 bool H264Encoder::Init(AVConfig& video_config)
@@ -74,10 +79,10 @@ void H264Encoder::Destroy()
 			sws_context_ = nullptr;
 		}
 
-		if (yuv_frame_) {
-			av_frame_free(&yuv_frame_);
-			yuv_frame_ = nullptr;
-		}
+		//if (yuv_frame_) {
+		//	av_frame_free(&yuv_frame_);
+		//	yuv_frame_ = nullptr;
+		//}
 
 		if (codec_context_) {
 			avcodec_close(codec_context_);
@@ -90,10 +95,31 @@ void H264Encoder::Destroy()
 	}
 }
 
-AVPacketPtr H264Encoder::Encode(const uint8_t *image, uint32_t width, uint32_t height, uint64_t pts)
+AVPacketPtr H264Encoder::Encode(const uint8_t *bgra_image, uint32_t width, uint32_t height, uint64_t pts)
 {
 	VideoConfig& h264_config = av_config_.video;
 
+	AVFramePtr yuv_frame(av_frame_alloc());
+	yuv_frame->format = AV_PIX_FMT_YUV420P;
+	yuv_frame->width = h264_config.width;
+	yuv_frame->height = h264_config.height;
+	if (av_frame_get_buffer(yuv_frame.get(), 32) != 0) {
+		LOG("av_frame_get_buffer() failed.\n");
+		return nullptr;
+	}
+
+#if USE_LIBYUV	
+	int result = libyuv::ARGBToI420(bgra_image, width * 4,
+		yuv_frame->data[0], yuv_frame->linesize[0],
+		yuv_frame->data[1], yuv_frame->linesize[1],
+		yuv_frame->data[2], yuv_frame->linesize[2],
+		width, height);
+
+	if (result != 0) {
+		LOG("libyuv::ARGBToI420() failed.\n");
+		return nullptr;
+	}
+#else
 	if (sws_context_ == nullptr) {
 		sws_context_ = sws_getContext(width, height, h264_config.format, h264_config.width, h264_config.height,
 			AV_PIX_FMT_YUV420P, SWS_BICUBIC,NULL, NULL, NULL);
@@ -105,42 +131,31 @@ AVPacketPtr H264Encoder::Encode(const uint8_t *image, uint32_t width, uint32_t h
 		}
 	}
 
-	if (yuv_frame_ == nullptr) {
-		yuv_frame_ = av_frame_alloc();
-		yuv_frame_->format = AV_PIX_FMT_YUV420P;
-		yuv_frame_->width = h264_config.width;
-		yuv_frame_->height = h264_config.height;
-		yuv_frame_->pts = 0;
-		if (av_frame_get_buffer(yuv_frame_, 32) != 0) {
-			LOG("av_frame_get_buffer() failed.\n");
-			return nullptr;
-		}
-	}
-
 	uint8_t* data[AV_NUM_DATA_POINTERS] = { 0 };
 	data[0] = (uint8_t*)image;
 	int insize[AV_NUM_DATA_POINTERS] = { 0 };
 	insize[0] = width * 4;
-	int outHeight = sws_scale(sws_context_, data, insize, 0, height,yuv_frame_->data, yuv_frame_->linesize);
+	int outHeight = sws_scale(sws_context_, data, insize, 0, height, yuv_frame->data, yuv_frame->linesize);
 	if (outHeight < 0) {
 		LOG("sws_scale() failed.\n");
 		return nullptr;
 	}
+#endif
 
 	if (pts != 0) {
-		yuv_frame_->pts = pts;	
+		yuv_frame->pts = pts;
 	}
 	else {
-		yuv_frame_->pts = pts_++;
+		yuv_frame->pts = pts_++;
 	}
 
-	yuv_frame_->pict_type = AV_PICTURE_TYPE_NONE;
+	yuv_frame->pict_type = AV_PICTURE_TYPE_NONE;
 	if (force_idr_) {
-		yuv_frame_->pict_type = AV_PICTURE_TYPE_I;
+		yuv_frame->pict_type = AV_PICTURE_TYPE_I;
 		force_idr_ = false;
 	}
 
-	if (avcodec_send_frame(codec_context_, yuv_frame_) < 0) {
+	if (avcodec_send_frame(codec_context_, yuv_frame.get()) < 0) {
 		LOG("avcodec_send_frame() failed.\n");
 		return nullptr;
 	}
