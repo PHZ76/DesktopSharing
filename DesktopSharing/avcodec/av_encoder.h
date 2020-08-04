@@ -62,14 +62,17 @@ public:
 	virtual bool Init(AVConfig& config) = 0;
 	virtual void Destroy() = 0;
 
+	virtual void ForceIDR() {}
+	virtual void SetBitrate(uint32_t bitrate_kbps) {}
+
 	AVCodecContext* GetAVCodecContext() const {
-		return codec_contex_;
+		return codec_context_;
 	}
 
 protected:
 	bool is_initialized_ = false;
 	AVConfig av_config_;
-	AVCodecContext *codec_contex_ = nullptr;
+	AVCodecContext *codec_context_ = nullptr;
 };
 
 }
