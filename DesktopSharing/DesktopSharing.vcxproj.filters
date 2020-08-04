@@ -40,6 +40,21 @@
     <Filter Include="源文件\imgui">
       <UniqueIdentifier>{fc15b1c2-2ddc-4d3e-8a53-60d09c9fe2d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\QsvCodec">
+      <UniqueIdentifier>{d6315d46-061f-4a79-9dda-b9a970b61950}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\QsvCodec\src">
+      <UniqueIdentifier>{3a6f75e9-d34f-4ba3-8a02-21c249c47c15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\libyuv">
+      <UniqueIdentifier>{562e1810-42e8-4c8d-8037-e3673d1b4608}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\libyuv\source">
+      <UniqueIdentifier>{5e9d5d14-477c-431c-8a48-6d692548f3fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\libyuv\include">
+      <UniqueIdentifier>{c218d111-7861-491d-ada4-ab2323859e15}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -221,6 +236,198 @@
     </ClCompile>
     <ClCompile Include="ScreenCapture\GDIScreenCapture.cpp">
       <Filter>源文件\ScreenCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_critical_section.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_dispatcher.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_dispatcher_log.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_dxva2_device.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_function_table.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_library_iterator.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_load_dll.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_load_plugin.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_plugin_hive.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\mfx_win_reg_key.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\src\qsv_main.cpp">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\common_directx11.cpp">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\common_utils.cpp">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\common_utils_windows.cpp">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\QsvEncoder.cpp">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="QsvCodec\common_directx9.cpp">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_common.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_gcc.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_mmi.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_msa.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_neon.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_neon64.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\compare_win.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_argb.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_from.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_from_argb.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_jpeg.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_to_argb.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\convert_to_i420.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\cpu_id.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\mjpeg_decoder.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\mjpeg_validate.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\planar_functions.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_any.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_argb.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_common.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_gcc.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_mmi.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_msa.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_neon.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_neon64.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\rotate_win.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_any.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_common.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_gcc.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_mmi.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_msa.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_neon.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_neon64.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\row_win.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_any.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_argb.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_common.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_gcc.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_mmi.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_msa.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_neon.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_neon64.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\scale_win.cc">
+      <Filter>源文件\libyuv\source</Filter>
+    </ClCompile>
+    <ClCompile Include="libyuv\source\video_common.cc">
+      <Filter>源文件\libyuv\source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -457,6 +664,60 @@
     </ClInclude>
     <ClInclude Include="ScreenCapture\GDIScreenCapture.h">
       <Filter>源文件\ScreenCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_critical_section.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher_defs.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher_log.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_dxva2_device.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_exposed_functions_list.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_library_iterator.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_load_dll.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_load_plugin.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_plugin_hive.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_vector.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfx_win_reg_key.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\src\mfxaudio_exposed_functions_list.h">
+      <Filter>源文件\QsvCodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\common_directx11.h">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\common_utils.h">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\QsvEncoder.h">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="QsvCodec\common_directx9.h">
+      <Filter>源文件\QsvCodec</Filter>
+    </ClInclude>
+    <ClInclude Include="libyuv\include\libyuv.h">
+      <Filter>源文件\libyuv\include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

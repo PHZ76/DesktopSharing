@@ -58,14 +58,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)imgui;$(ProjectDir)net;$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)QsvCodec\include\msdk\include;$(ProjectDir)QsvCodec\include;$(ProjectDir)imgui;$(ProjectDir)net;$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\SDL2\include;%(AdditionalIncludeDirectories);$(ProjectDir)libyuv\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;__WINDOWS_WASAPI__;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)..\libs\SDL2\lib\x86;$(ProjectDir)..\libs\ffmpeg\lib;$(ProjectDir)..\libs\portaudio\lib\debug;$(ProjectDir)..\libs\screen_capture\lib\debug;$(ProjectDir)..\libs\screen_capture_lite\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>SDL2.lib;avdevice.lib;avformat.lib;swresample.lib;avcodec.lib;swscale.lib;avutil.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;avdevice.lib;avformat.lib;swresample.lib;avcodec.lib;swscale.lib;avutil.lib;dxgi.lib;d3d11.lib;d3d9.lib;dxva2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -76,8 +76,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)imgui;$(ProjectDir)net;$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>__WINDOWS_WASAPI__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)QsvCodec\src;$(ProjectDir)QsvCodec\include;$(ProjectDir)QsvCodec;$(ProjectDir)imgui;$(ProjectDir)net;$(ProjectDir)wasapi;$(ProjectDir)NvCodec;$(ProjectDir)NvCodec\NvEncoder;$(ProjectDir)..\libs\ffmpeg\include;$(ProjectDir)..\libs\SDL2\include;%(AdditionalIncludeDirectories);$(ProjectDir)libyuv\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;__WINDOWS_WASAPI__;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -87,7 +87,7 @@
       <AdditionalOptions> /SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <StackReserveSize>
       </StackReserveSize>
-      <AdditionalDependencies>SDL2.lib;avdevice.lib;avformat.lib;swresample.lib;avcodec.lib;swscale.lib;avutil.lib;d3d9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;avdevice.lib;avformat.lib;swresample.lib;avcodec.lib;swscale.lib;avutil.lib;dxgi.lib;d3d11.lib;d3d9.lib;dxva2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -99,6 +99,54 @@
     <ClCompile Include="imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="libyuv\source\compare.cc" />
+    <ClCompile Include="libyuv\source\compare_common.cc" />
+    <ClCompile Include="libyuv\source\compare_gcc.cc" />
+    <ClCompile Include="libyuv\source\compare_mmi.cc" />
+    <ClCompile Include="libyuv\source\compare_msa.cc" />
+    <ClCompile Include="libyuv\source\compare_neon.cc" />
+    <ClCompile Include="libyuv\source\compare_neon64.cc" />
+    <ClCompile Include="libyuv\source\compare_win.cc" />
+    <ClCompile Include="libyuv\source\convert.cc" />
+    <ClCompile Include="libyuv\source\convert_argb.cc" />
+    <ClCompile Include="libyuv\source\convert_from.cc" />
+    <ClCompile Include="libyuv\source\convert_from_argb.cc" />
+    <ClCompile Include="libyuv\source\convert_jpeg.cc" />
+    <ClCompile Include="libyuv\source\convert_to_argb.cc" />
+    <ClCompile Include="libyuv\source\convert_to_i420.cc" />
+    <ClCompile Include="libyuv\source\cpu_id.cc" />
+    <ClCompile Include="libyuv\source\mjpeg_decoder.cc" />
+    <ClCompile Include="libyuv\source\mjpeg_validate.cc" />
+    <ClCompile Include="libyuv\source\planar_functions.cc" />
+    <ClCompile Include="libyuv\source\rotate.cc" />
+    <ClCompile Include="libyuv\source\rotate_any.cc" />
+    <ClCompile Include="libyuv\source\rotate_argb.cc" />
+    <ClCompile Include="libyuv\source\rotate_common.cc" />
+    <ClCompile Include="libyuv\source\rotate_gcc.cc" />
+    <ClCompile Include="libyuv\source\rotate_mmi.cc" />
+    <ClCompile Include="libyuv\source\rotate_msa.cc" />
+    <ClCompile Include="libyuv\source\rotate_neon.cc" />
+    <ClCompile Include="libyuv\source\rotate_neon64.cc" />
+    <ClCompile Include="libyuv\source\rotate_win.cc" />
+    <ClCompile Include="libyuv\source\row_any.cc" />
+    <ClCompile Include="libyuv\source\row_common.cc" />
+    <ClCompile Include="libyuv\source\row_gcc.cc" />
+    <ClCompile Include="libyuv\source\row_mmi.cc" />
+    <ClCompile Include="libyuv\source\row_msa.cc" />
+    <ClCompile Include="libyuv\source\row_neon.cc" />
+    <ClCompile Include="libyuv\source\row_neon64.cc" />
+    <ClCompile Include="libyuv\source\row_win.cc" />
+    <ClCompile Include="libyuv\source\scale.cc" />
+    <ClCompile Include="libyuv\source\scale_any.cc" />
+    <ClCompile Include="libyuv\source\scale_argb.cc" />
+    <ClCompile Include="libyuv\source\scale_common.cc" />
+    <ClCompile Include="libyuv\source\scale_gcc.cc" />
+    <ClCompile Include="libyuv\source\scale_mmi.cc" />
+    <ClCompile Include="libyuv\source\scale_msa.cc" />
+    <ClCompile Include="libyuv\source\scale_neon.cc" />
+    <ClCompile Include="libyuv\source\scale_neon64.cc" />
+    <ClCompile Include="libyuv\source\scale_win.cc" />
+    <ClCompile Include="libyuv\source\video_common.cc" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="net\Acceptor.cpp" />
@@ -122,6 +170,22 @@
     <ClCompile Include="NvCodec\NvEncoder\NvEncoder.cpp" />
     <ClCompile Include="NvCodec\NvEncoder\NvEncoderD3D11.cpp" />
     <ClCompile Include="Overlay.cpp" />
+    <ClCompile Include="QsvCodec\common_directx9.cpp" />
+    <ClCompile Include="QsvCodec\common_directx11.cpp" />
+    <ClCompile Include="QsvCodec\common_utils.cpp" />
+    <ClCompile Include="QsvCodec\common_utils_windows.cpp" />
+    <ClCompile Include="QsvCodec\QsvEncoder.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_critical_section.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_dispatcher.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_dispatcher_log.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_dxva2_device.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_function_table.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_library_iterator.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_load_dll.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_load_plugin.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_plugin_hive.cpp" />
+    <ClCompile Include="QsvCodec\src\mfx_win_reg_key.cpp" />
+    <ClCompile Include="QsvCodec\src\qsv_main.cpp" />
     <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp" />
     <ClCompile Include="ScreenCapture\GDIScreenCapture.cpp" />
     <ClCompile Include="ScreenCapture\ScreenCapture.cpp" />
@@ -165,6 +229,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="libyuv\include\libyuv.h" />
     <ClInclude Include="MainWindow.h" />
     <ClInclude Include="md5\md5.hpp" />
     <ClInclude Include="net\Acceptor.h" />
@@ -195,6 +260,23 @@
     <ClInclude Include="NvCodec\NvEncoder\NvEncoder.h" />
     <ClInclude Include="NvCodec\NvEncoder\NvEncoderD3D11.h" />
     <ClInclude Include="Overlay.h" />
+    <ClInclude Include="QsvCodec\common_directx9.h" />
+    <ClInclude Include="QsvCodec\common_directx11.h" />
+    <ClInclude Include="QsvCodec\common_utils.h" />
+    <ClInclude Include="QsvCodec\QsvEncoder.h" />
+    <ClInclude Include="QsvCodec\src\mfxaudio_exposed_functions_list.h" />
+    <ClInclude Include="QsvCodec\src\mfx_critical_section.h" />
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher.h" />
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher_defs.h" />
+    <ClInclude Include="QsvCodec\src\mfx_dispatcher_log.h" />
+    <ClInclude Include="QsvCodec\src\mfx_dxva2_device.h" />
+    <ClInclude Include="QsvCodec\src\mfx_exposed_functions_list.h" />
+    <ClInclude Include="QsvCodec\src\mfx_library_iterator.h" />
+    <ClInclude Include="QsvCodec\src\mfx_load_dll.h" />
+    <ClInclude Include="QsvCodec\src\mfx_load_plugin.h" />
+    <ClInclude Include="QsvCodec\src\mfx_plugin_hive.h" />
+    <ClInclude Include="QsvCodec\src\mfx_vector.h" />
+    <ClInclude Include="QsvCodec\src\mfx_win_reg_key.h" />
     <ClInclude Include="ScreenCapture\DXGIScreenCapture.h" />
     <ClInclude Include="ScreenCapture\GDIScreenCapture.h" />
     <ClInclude Include="ScreenCapture\ScreenCapture.h" />
