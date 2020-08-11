@@ -11,7 +11,8 @@
 * 完成RTSP本地转发音视频数据。
 * 完成RTSP推流器。
 * 完成RTMP推流器。
-* 完成硬件编码(nvenc), 仅支持部分nvidia显卡。
+* 完成独显硬件编码(nvenc), 仅支持部分nvidia显卡。
+* 完成核显硬件编码(qsv)。
 * 完成简单的UI界面。
 
 后续计划
@@ -27,7 +28,8 @@
 * 屏幕采集: DXGI(win8以上), GDI
 * 音频采集: WASAPI
 * 编码器: [ffmpeg4.0](https://ffmpeg.org/), Version: 4.0
-* 硬件编码器: [Video-Codec-SDK](https://developer.nvidia.com/nvidia-video-codec-sdk), Version: 8.2
+* 独显硬件编码器: [Video-Codec-SDK](https://developer.nvidia.com/nvidia-video-codec-sdk), Version: 8.2
+* 核显硬件编码器: [Media-SDK](https://github.com/Intel-Media-SDK/MediaSDK)
 * RTMP推流器: [rtmp](https://github.com/PHZ76/rtmp)
 * RTSP服务器,推流器: [RtspServer](https://github.com/PHZ76/RtspServer)
 * UI界面: [SDL](https://github.com/SDL-mirror/SDL), [imgui](https://github.com/ocornut/imgui)
