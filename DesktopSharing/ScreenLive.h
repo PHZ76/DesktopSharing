@@ -8,6 +8,7 @@
 #include "avcodec/h264_encoder.h"
 #include "avcodec/aac_encoder.h"
 #include "NvCodec/nvenc.h"
+#include "QsvCodec/QsvEncoder.h"
 #include "wasapi/audio_capture.h"
 #include "ScreenCapture/ScreenCapture.h"
 #include <mutex>
@@ -24,7 +25,7 @@ struct AVConfig
 	uint32_t framerate = 25;
 	//uint32_t gop = 25;
 
-	std::string codec = "x264"; // [software codec: "x264"]  [hardware codec: "h264_nvenc"]
+	std::string codec = "x264"; // [software codec: "x264"]  [hardware codec: "h264_nvenc, h264_qsv"]
 
 	bool operator != (const AVConfig &src) const {
 		if (src.bitrate_bps != bitrate_bps || src.framerate != framerate ||
@@ -97,6 +98,7 @@ private:
 
 	// encoder
 	void* nvenc_data_ = nullptr;
+	QsvEncoder qsv_encoder_;
 	ffmpeg::H264Encoder h264_encoder_;
 	ffmpeg::AACEncoder  aac_encoder_;
 	std::shared_ptr<std::thread> encode_video_thread_ = nullptr;

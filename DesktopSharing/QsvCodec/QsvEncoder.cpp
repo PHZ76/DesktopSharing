@@ -1,10 +1,13 @@
 #include "QsvEncoder.h"
 #include "common_utils.h"
+#include "libyuv.h"
 #include "net/log.h"
 #include <Windows.h>
 #include <versionhelpers.h>
 
 QsvEncoder::QsvEncoder()
+	: sps_buffer_(new mfxU8[1024])
+	, pps_buffer_(new mfxU8[1024])
 {
 	mfx_impl_ = MFX_IMPL_AUTO_ANY;
 	mfx_ver_ = { {0, 1} };
@@ -23,14 +26,36 @@ QsvEncoder::QsvEncoder()
 	mfxStatus sts = MFX_ERR_NONE;
 	sts = mfx_session_.Init(impl, &mfx_ver_);
 	if (sts == MFX_ERR_NONE) {
-		mfx_session_.QueryVersion(&mfx_ver_);
-		mfx_session_.Close();
+		//mfx_session_.QueryVersion(&mfx_ver_);
+		//mfx_session_.Close();
 	}
 }
 
 QsvEncoder::~QsvEncoder()
 {
 	Destroy();
+}
+
+bool QsvEncoder::IsSupported()
+{
+	mfxVersion             mfx_ver;
+	MFXVideoSession        mfx_session;
+	mfxIMPL                mfx_impl;
+
+	mfx_impl = MFX_IMPL_AUTO_ANY;
+	mfx_ver = { {0, 1} };
+
+	if (IsWindows8OrGreater()) {
+		mfx_impl |= MFX_IMPL_VIA_D3D11;
+	}
+	else {
+		mfx_impl |= MFX_IMPL_VIA_D3D9;
+	}
+
+	mfxStatus sts = MFX_ERR_NONE;
+	sts = mfx_session.Init(mfx_impl, &mfx_ver);
+	mfx_session.Close();
+	return sts == MFX_ERR_NONE;
 }
 
 bool QsvEncoder::Init(QsvParams& qsv_params)
@@ -246,7 +271,167 @@ bool QsvEncoder::GetVideoParam()
 
 	sps_size_ = opt.SPSBufSize;
 	pps_size_ = opt.PPSBufSize;
+
+	//printf("\n");
+	//for (uint32_t i = 0; i < 150 && i < sps_size_; i++) {
+	//	printf("%x ", sps_buffer_.get()[i]);
+	//}
+	//printf("\n");
+
 	return true;
+}
+
+int QsvEncoder::Encode(const uint8_t* bgra_image, uint32_t width, uint32_t height,
+	uint8_t* out_buf, uint32_t out_buf_size)
+{
+	if (!is_initialized_) {
+		return -1;
+	}
+
+	int yuv_buf_size = width * height * 3 / 2;
+	std::shared_ptr<uint8_t> nv12_buf(new uint8_t[yuv_buf_size]);
+
+	int stride_y = width;
+	int stride_uv = width;// (width + 1) / 2;
+	uint8_t* data_y = nv12_buf.get();
+	uint8_t* data_uv = nv12_buf.get() + width * height;
+
+	int ret = libyuv::ARGBToNV12(bgra_image, width * 4, data_y, stride_y, data_uv, stride_uv, width, height);
+	if (ret != 0) {
+		return -1;
+	}
+
+	mfxStatus sts = MFX_ERR_NONE;
+
+	int index = GetFreeSurfaceIndex(mfx_surfaces_);  // Find free frame surface
+	MSDK_CHECK_ERROR(MFX_ERR_NOT_FOUND, index, MFX_ERR_MEMORY_ALLOC);
+
+	// Surface locking required when read/write video surfaces
+	sts = mfx_allocator_.Lock(mfx_allocator_.pthis, mfx_surfaces_[index].Data.MemId, &(mfx_surfaces_[index].Data));
+	MSDK_CHECK_ERROR(MFX_ERR_NOT_FOUND, index, MFX_ERR_LOCK_MEMORY);
+
+	// load nv12 
+	mfxU16 w, h, i, pitch;
+	mfxU8 *ptr;
+	mfxFrameInfo *info = &mfx_surfaces_[index].Info;
+	mfxFrameData *data = &mfx_surfaces_[index].Data;
+
+	if (info->CropH > 0 && info->CropW > 0) {
+		w = info->CropW;
+		h = info->CropH;
+	}
+	else {
+		w = info->Width;
+		h = info->Height;
+	}
+
+	pitch = data->Pitch;
+	ptr = data->Y + info->CropX + info->CropY * data->Pitch;
+
+	// load Y plane
+	for (i = 0; i < h; i++)
+		memcpy(ptr + i * pitch, data_y + i * stride_y, w);
+
+	// load UV plane
+	h /= 2;
+	ptr = data->UV + info->CropX + (info->CropY / 2) * pitch;
+
+	for (i = 0; i < h; i++) {
+		memcpy(ptr + i * pitch, data_uv + i * stride_uv, w);
+	}
+
+	sts = mfx_allocator_.Unlock(mfx_allocator_.pthis, mfx_surfaces_[index].Data.MemId, &(mfx_surfaces_[index].Data));
+	MSDK_CHECK_ERROR(MFX_ERR_NOT_FOUND, index, MFX_ERR_UNKNOWN);
+
+	return EncodeFrame(index, out_buf, out_buf_size);
+}
+
+static void SaveFile(uint8_t* frame_data, uint32_t frame_size, bool is_h264)
+{
+	printf("\n");
+	for (uint32_t i = 0; i < 150 && i < frame_size; i++) {
+		printf("%x ", frame_data[i]);
+	}
+	printf("\n");
+	printf("frame size: %d\n", frame_size);
+
+	static FILE* file = NULL;
+	if (!file) {
+		if (is_h264) {
+			file = fopen("test.h264", "wb+");
+		}
+		else {
+			file = fopen("test.h265", "wb+");
+		}
+	}
+
+	if (file) {
+		fwrite(frame_data, 1, frame_size, file);
+	}
+}
+
+int QsvEncoder::EncodeFrame(int index, uint8_t* out_buf, uint32_t out_buf_size)
+{
+	mfxSyncPoint syncp;
+	mfxStatus sts = MFX_ERR_NONE;
+	uint32_t frame_size = 0;
+
+	for (;;) {
+		// Encode a frame asychronously (returns immediately)
+		mfxEncodeCtrl* enc_ctrl = nullptr;
+		if (enc_ctrl_.FrameType) {
+			enc_ctrl = &enc_ctrl_;
+		}
+		sts = mfx_encoder_->EncodeFrameAsync(enc_ctrl, &mfx_surfaces_[index], &mfx_enc_bs_, &syncp);
+		enc_ctrl_.FrameType = 0;
+
+		if (MFX_ERR_NONE < sts && !syncp) {  // Repeat the call if warning and no output
+			if (MFX_WRN_DEVICE_BUSY == sts)
+				MSDK_SLEEP(1);  // Wait if device is busy, then repeat the same call
+		}
+		else if (MFX_ERR_NONE < sts && syncp) {
+			sts = MFX_ERR_NONE;     // Ignore warnings if output is available
+			break;
+		}
+		else if (MFX_ERR_NOT_ENOUGH_BUFFER == sts) {
+			// Allocate more bitstream buffer memory here if needed...
+			break;
+		}
+		else {
+			break;
+		}
+	}
+
+	if (MFX_ERR_NONE == sts) {
+		sts = mfx_session_.SyncOperation(syncp, 60000);   // Synchronize. Wait until encoded frame is ready
+		MSDK_CHECK_RESULT(sts, MFX_ERR_NONE, sts);
+
+		//mfx_enc_bs_.Data + mfx_enc_bs_.DataOffset, mfx_enc_bs_.DataLength
+		if (mfx_enc_bs_.DataLength > 0) {
+			//printf("encoder output frame size: %u \n", mfx_enc_bs_.DataLength);
+			if (out_buf_size >= frame_size + sps_size_ + pps_size_) {
+				//memcpy(out_buf + frame_size, sps_buffer_.get(), sps_size_);
+				//frame_size += sps_size_;
+				//memcpy(out_buf + frame_size, pps_buffer_.get(), pps_size_);
+				//frame_size += pps_size_;
+
+				if (mfx_enc_params_.mfx.CodecId == MFX_CODEC_AVC) {
+					memcpy(out_buf + frame_size, mfx_enc_bs_.Data, mfx_enc_bs_.DataLength);
+				}
+				else if (mfx_enc_params_.mfx.CodecId == MFX_CODEC_HEVC) {
+					memcpy(out_buf + frame_size, mfx_enc_bs_.Data, mfx_enc_bs_.DataLength);
+				}
+
+				frame_size += mfx_enc_bs_.DataLength;
+
+				//SaveFile(out_buf, frame_size, mfx_enc_params_.mfx.CodecId == MFX_CODEC_AVC);			
+			}
+
+			mfx_enc_bs_.DataLength = 0;
+		}
+	}
+
+	return frame_size;
 }
 
 void QsvEncoder::ForceIDR()

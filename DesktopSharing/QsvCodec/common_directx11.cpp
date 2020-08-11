@@ -26,7 +26,10 @@ namespace d3d11 {
 
 	CComPtr<ID3D11Device>                   g_pD3D11Device;
 	CComPtr<ID3D11DeviceContext>            g_pD3D11Ctx;
-	CComPtr<IDXGIFactory2>                  g_pDXGIFactory;
+	CComPtr<IDXGIFactory2>                g_pDXGIFactory;
+	/*ID3D11Device*							g_pD3D11Device;
+	ID3D11DeviceContext*                    g_pD3D11Ctx;
+	IDXGIFactory2*							g_pDXGIFactory;*/
 	IDXGIAdapter*                           g_pAdapter;
 
 	std::map<mfxMemId*, mfxHDL>             allocResponses;
@@ -69,7 +72,7 @@ namespace d3d11 {
 				break;
 			}
 		}
-
+		
 		HRESULT hres = CreateDXGIFactory(__uuidof(IDXGIFactory2), (void**)(&g_pDXGIFactory));
 		if (FAILED(hres)) return NULL;
 

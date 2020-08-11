@@ -235,6 +235,11 @@ bool MainWindow::StartLive(int& event_type,
 	if (avconfig.codec == "h264_nvenc") {
 		if (!nvenc_info.is_supported()) {
 			avconfig.codec = "x264";
+		}		
+	}
+	else if (avconfig.codec == "h264_qsv") {
+		if (!QsvEncoder::IsSupported()) {
+			avconfig.codec = "x264";
 		}
 	}
 

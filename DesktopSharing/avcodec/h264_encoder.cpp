@@ -132,7 +132,7 @@ AVPacketPtr H264Encoder::Encode(const uint8_t *bgra_image, uint32_t width, uint3
 	}
 
 	uint8_t* data[AV_NUM_DATA_POINTERS] = { 0 };
-	data[0] = (uint8_t*)image;
+	data[0] = (uint8_t*)bgra_image;
 	int insize[AV_NUM_DATA_POINTERS] = { 0 };
 	insize[0] = width * 4;
 	int outHeight = sws_scale(sws_context_, data, insize, 0, height, yuv_frame->data, yuv_frame->linesize);

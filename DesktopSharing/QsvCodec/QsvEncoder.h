@@ -25,8 +25,16 @@ public:
 	QsvEncoder();
 	virtual ~QsvEncoder();
 
+	static bool IsSupported();
+
 	virtual bool Init(QsvParams& qsv_params);
 	virtual void Destroy();
+	
+	virtual bool IsInitialized() const 
+	{ return is_initialized_; }
+
+	virtual int Encode(const uint8_t* bgra_image, uint32_t width, uint32_t height,
+		uint8_t* out_buf, uint32_t out_buf_size);
 
 	virtual void ForceIDR();
 	virtual void SetBitrate(uint32_t bitrate_kbps);
@@ -38,6 +46,7 @@ private:
 	bool AllocateBuffer();
 	void FreeBuffer();
 	bool GetVideoParam();
+	int  EncodeFrame(int index, uint8_t* out_buf, uint32_t out_buf_size);
 
 	bool is_initialized_ = false;
 	bool use_d3d11_ = false;

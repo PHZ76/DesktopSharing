@@ -383,6 +383,16 @@ int ScreenLive::StartEncoder(AVConfig& config)
 			}
 		}
 	}
+	else if (av_config_.codec == "h264_qsv") {
+		QsvParams qsv_params;
+		qsv_params.codec = "h264";
+		qsv_params.bitrate_kbps = encoder_config.video.bitrate / 1000;
+		qsv_params.framerate = encoder_config.video.framerate;
+		qsv_params.gop = encoder_config.video.gop;
+		qsv_params.width = screen_capture_->GetWidth();
+		qsv_params.height = screen_capture_->GetHeight();
+		qsv_encoder_.Init(qsv_params);
+	}
 
 	is_encoder_started_ = true;
 	encode_video_thread_.reset(new std::thread(&ScreenLive::EncodeVideo, this));
@@ -407,9 +417,14 @@ int ScreenLive::StopEncoder()
 
 		h264_encoder_.Destroy();
 		aac_encoder_.Destroy();
+
 		if (nvenc_data_ != nullptr) {
 			nvenc_info.destroy(&nvenc_data_);
 			nvenc_data_ = nullptr;
+		}
+
+		if (qsv_encoder_.IsInitialized()) {
+			qsv_encoder_.Destroy();
 		}
 	}
 
@@ -420,7 +435,8 @@ bool ScreenLive::IsKeyFrame(const uint8_t* data, uint32_t size)
 {
 	if (size > 4) {
 		//0x67:sps ,0x65:IDR, 0x6: SEI
-		if (data[4] == 0x67 || data[4] == 0x65 || data[4] == 0x6) {
+		if (data[4] == 0x67 || data[4] == 0x65 || 
+			data[4] == 0x6 || data[4] == 0x27) {
 			return true;
 		}
 	}
@@ -480,24 +496,29 @@ void ScreenLive::EncodeVideo()
 				//}
 			//}		
 		}
-		else {
+		else {			
 			if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
-				ffmpeg::AVPacketPtr pkt_ptr = h264_encoder_.Encode(&bgra_image[0], 
-					screen_capture_->GetWidth(), screen_capture_->GetHeight());				
-				int extra_data_size = 0;
-				uint8_t* extra_data = nullptr;
+				if (qsv_encoder_.IsInitialized()) {
+					frame_size = qsv_encoder_.Encode(&bgra_image[0], width, height, buffer.get(), buffer_size);
+				}		
+				else {
+					ffmpeg::AVPacketPtr pkt_ptr = h264_encoder_.Encode(&bgra_image[0],
+						screen_capture_->GetWidth(), screen_capture_->GetHeight());
+					int extra_data_size = 0;
+					uint8_t* extra_data = nullptr;
 
-				if (pkt_ptr != nullptr){
-					if (IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
-						/* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
-						extra_data = h264_encoder_.GetAVCodecContext()->extradata;
-						extra_data_size = h264_encoder_.GetAVCodecContext()->extradata_size;
-						memcpy(buffer.get(), extra_data, extra_data_size);
+					if (pkt_ptr != nullptr) {
+						if (IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
+							/* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
+							extra_data = h264_encoder_.GetAVCodecContext()->extradata;
+							extra_data_size = h264_encoder_.GetAVCodecContext()->extradata_size;
+							memcpy(buffer.get(), extra_data, extra_data_size);
+						}
+
+						memcpy(buffer.get() + extra_data_size, pkt_ptr->data, pkt_ptr->size);
+						frame_size = pkt_ptr->size + extra_data_size;
 					}
-					
-					memcpy(buffer.get() + extra_data_size, pkt_ptr->data, pkt_ptr->size);
-					frame_size = pkt_ptr->size + extra_data_size;
-				}
+				}		
 			}				
 		}		
 
