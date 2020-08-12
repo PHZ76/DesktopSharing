@@ -232,15 +232,10 @@ bool MainWindow::StartLive(int& event_type,
 	avconfig.framerate = atoi(encoder_settings[1].c_str());
 	avconfig.bitrate_bps = atoi(encoder_settings[2].c_str()) * 1000U;
 	avconfig.codec = encoder_settings[0];
-	if (avconfig.codec == "h264_nvenc") {
-		if (!nvenc_info.is_supported()) {
-			avconfig.codec = "x264";
-		}		
-	}
-	else if (avconfig.codec == "h264_qsv") {
-		if (!QsvEncoder::IsSupported()) {
-			avconfig.codec = "x264";
-		}
+
+	if ((avconfig.codec == "h264_nvenc" && !nvenc_info.is_supported()) ||
+		(avconfig.codec == "h264_qsv" && !QsvEncoder::IsSupported())) {
+		avconfig.codec = "x264";	
 	}
 
 	/* reset video encoder */

@@ -384,14 +384,16 @@ int ScreenLive::StartEncoder(AVConfig& config)
 		}
 	}
 	else if (av_config_.codec == "h264_qsv") {
-		QsvParams qsv_params;
-		qsv_params.codec = "h264";
-		qsv_params.bitrate_kbps = encoder_config.video.bitrate / 1000;
-		qsv_params.framerate = encoder_config.video.framerate;
-		qsv_params.gop = encoder_config.video.gop;
-		qsv_params.width = screen_capture_->GetWidth();
-		qsv_params.height = screen_capture_->GetHeight();
-		qsv_encoder_.Init(qsv_params);
+		if (QsvEncoder::IsSupported()) {
+			QsvParams qsv_params;
+			qsv_params.codec = "h264";
+			qsv_params.bitrate_kbps = encoder_config.video.bitrate / 1000;
+			qsv_params.framerate = encoder_config.video.framerate;
+			qsv_params.gop = encoder_config.video.gop;
+			qsv_params.width = screen_capture_->GetWidth();
+			qsv_params.height = screen_capture_->GetHeight();
+			qsv_encoder_.Init(qsv_params);
+		}
 	}
 
 	is_encoder_started_ = true;
