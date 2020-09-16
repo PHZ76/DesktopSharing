@@ -293,8 +293,13 @@ int DXGIScreenCapture::AquireFrame()
 	hr = d3d11_context_->Map(rgba_texture_.Get(), 0, D3D11_MAP_READ, 0, &dsec);
 	if (!FAILED(hr)) {
 		if (dsec.pData != NULL) {
+			uint32_t image_width = GetWidth();
+			uint32_t image_height = GetHeight();
 			image_ptr_.reset(new uint8_t[image_size_]);
-			memcpy(image_ptr_.get(), dsec.pData, image_size_);
+
+			for (uint32_t y = 0; y < image_height; y++) {
+				memcpy(image_ptr_.get() + y * image_width * 4, (uint8_t*)dsec.pData + y * dsec.RowPitch, image_width * 4);
+			}
 		}
 		d3d11_context_->Unmap(rgba_texture_.Get(), 0);
 	}

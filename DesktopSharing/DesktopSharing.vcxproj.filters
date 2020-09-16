@@ -429,6 +429,12 @@
     <ClCompile Include="libyuv\source\video_common.cc">
       <Filter>源文件\libyuv\source</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_opengl2.cpp">
+      <Filter>源文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>源文件\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\Acceptor.h">
@@ -718,6 +724,9 @@
     </ClInclude>
     <ClInclude Include="libyuv\include\libyuv.h">
       <Filter>源文件\libyuv\include</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_opengl2.h">
+      <Filter>源文件\imgui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

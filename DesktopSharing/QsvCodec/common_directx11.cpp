@@ -26,7 +26,7 @@ namespace d3d11 {
 
 	CComPtr<ID3D11Device>                   g_pD3D11Device;
 	CComPtr<ID3D11DeviceContext>            g_pD3D11Ctx;
-	CComPtr<IDXGIFactory2>                g_pDXGIFactory;
+	CComPtr<IDXGIFactory2>                  g_pDXGIFactory;
 	/*ID3D11Device*							g_pD3D11Device;
 	ID3D11DeviceContext*                    g_pD3D11Ctx;
 	IDXGIFactory2*							g_pDXGIFactory;*/

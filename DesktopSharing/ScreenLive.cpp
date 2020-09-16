@@ -491,7 +491,9 @@ void ScreenLive::EncodeVideo()
 						ID3D11DeviceContext *context = nvenc_info.get_context(nvenc_data_);
 						D3D11_MAPPED_SUBRESOURCE map;
 						context->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
-						memcpy((uint8_t *)map.pData, &bgra_image[0], bgra_image.size());
+						for (uint32_t y = 0; y < height; y++) {
+							memcpy((uint8_t*)map.pData + y * map.RowPitch, &bgra_image[0] + y * width * 4, width * 4);
+						}
 						context->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
 						frame_size = nvenc_info.encode_texture(nvenc_data_, texture, buffer.get(), buffer_size);
 					}
