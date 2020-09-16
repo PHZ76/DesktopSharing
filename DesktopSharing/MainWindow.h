@@ -5,6 +5,7 @@
 #include "SDL_syswm.h"
 #include "Overlay.h"
 #include "ScreenLive.h"
+#include <string>
 
 class MainWindow : public OverlayCallack
 {
@@ -24,8 +25,8 @@ public:
 	bool UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height);
 	
 private:
-	bool InitD3D();
-	void ClearD3D();
+	bool Init();
+	void Clear();
 
 	virtual bool StartLive(int& event_type, 
 		std::vector<std::string>& encoder_settings,
@@ -41,9 +42,13 @@ private:
 
 	AVConfig avconfig_;
 
+	std::string renderer_name_;
 	SDL_Renderer* renderer_   = nullptr;
 	SDL_Texture*  texture_    = nullptr;
+
 	IDirect3DDevice9* device_ = nullptr;
+	SDL_GLContext gl_context_ = nullptr;
+
 	int texture_format_ = SDL_PIXELFORMAT_UNKNOWN;
 	uint32_t texture_width_  = 0;
 	uint32_t texture_height_ = 0;

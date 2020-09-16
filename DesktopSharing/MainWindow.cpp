@@ -27,17 +27,17 @@ bool MainWindow::Create()
 		SDL_assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 	});
 
-	int window_flag = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+	int window_flag = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
 	window_ = SDL_CreateWindow("Screen Live", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		window_width_, window_height_, window_flag);
-
+	SDL_GLContext gl_context = SDL_GL_CreateContext(window_);
 	SDL_SysWMinfo wm_info;
 	SDL_VERSION(&wm_info.version);
 	if (SDL_GetWindowWMInfo(window_, &wm_info)) {
 		window_handle_ = wm_info.info.win.window;
 	}
 
-	if (!InitD3D()) {
+	if (!Init()) {
 		Destroy();
 		return false;
 	}
@@ -55,7 +55,7 @@ bool MainWindow::Create()
 void MainWindow::Destroy()
 {
 	if (window_) {
-		ClearD3D();
+		Clear();
 		SDL_DestroyWindow(window_);
 		window_ = nullptr;
 		window_handle_ = nullptr;
@@ -81,16 +81,18 @@ void MainWindow::Resize()
 		overlay_width_ = window_width_;
 		overlay_height_ = kMinOverlayHeight;
 
-		ClearD3D();
-		InitD3D();
+		Clear();
+		Init();
 	}
 }
 
-bool MainWindow::InitD3D()
+bool MainWindow::Init()
 {
 	int driver_index = -1;
 	int driver_count = SDL_GetNumRenderDrivers();
 	int renderer_flags = SDL_RENDERER_SOFTWARE;
+
+	renderer_name_ = "opengl"; //direct3d opengl
 
 	for (int i = 0; i < driver_count; i++) {
 		SDL_RendererInfo info;
@@ -98,7 +100,7 @@ bool MainWindow::InitD3D()
 			continue;
 		}
 
-		if (strcmp(info.name, "direct3d") == 0) {
+		if (strcmp(info.name, renderer_name_.c_str()) == 0) {
 			driver_index = i;
 			if (info.flags & SDL_RENDERER_ACCELERATED) {
 				renderer_flags = SDL_RENDERER_ACCELERATED;
@@ -113,24 +115,39 @@ bool MainWindow::InitD3D()
 	renderer_ = SDL_CreateRenderer(window_, driver_index, renderer_flags);
 	SDL_assert(renderer_ != nullptr);
 
-	device_ = SDL_RenderGetD3D9Device(renderer_);
-	SDL_assert(device_ != nullptr);
 
 	SDL_SetRenderDrawColor(renderer_, 114, 144, 154, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer_);
 	SDL_RenderPresent(renderer_);
 
 	overlay_ = new Overlay;
-	if (!overlay_->Init(window_, device_)) {
+
+	SDL_RendererInfo renderer_info;
+	SDL_GetRendererInfo(renderer_, &renderer_info);
+
+	bool ret = false;
+	if (strcmp(renderer_info.name, "direct3d") == 0) {
+		device_ = SDL_RenderGetD3D9Device(renderer_);
+		SDL_assert(device_ != nullptr);
+		ret = overlay_->Init(window_, device_);
+	}
+	else if (strcmp(renderer_info.name, "opengl") == 0) {
+		gl_context_ = SDL_GL_CreateContext(window_);
+		SDL_assert(gl_context_ != nullptr);
+		ret = overlay_->Init(window_, gl_context_);
+	}
+
+	if (!ret) {
 		delete overlay_;
 		overlay_ = nullptr;
 	}
+
 	overlay_->SetRect(0, 0 + video_height_, video_width_, kMinOverlayHeight);
 	overlay_->RegisterObserver(this);
 	return true;
 }
 
-void MainWindow::ClearD3D()
+void MainWindow::Clear()
 {
 	if (overlay_) {
 		overlay_->Destroy();
@@ -147,6 +164,11 @@ void MainWindow::ClearD3D()
 	}
 
 	if (renderer_) {
+		if (gl_context_) {
+			SDL_GL_DeleteContext(gl_context_);
+			gl_context_ = nullptr;
+		}
+		
 		SDL_DestroyRenderer(renderer_);
 		renderer_ = nullptr;
 	}

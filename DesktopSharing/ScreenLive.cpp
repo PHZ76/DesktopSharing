@@ -481,8 +481,8 @@ void ScreenLive::EncodeVideo()
 
 		if (nvenc_data_ != nullptr) {
 			HANDLE handle = nullptr;
-			//int lockKey = 0, unlockKey = 0;
-			//if (screen_capture_.GetTextureHandle(&handle, &lockKey, &unlockKey)) {
+			int lockKey = 0, unlockKey = 0;
+			//if (screen_capture_->GetTextureHandle(&handle, &lockKey, &unlockKey)) {
 			//	frame_size = nvenc_info.encode_handle(nvenc_data_, handle, lockKey, unlockKey, buffer.get(), buffer_size);
 			//	if (frame_size < 0) {
 					if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
@@ -497,7 +497,7 @@ void ScreenLive::EncodeVideo()
 						context->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
 						frame_size = nvenc_info.encode_texture(nvenc_data_, texture, buffer.get(), buffer_size);
 					}
-				//}
+			//	}
 			//}		
 		}
 		else {			
@@ -598,8 +598,7 @@ void ScreenLive::PushAudio(const uint8_t* data, uint32_t size, uint32_t timestam
 	audio_frame.size = size;
 	memcpy(audio_frame.buffer.get(), data, size);
 
-	if(size > 0)
-	{
+	if(size > 0){
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		/* RTSP服务器 */

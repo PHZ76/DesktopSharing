@@ -5,7 +5,9 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h" 
 #include "imgui/imgui_impl_sdl.h"
+#include "imgui_impl_opengl2.h"
 #include <d3d9.h>
+#include <SDL_opengl.h>
 #include <string>
 #include <vector>
 
@@ -37,7 +39,9 @@ public:
 
 	void RegisterObserver(OverlayCallack* callback);
 
-	bool Init(SDL_Window* window, void *device);
+	bool Init(SDL_Window* window, IDirect3DDevice9* device);
+	bool Init(SDL_Window* window, SDL_GLContext gl_context);
+
 	void SetRect(int x, int y, int w, int h);
 	void Destroy();
 	bool Render();
@@ -48,13 +52,16 @@ public:
 	void SetDebugInfo(std::string text);
 
 private:
+	void Init();
 	bool Copy();
 	bool Begin();
 	bool End();
 	void NotifyEvent(int event_type);
 
 	SDL_Window* window_ = nullptr;
-	void* device_ = nullptr;
+	IDirect3DDevice9* device_ = nullptr;
+	SDL_GLContext gl_context_ = nullptr;
+
 	SDL_Rect rect_;
 
 	OverlayCallack* callback_ = nullptr;

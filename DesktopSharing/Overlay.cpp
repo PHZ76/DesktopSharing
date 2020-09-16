@@ -27,19 +27,11 @@ void Overlay::RegisterObserver(OverlayCallack* callback)
 	callback_ = callback;
 }
 
-bool Overlay::Init(SDL_Window* window, void *device)
+bool Overlay::Init(SDL_Window* window, IDirect3DDevice9* device)
 {
-	static std::once_flag init_flag;
-	std::call_once(init_flag, [=]() {
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGui::StyleColorsDark();
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
-		ImGui::GetStyle().AntiAliasedLines = false;
-		ImGui::GetStyle().WindowRounding = 0;
-	});
+	Init();
 
-	if (device_ != nullptr) {
+	if (gl_context_ || device_) {
 		Destroy();
 	}
 
@@ -48,6 +40,25 @@ bool Overlay::Init(SDL_Window* window, void *device)
 		ImGui_ImplDX9_Init(reinterpret_cast<IDirect3DDevice9*>(device));
 		window_ = window;
 		device_ = (IDirect3DDevice9 *)device;
+		return true;
+	}
+
+	return false;
+}
+
+bool Overlay::Init(SDL_Window* window, SDL_GLContext gl_context)
+{
+	Init();
+
+	if (gl_context_ || device_) {
+		Destroy();
+	}
+
+	if (gl_context) {
+		ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+		ImGui_ImplOpenGL2_Init();
+		window_ = window;
+		gl_context_ = gl_context;
 		return true;
 	}
 
@@ -64,22 +75,35 @@ void Overlay::SetRect(int x, int y, int w, int h)
 
 void Overlay::Destroy()
 {
+	window_ = nullptr;
+	memset(&rect_, 0, sizeof(SDL_Rect));
+
 	if (device_) {
-		window_ = nullptr;
 		device_ = nullptr;
-		memset(&rect_, 0, sizeof(SDL_Rect));
 		ImGui_ImplDX9_Shutdown();
+		ImGui_ImplSDL2_Shutdown();
+	}
+
+	if (gl_context_) {
+		gl_context_ = nullptr;
+		ImGui_ImplOpenGL2_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 	}
 }
 
 bool Overlay::Begin()
 {
-	if (!device_ || !window_) {
+	if ((!device_&&!gl_context_) || !window_) {
 		return false;
 	}
 
-	ImGui_ImplDX9_NewFrame();
+	if (device_) {
+		ImGui_ImplDX9_NewFrame();
+	}
+	else if (gl_context_) {
+		ImGui_ImplOpenGL2_NewFrame();
+	}
+	
 	ImGui_ImplSDL2_NewFrame(window_);
 	ImGui::NewFrame();
 	return true;
@@ -87,12 +111,19 @@ bool Overlay::Begin()
 
 bool Overlay::End()
 {
-	if (!device_ || !window_) {
+	if ((!device_ && !gl_context_) || !window_) {
 		return false;
 	}
 
 	ImGui::Render();
-	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+
+	if (device_) {
+		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+	}
+	else if (gl_context_) {
+		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+	}
+	
 	ImGui::EndFrame();
 	return true;
 }
@@ -111,6 +142,19 @@ bool Overlay::Render()
 void Overlay::Process(SDL_Event* event)
 {
 	ImGui_ImplSDL2_ProcessEvent(event);
+}
+
+void Overlay::Init()
+{
+	static std::once_flag init_flag;
+	std::call_once(init_flag, [=]() {
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGui::StyleColorsDark();
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+		ImGui::GetStyle().AntiAliasedLines = false;
+		ImGui::GetStyle().WindowRounding = 0;
+	});
 }
 
 bool Overlay::Copy()
