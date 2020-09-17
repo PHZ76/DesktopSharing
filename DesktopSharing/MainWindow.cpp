@@ -27,6 +27,16 @@ bool MainWindow::Create()
 		SDL_assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 	});
 
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+	// Create window with graphics context
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
 	int window_flag = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
 	window_ = SDL_CreateWindow("Screen Live", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		window_width_, window_height_, window_flag);
@@ -134,6 +144,8 @@ bool MainWindow::Init()
 	else if (strcmp(renderer_info.name, "opengl") == 0) {
 		gl_context_ = SDL_GL_CreateContext(window_);
 		SDL_assert(gl_context_ != nullptr);
+		SDL_GL_MakeCurrent(window_, gl_context_);
+		SDL_GL_SetSwapInterval(1); // Enable vsync
 		ret = overlay_->Init(window_, gl_context_);
 	}
 

@@ -55,8 +55,18 @@ bool Overlay::Init(SDL_Window* window, SDL_GLContext gl_context)
 	}
 
 	if (gl_context) {
+		static std::once_flag init_flag;
+		std::call_once(init_flag, [=]() {
+			glfwInit();
+			gl3wInit();
+		});
+
+		const char* glsl_version = "#version 130";
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
 		ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-		ImGui_ImplOpenGL2_Init();
+		ImGui_ImplOpenGL3_Init(glsl_version);
 		window_ = window;
 		gl_context_ = gl_context;
 		return true;
@@ -86,7 +96,7 @@ void Overlay::Destroy()
 
 	if (gl_context_) {
 		gl_context_ = nullptr;
-		ImGui_ImplOpenGL2_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplSDL2_Shutdown();
 	}
 }
@@ -101,7 +111,7 @@ bool Overlay::Begin()
 		ImGui_ImplDX9_NewFrame();
 	}
 	else if (gl_context_) {
-		ImGui_ImplOpenGL2_NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
 	}
 	
 	ImGui_ImplSDL2_NewFrame(window_);
@@ -121,7 +131,7 @@ bool Overlay::End()
 		ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 	}
 	else if (gl_context_) {
-		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 	
 	ImGui::EndFrame();

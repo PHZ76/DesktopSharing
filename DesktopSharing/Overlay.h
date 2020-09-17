@@ -5,11 +5,15 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h" 
 #include "imgui/imgui_impl_sdl.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 #include <d3d9.h>
-#include <SDL_opengl.h>
+//#include <SDL_opengl.h>
 #include <string>
 #include <vector>
+
+#include <GL/gl3w.h>            // Initialize with gl3wInit()
+#include <GLFW/glfw3.h>
 
 enum OverlayEventType
 {
