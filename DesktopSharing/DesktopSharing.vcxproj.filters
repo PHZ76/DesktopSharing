@@ -55,6 +55,9 @@
     <Filter Include="源文件\libyuv\include">
       <UniqueIdentifier>{c218d111-7861-491d-ada4-ab2323859e15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\imgui\GL">
+      <UniqueIdentifier>{e59cb818-768f-489d-a4b7-f0e1891ca409}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -435,6 +438,12 @@
     <ClCompile Include="imgui\imgui_demo.cpp">
       <Filter>源文件\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_opengl3.cpp">
+      <Filter>源文件\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\gl3w\GL\gl3w.c">
+      <Filter>源文件\imgui\GL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\Acceptor.h">
@@ -727,6 +736,15 @@
     </ClInclude>
     <ClInclude Include="imgui\imgui_impl_opengl2.h">
       <Filter>源文件\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_opengl3.h">
+      <Filter>源文件\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\gl3w\GL\gl3w.h">
+      <Filter>源文件\imgui\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\gl3w\GL\glcorearb.h">
+      <Filter>源文件\imgui\GL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
