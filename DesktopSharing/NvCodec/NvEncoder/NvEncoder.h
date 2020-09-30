@@ -217,6 +217,11 @@ public:
 	void ForceIDR() { m_forceIDR = true; }
 
     /**
+    *  @brief set region of interest
+    */
+    void SetROI(int pos_x, int pos_y, int region_width, int region_height, int delta_qp);
+
+    /**
     *  @brief  NvEncoder class virtual destructor.
     */
     virtual ~NvEncoder();
@@ -410,4 +415,7 @@ private:
     int32_t m_nEncoderBuffer = 0;
     int32_t m_nOutputDelay = 0;
 	bool m_forceIDR = false;
+
+    std::unique_ptr<int8_t> m_qpDeltaMap;
+    uint32_t m_qpDeltaMapSize = 0;
 };

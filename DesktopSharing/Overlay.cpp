@@ -125,6 +125,7 @@ bool Overlay::End()
 		return false;
 	}
 
+	ImGui::EndFrame();
 	ImGui::Render();
 
 	if (device_) {
@@ -133,8 +134,7 @@ bool Overlay::End()
 	else if (gl_context_) {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
-	
-	ImGui::EndFrame();
+
 	return true;
 }
 

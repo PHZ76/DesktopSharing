@@ -35,7 +35,7 @@ private:
 	virtual void StopLive(int event_type);
 
 	SDL_Window* window_   = nullptr;
-	HANDLE window_handle_ = nullptr;
+	HWND window_handle_ = nullptr;
 
 	Overlay* overlay_ = nullptr;
 	std::string debug_info_text_;

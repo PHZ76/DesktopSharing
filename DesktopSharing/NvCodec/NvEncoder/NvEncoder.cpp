@@ -445,6 +445,39 @@ void NvEncoder::GetSequenceParams(std::vector<uint8_t> &seqParams)
     seqParams.insert(seqParams.end(), &spsppsData[0], &spsppsData[spsppsSize]);
 }
 
+void NvEncoder::SetROI(int pos_x, int pos_y, int region_width, int region_height, int delta_qp)
+{
+    int mb_size = 16;
+    if (m_initializeParams.encodeGUID == NV_ENC_CODEC_H264_GUID) {
+        mb_size = 16;
+    }
+    else {
+        mb_size = 32;
+    }
+
+    int cx_map = (m_initializeParams.encodeWidth + mb_size - 1) / mb_size;
+    int cy_map = (m_initializeParams.encodeHeight + mb_size - 1) / mb_size;
+    m_qpDeltaMapSize = cx_map * cy_map;
+    m_qpDeltaMap.reset(new int8_t[m_qpDeltaMapSize]);
+    memset(m_qpDeltaMap.get(), 0, m_qpDeltaMapSize);
+
+    /* final-encoding-QP =  rate-control-algorithm-QP + delta-QP */
+    int min_x = pos_x / mb_size;
+    int mix_y = pos_y / mb_size;
+    int max_x = (pos_x + region_width) / mb_size;
+    int max_y = (pos_y + region_height) / mb_size;
+    for (int y = 0; y < cy_map; y++) {
+        for (int x = 0; x < cx_map; x++) {
+            if (y >= mix_y && y <= max_y && x >= min_x && x <= max_x) {
+                m_qpDeltaMap.get()[y * cx_map + x] = -delta_qp;
+            }
+            else {
+                m_qpDeltaMap.get()[y * cx_map + x] = delta_qp;
+            }
+        }
+    }
+}
+
 void NvEncoder::DoEncode(NV_ENC_INPUT_PTR inputBuffer, std::vector<std::vector<uint8_t>> &vPacket, NV_ENC_PIC_PARAMS *pPicParams)
 {
     NV_ENC_PIC_PARAMS picParams = {};
@@ -460,6 +493,9 @@ void NvEncoder::DoEncode(NV_ENC_INPUT_PTR inputBuffer, std::vector<std::vector<u
     picParams.inputHeight = GetEncodeHeight();
     picParams.outputBitstream = m_vBitstreamOutputBuffer[m_iToSend % m_nEncoderBuffer];
     picParams.completionEvent = m_vpCompletionEvent[m_iToSend % m_nEncoderBuffer];
+
+    picParams.qpDeltaMap = m_qpDeltaMap.get();
+    picParams.qpDeltaMapSize = m_qpDeltaMapSize;
 
 	if (m_forceIDR) {
 		picParams.pictureType = NV_ENC_PIC_TYPE_IDR;

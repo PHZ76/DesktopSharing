@@ -30,6 +30,7 @@ struct nvenc_info
 	int   (*set_framerate)(void *nvenc_data, uint32_t framerate);
 	int   (*request_idr)(void *nvenc_data);
 	int   (*get_sequence_params)(void *nvenc_data, uint8_t* buf, uint32_t max_buf_size);
+	int   (*set_region_of_interest)(void* nvenc_data, int x, int y, int width, int height, int delta_qp);
 	ID3D11Device* (*get_device)(void *encoder_data);
 	ID3D11Texture2D* (*get_texture)(void *encoder_data);
 	ID3D11DeviceContext* (*get_context)(void *encoder_data);

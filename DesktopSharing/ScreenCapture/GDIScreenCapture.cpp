@@ -190,7 +190,7 @@ bool GDIScreenCapture::Decode(AVFrame* av_frame, AVPacket* av_packet)
 		width_ = av_frame->width;
 		height_ = av_frame->height;
 
-		for (int i = 0; i < height_; i++) {
+		for (uint32_t i = 0; i < height_; i++) {
 			memcpy(image_.get() + i * width_ * 4, av_frame->data[0] + i * av_frame->linesize[0], av_frame->linesize[0]);
 		}
 

@@ -211,7 +211,8 @@ static bool nvenc_init(void *nvenc_data, void *encoder_config)
 	//initializeParams.encodeConfig->rcParams.vbvBufferSize = enc->bitrate; // / (initializeParams.frameRateNum / initializeParams.frameRateDen);
 	//initializeParams.encodeConfig->rcParams.vbvInitialDelay = initializeParams.encodeConfig->rcParams.vbvInitialDelay;
 	initializeParams.encodeConfig->rcParams.rateControlMode = NV_ENC_PARAMS_RC_CBR;
-	
+	initializeParams.encodeConfig->rcParams.qpMapMode = NV_ENC_QP_MAP_DELTA;
+
 	enc->nvenc->CreateEncoder(&initializeParams);
 
 	return true;
@@ -384,20 +385,18 @@ int nvenc_request_idr(void *nvenc_data)
 
 int nvenc_get_sequence_params(void *nvenc_data, uint8_t* outBuf, uint32_t max_buf_size)
 {
-	if (nvenc_data == nullptr)
-	{
+	if (nvenc_data == nullptr) {
 		return 0;
 	}
 
 	struct nvenc_data *enc = (struct nvenc_data *)nvenc_data;
 
 	std::lock_guard<std::mutex> locker(enc->mutex);
-	if (enc->nvenc != nullptr)
-	{
+
+	if (enc->nvenc != nullptr) {
 		std::vector<uint8_t> seq_params;
 		enc->nvenc->GetSequenceParams(seq_params);
-		if (seq_params.size() > 0 && seq_params.size() < max_buf_size)
-		{
+		if (seq_params.size() > 0 && seq_params.size() < max_buf_size) {
 			memcpy(outBuf, seq_params.data(), seq_params.size());
 			return (int)seq_params.size();
 		}		
@@ -406,10 +405,26 @@ int nvenc_get_sequence_params(void *nvenc_data, uint8_t* outBuf, uint32_t max_bu
 	return 0;
 }
 
+int nvenc_set_region_of_interest(void* nvenc_data, int x, int y, int width, int height, int delta_qp)
+{
+	if (nvenc_data == nullptr) {
+		return 0;
+	}
+
+	struct nvenc_data* enc = (struct nvenc_data*)nvenc_data;
+
+	std::lock_guard<std::mutex> locker(enc->mutex);
+
+	if (enc->nvenc != nullptr){ 
+		enc->nvenc->SetROI(x, y, width, height, delta_qp);
+	}
+
+	return 0;
+}
+
 static ID3D11Device* get_device(void *nvenc_data)
 {	
-	if (nvenc_data == nullptr)
-	{
+	if (nvenc_data == nullptr) {
 		return nullptr;
 	}
 
@@ -421,8 +436,7 @@ static ID3D11Device* get_device(void *nvenc_data)
 
 static ID3D11Texture2D* get_texture(void *nvenc_data)
 {
-	if (nvenc_data == nullptr)
-	{
+	if (nvenc_data == nullptr) {
 		return nullptr;
 	}
 
@@ -435,8 +449,7 @@ static ID3D11Texture2D* get_texture(void *nvenc_data)
 
 static ID3D11DeviceContext* get_context(void *nvenc_data)
 {
-	if (nvenc_data == nullptr)
-	{
+	if (nvenc_data == nullptr) {
 		return nullptr;
 	}
 
@@ -457,7 +470,9 @@ struct nvenc_info nvenc_info = {
 	nvenc_set_framerate,
 	nvenc_request_idr,
 	nvenc_get_sequence_params,
+	nvenc_set_region_of_interest,
 	get_device,
 	get_texture,
 	get_context
 };
+
