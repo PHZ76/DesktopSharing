@@ -569,8 +569,7 @@ void ScreenLive::PushVideo(const uint8_t* data, uint32_t size, uint32_t timestam
 	vidoe_frame.timestamp = timestamp;
 	memcpy(vidoe_frame.buffer.get(), data + 4, size - 4);
 
-	if (size > 0)
-	{
+	if (size > 0) {
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		/* RTSP服务器 */
