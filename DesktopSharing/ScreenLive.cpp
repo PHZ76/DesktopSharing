@@ -563,28 +563,28 @@ void ScreenLive::EncodeAudio()
 
 void ScreenLive::PushVideo(const uint8_t* data, uint32_t size, uint32_t timestamp)
 {
-	xop::AVFrame vidoe_frame(size);
-	vidoe_frame.size = size - 4; /* -4 去掉H.264起始码 */
-	vidoe_frame.type = IsKeyFrame(data, size) ? xop::VIDEO_FRAME_I : xop::VIDEO_FRAME_P;
-	vidoe_frame.timestamp = timestamp;
-	memcpy(vidoe_frame.buffer.get(), data + 4, size - 4);
+	xop::AVFrame video_frame(size);
+	video_frame.size = size - 4; /* -4 去掉H.264起始码 */
+	video_frame.type = IsKeyFrame(data, size) ? xop::VIDEO_FRAME_I : xop::VIDEO_FRAME_P;
+	video_frame.timestamp = timestamp;
+	memcpy(video_frame.buffer.get(), data + 4, size - 4);
 
 	if (size > 0) {
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		/* RTSP服务器 */
 		if (rtsp_server_ != nullptr && this->rtsp_clients_ > 0) {
-			rtsp_server_->PushFrame(media_session_id_, xop::channel_0, vidoe_frame);
+			rtsp_server_->PushFrame(media_session_id_, xop::channel_0, video_frame);
 		}
 
 		/* RTSP推流 */
 		if (rtsp_pusher_ != nullptr && rtsp_pusher_->IsConnected()) {
-			rtsp_pusher_->PushFrame(xop::channel_0, vidoe_frame);
+			rtsp_pusher_->PushFrame(xop::channel_0, video_frame);
 		}
 
 		/* RTMP推流 */
 		if (rtmp_pusher_ != nullptr && rtmp_pusher_->IsConnected()) {
-			rtmp_pusher_->PushVideoFrame(vidoe_frame.buffer.get(), vidoe_frame.size);
+			rtmp_pusher_->PushVideoFrame(video_frame.buffer.get(), video_frame.size);
 		}
 	}
 }
