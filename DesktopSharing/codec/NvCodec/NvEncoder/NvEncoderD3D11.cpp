@@ -13,7 +13,7 @@
 #ifndef WIN32
 //#include <dlfcn.h>
 #endif
-#include "NvEncoder/NvEncoderD3D11.h"
+#include "NvEncoderD3D11.h"
 #include <D3D9Types.h>
 
 #ifndef MAKEFOURCC

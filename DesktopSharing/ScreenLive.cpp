@@ -118,6 +118,11 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 	if (type == SCREEN_LIVE_RTSP_SERVER) {	
 		auto rtsp_server = xop::RtspServer::Create(event_loop_.get());
 		xop::MediaSessionId session_id = 0;
+
+		if (config.ip == "127.0.0.1") {
+			config.ip = "0.0.0.0";
+		}
+
 		if (!rtsp_server->Start(config.ip, config.port)) {
 			return false;
 		}
@@ -152,43 +157,40 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		}
 
 		std::lock_guard<std::mutex> locker(mutex_);
-		//if (rtsp_pusher_ != nullptr) {
-		//	rtsp_pusher_->close();
-		//}
 		rtsp_pusher_ = rtsp_pusher;
 		printf("RTSP Pusher start: Push stream to  %s ... \n", config.rtsp_url.c_str());
 	}
 	else if (type == SCREEN_LIVE_RTMP_PUSHER) {
-
 		auto rtmp_pusher = xop::RtmpPublisher::Create(event_loop_.get());
 
 		xop::MediaInfo mediaInfo;
-		uint8_t* extradata = aac_encoder_.GetAVCodecContext()->extradata;
-		uint8_t  extradata_size = aac_encoder_.GetAVCodecContext()->extradata_size;
+		uint8_t extradata[1024] = { 0 };
+		int  extradata_size = 0;
+
+		extradata_size = aac_encoder_.GetSpecificConfig(extradata, 1024);
+		if (extradata_size <= 0) {
+			printf("Get audio specific config failed. \n");
+			return false;
+		}
 
 		mediaInfo.audio_specific_config_size = extradata_size;
 		mediaInfo.audio_specific_config.reset(new uint8_t[mediaInfo.audio_specific_config_size]);
 		memcpy(mediaInfo.audio_specific_config.get(), extradata, extradata_size);
 
-		uint8_t extradata_buf[1024];
-		if (nvenc_data_ != nullptr) {
-			extradata_size = nvenc_info.get_sequence_params(nvenc_data_, extradata_buf, 1024);
-			extradata = extradata_buf;
-		}
-		else {
-			extradata = h264_encoder_.GetAVCodecContext()->extradata;
-			extradata_size = h264_encoder_.GetAVCodecContext()->extradata_size;
+		extradata_size = h264_encoder_.GetSequenceParams(extradata, 1024);
+		if (extradata_size <= 0) {
+			printf("Get video specific config failed. \n");
+			return false;
 		}
 
-		xop::Nal sps = xop::H264Parser::findNal(extradata, extradata_size);
+		xop::Nal sps = xop::H264Parser::findNal((uint8_t*)extradata, extradata_size);
 		if (sps.first != nullptr && sps.second != nullptr && *sps.first == 0x67) {
 			mediaInfo.sps_size = sps.second - sps.first + 1;
 			mediaInfo.sps.reset(new uint8_t[mediaInfo.sps_size]);
 			memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.sps_size);
 
-			xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - extradata));
-			if (pps.first != nullptr && pps.second != nullptr && *pps.first == 0x68)
-			{
+			xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - (uint8_t*)extradata));
+			if (pps.first != nullptr && pps.second != nullptr && *pps.first == 0x68) {
 				mediaInfo.pps_size = pps.second - pps.first + 1;
 				mediaInfo.pps.reset(new uint8_t[mediaInfo.pps_size]);
 				memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.pps_size);
@@ -204,9 +206,6 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		}
 
 		std::lock_guard<std::mutex> locker(mutex_);
-		//if (rtmp_pusher_ != nullptr) {
-		//	rtmp_pusher_->close();
-		//}
 		rtmp_pusher_ = rtmp_pusher;
 		printf("RTMP Pusher start: Push stream to  %s ... \n", config.rtmp_url.c_str());
 	}
@@ -347,53 +346,23 @@ int ScreenLive::StartEncoder(AVConfig& config)
 	ffmpeg::AVConfig encoder_config;
 	encoder_config.video.framerate = av_config_.framerate;
 	encoder_config.video.bitrate = av_config_.bitrate_bps;
-	encoder_config.video.gop = av_config_.framerate * 2;
+	encoder_config.video.gop = av_config_.framerate;
 	encoder_config.video.format = AV_PIX_FMT_BGRA;
 	encoder_config.video.width = screen_capture_->GetWidth();
 	encoder_config.video.height = screen_capture_->GetHeight();
 
-	encoder_config.audio.samplerate = audio_capture_.GetSamplerate();
-	encoder_config.audio.channels = audio_capture_.GetChannels();
+	h264_encoder_.SetCodec(config.codec);
 
-	if (!h264_encoder_.Init(encoder_config) ) {
+	if (!h264_encoder_.Init(av_config_.framerate, av_config_.bitrate_bps/1000,
+							AV_PIX_FMT_BGRA, screen_capture_->GetWidth(), 
+							screen_capture_->GetHeight()) ) {
 		return -1;
 	}
 
-	if (!aac_encoder_.Init(encoder_config)) {
+	int samplerate = audio_capture_.GetSamplerate();
+	int channels = audio_capture_.GetChannels();
+	if (!aac_encoder_.Init(samplerate, channels, AV_SAMPLE_FMT_S16, 64)) {
 		return -1;
-	}
-
-	if (av_config_.codec == "h264_nvenc") {
-		if (nvenc_info.is_supported()) {
-			nvenc_data_ = nvenc_info.create();
-		}
-
-		if (nvenc_data_ != nullptr) {
-			nvenc_config nvenc_config;
-			nvenc_config.codec = "h264";
-			nvenc_config.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-			nvenc_config.width = screen_capture_->GetWidth();
-			nvenc_config.height = screen_capture_->GetHeight();
-			nvenc_config.framerate = encoder_config.video.framerate;
-			nvenc_config.gop = encoder_config.video.gop;
-			nvenc_config.bitrate = encoder_config.video.bitrate;
-			if (!nvenc_info.init(nvenc_data_, &nvenc_config)) {
-				nvenc_info.destroy(&nvenc_data_);
-				nvenc_data_ = nullptr;
-			}
-		}
-	}
-	else if (av_config_.codec == "h264_qsv") {
-		if (QsvEncoder::IsSupported()) {
-			QsvParams qsv_params;
-			qsv_params.codec = "h264";
-			qsv_params.bitrate_kbps = encoder_config.video.bitrate / 1000;
-			qsv_params.framerate = encoder_config.video.framerate;
-			qsv_params.gop = encoder_config.video.gop;
-			qsv_params.width = screen_capture_->GetWidth();
-			qsv_params.height = screen_capture_->GetHeight();
-			qsv_encoder_.Init(qsv_params);
-		}
 	}
 
 	is_encoder_started_ = true;
@@ -419,15 +388,6 @@ int ScreenLive::StopEncoder()
 
 		h264_encoder_.Destroy();
 		aac_encoder_.Destroy();
-
-		if (nvenc_data_ != nullptr) {
-			nvenc_info.destroy(&nvenc_data_);
-			nvenc_data_ = nullptr;
-		}
-
-		if (qsv_encoder_.IsInitialized()) {
-			qsv_encoder_.Destroy();
-		}
 	}
 
 	return 0;
@@ -452,8 +412,6 @@ void ScreenLive::EncodeVideo()
 	uint32_t encoding_fps = 0;
 	uint32_t msec = 1000 / av_config_.framerate;
 
-	uint32_t buffer_size = 1920 * 1080 * 4;				    
-	std::shared_ptr<uint8_t> buffer(new uint8_t[buffer_size]);
 
 	while (is_encoder_started_ && is_capture_started_) {
 		if (update_ts.elapsed() >= 1000) {
@@ -463,7 +421,7 @@ void ScreenLive::EncodeVideo()
 		}
 
 		uint32_t delay = msec;
-		uint32_t elapsed = (uint32_t)encoding_ts.elapsed(); /*编码耗时计算*/
+		uint32_t elapsed = (uint32_t)encoding_ts.elapsed();
 		if (elapsed > delay) {
 			delay = 0;
 		}
@@ -479,56 +437,14 @@ void ScreenLive::EncodeVideo()
 		int frame_size = 0;
 		uint32_t width = 0, height = 0;
 
-		if (nvenc_data_ != nullptr) {
-			HANDLE handle = nullptr;
-			int lockKey = 0, unlockKey = 0;
-			//if (screen_capture_->GetTextureHandle(&handle, &lockKey, &unlockKey)) {
-			//	frame_size = nvenc_info.encode_handle(nvenc_data_, handle, lockKey, unlockKey, buffer.get(), buffer_size);
-			//	if (frame_size < 0) {
-					if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
-						ID3D11Device* device = nvenc_info.get_device(nvenc_data_);
-						ID3D11Texture2D* texture = nvenc_info.get_texture(nvenc_data_);
-						ID3D11DeviceContext *context = nvenc_info.get_context(nvenc_data_);
-						D3D11_MAPPED_SUBRESOURCE map;
-						context->Map(texture, D3D11CalcSubresource(0, 0, 1), D3D11_MAP_WRITE, 0, &map);
-						for (uint32_t y = 0; y < height; y++) {
-							memcpy((uint8_t*)map.pData + y * map.RowPitch, &bgra_image[0] + y * width * 4, width * 4);
-						}
-						context->Unmap(texture, D3D11CalcSubresource(0, 0, 1));
-						frame_size = nvenc_info.encode_texture(nvenc_data_, texture, buffer.get(), buffer_size);
-					}
-			//	}
-			//}		
-		}
-		else {			
-			if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
-				if (qsv_encoder_.IsInitialized()) {
-					frame_size = qsv_encoder_.Encode(&bgra_image[0], width, height, buffer.get(), buffer_size);
-				}		
-				else {
-					ffmpeg::AVPacketPtr pkt_ptr = h264_encoder_.Encode(&bgra_image[0],
-						screen_capture_->GetWidth(), screen_capture_->GetHeight());
-					int extra_data_size = 0;
-					uint8_t* extra_data = nullptr;
-
-					if (pkt_ptr != nullptr) {
-						if (IsKeyFrame(pkt_ptr->data, pkt_ptr->size)) {
-							/* 编码器使用了AV_CODEC_FLAG_GLOBAL_HEADER, 这里需要添加sps, pps */
-							extra_data = h264_encoder_.GetAVCodecContext()->extradata;
-							extra_data_size = h264_encoder_.GetAVCodecContext()->extradata_size;
-							memcpy(buffer.get(), extra_data, extra_data_size);
-						}
-
-						memcpy(buffer.get() + extra_data_size, pkt_ptr->data, pkt_ptr->size);
-						frame_size = pkt_ptr->size + extra_data_size;
-					}
-				}		
-			}				
-		}		
-
-		if (frame_size > 0) {
-			encoding_fps += 1;
-			PushVideo(buffer.get(), frame_size, timestamp);
+		if (screen_capture_->CaptureFrame(bgra_image, width, height)) {
+			std::vector<uint8_t> out_frame;
+			if (h264_encoder_.Encode(&bgra_image[0], width, height, bgra_image.size(), out_frame) > 0) {
+				if (out_frame.size() > 0) {
+					encoding_fps += 1;
+					PushVideo(&out_frame[0], out_frame.size(), timestamp);
+				}
+			}
 		}
 	}
 
@@ -538,7 +454,7 @@ void ScreenLive::EncodeVideo()
 void ScreenLive::EncodeAudio()
 {
 	std::shared_ptr<uint8_t> pcm_buffer(new uint8_t[48000 * 8]);	
-	uint32_t frame_samples = aac_encoder_.GetFrameSamples();
+	uint32_t frame_samples = aac_encoder_.GetFrames();
 	uint32_t channel = audio_capture_.GetChannels();
 	uint32_t samplerate = audio_capture_.GetSamplerate();
 	

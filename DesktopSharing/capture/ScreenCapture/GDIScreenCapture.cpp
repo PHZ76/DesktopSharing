@@ -150,8 +150,9 @@ bool GDIScreenCapture::AquireFrame()
 		return false;
 	}
 
-	std::shared_ptr<AVFrame> av_frame(av_frame_alloc(), [](AVFrame *ptr) { av_frame_free(&ptr); });
-	std::shared_ptr<AVPacket> av_packet(av_packet_alloc(), [](AVPacket *ptr) { av_packet_free(&ptr); });
+	std::shared_ptr<AVFrame> av_frame(av_frame_alloc(), [](AVFrame *ptr) {av_frame_free(&ptr);});
+	std::shared_ptr<AVPacket> av_packet(av_packet_alloc(), [](AVPacket *ptr) {av_packet_free(&ptr);});
+	av_init_packet(av_packet.get());
 
 	int ret = av_read_frame(format_context_, av_packet.get());
 	if (ret < 0) {

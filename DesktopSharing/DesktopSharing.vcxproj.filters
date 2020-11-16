@@ -19,32 +19,11 @@
     <Filter Include="源文件\net">
       <UniqueIdentifier>{7e8e052b-16fb-483a-b622-eb08a34f8097}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\ScreenCapture">
-      <UniqueIdentifier>{ff421d97-3a5f-46d4-8d09-f36dfd07a3dd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\NvCodec">
-      <UniqueIdentifier>{04699705-dad5-45fb-b939-71d64c6d0e93}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\NvCodec\NvEncoder">
-      <UniqueIdentifier>{56f1b2c0-db81-45a4-8f90-14f2519c962f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\wasapi">
-      <UniqueIdentifier>{91c87bcd-3edf-4969-afe4-e88a78918d2b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\md5">
       <UniqueIdentifier>{6f86d385-535f-48be-9e29-2a2b6cd33f39}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\avcodec">
-      <UniqueIdentifier>{8115ea6d-2b3e-43cb-80ad-0ee6ff13e1de}</UniqueIdentifier>
-    </Filter>
     <Filter Include="源文件\imgui">
       <UniqueIdentifier>{fc15b1c2-2ddc-4d3e-8a53-60d09c9fe2d0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\QsvCodec">
-      <UniqueIdentifier>{d6315d46-061f-4a79-9dda-b9a970b61950}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\QsvCodec\src">
-      <UniqueIdentifier>{3a6f75e9-d34f-4ba3-8a02-21c249c47c15}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\libyuv">
       <UniqueIdentifier>{562e1810-42e8-4c8d-8037-e3673d1b4608}</UniqueIdentifier>
@@ -57,6 +36,33 @@
     </Filter>
     <Filter Include="源文件\imgui\GL">
       <UniqueIdentifier>{e59cb818-768f-489d-a4b7-f0e1891ca409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec">
+      <UniqueIdentifier>{2b2853c2-f9ea-4bb8-b06f-79a91a7c1bdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec\avcodec">
+      <UniqueIdentifier>{0a24de64-2bf4-4c54-a101-c8c6bd67dc81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec\nvcodec">
+      <UniqueIdentifier>{974f461a-52e5-4a02-ba20-89861f9c7811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec\nvcodec\NvEncoder">
+      <UniqueIdentifier>{b590e5bb-a407-4758-8729-85f0fd1f7209}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec\qsvcodec">
+      <UniqueIdentifier>{0f20fbbc-669b-4f06-af52-ac5d7c8a19f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\codec\qsvcodec\src">
+      <UniqueIdentifier>{b5abc978-c2c9-43d1-bdb8-3aeafa1ca617}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\capture">
+      <UniqueIdentifier>{8b96442d-e7e2-411a-a34d-4e78cc43e4fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\capture\ScreenCpature">
+      <UniqueIdentifier>{e34c8d3d-181e-4ed6-b18a-020b36451ee8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\capture\AudioCapture">
+      <UniqueIdentifier>{30c25f44-00c1-402d-a57c-9279e6fa7497}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -147,9 +153,6 @@
     <ClCompile Include="xop\RtspServer.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenCapture\DXGIScreenCapture.cpp">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClCompile>
     <ClCompile Include="xop\amf.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
@@ -171,35 +174,11 @@
     <ClCompile Include="xop\HttpFlvServer.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
-    <ClCompile Include="NvCodec\NvEncoder\NvEncoder.cpp">
-      <Filter>源文件\NvCodec\NvEncoder</Filter>
-    </ClCompile>
-    <ClCompile Include="NvCodec\NvEncoder\NvEncoderD3D11.cpp">
-      <Filter>源文件\NvCodec\NvEncoder</Filter>
-    </ClCompile>
-    <ClCompile Include="wasapi\WASAPICapture.cpp">
-      <Filter>源文件\wasapi</Filter>
-    </ClCompile>
-    <ClCompile Include="wasapi\WASAPIPlayer.cpp">
-      <Filter>源文件\wasapi</Filter>
-    </ClCompile>
     <ClCompile Include="xop\DigestAuthentication.cpp">
       <Filter>源文件\xop</Filter>
     </ClCompile>
     <ClCompile Include="ScreenLive.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="avcodec\aac_encoder.cpp">
-      <Filter>源文件\avcodec</Filter>
-    </ClCompile>
-    <ClCompile Include="avcodec\h264_encoder.cpp">
-      <Filter>源文件\avcodec</Filter>
-    </ClCompile>
-    <ClCompile Include="wasapi\audio_capture.cpp">
-      <Filter>源文件\wasapi</Filter>
-    </ClCompile>
-    <ClCompile Include="NvCodec\nvenc.cpp">
-      <Filter>源文件\NvCodec</Filter>
     </ClCompile>
     <ClCompile Include="xop\RtmpClient.cpp">
       <Filter>源文件\xop</Filter>
@@ -233,60 +212,6 @@
     </ClCompile>
     <ClCompile Include="Overlay.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenCapture\ScreenCapture.cpp">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClCompile>
-    <ClCompile Include="ScreenCapture\GDIScreenCapture.cpp">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_critical_section.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_dispatcher.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_dispatcher_log.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_dxva2_device.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_function_table.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_library_iterator.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_load_dll.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_load_plugin.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_plugin_hive.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\mfx_win_reg_key.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\src\qsv_main.cpp">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\common_directx11.cpp">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\common_utils.cpp">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\common_utils_windows.cpp">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\QsvEncoder.cpp">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClCompile>
-    <ClCompile Include="QsvCodec\common_directx9.cpp">
-      <Filter>源文件\QsvCodec</Filter>
     </ClCompile>
     <ClCompile Include="libyuv\source\compare.cc">
       <Filter>源文件\libyuv\source</Filter>
@@ -444,6 +369,102 @@
     <ClCompile Include="imgui\gl3w\GL\gl3w.c">
       <Filter>源文件\imgui\GL</Filter>
     </ClCompile>
+    <ClCompile Include="codec\avcodec\aac_encoder.cpp">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\avcodec\h264_encoder.cpp">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\avcodec\video_converter.cpp">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\NvCodec\NvEncoder\NvEncoder.cpp">
+      <Filter>源文件\codec\nvcodec\NvEncoder</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\NvCodec\NvEncoder\NvEncoderD3D11.cpp">
+      <Filter>源文件\codec\nvcodec\NvEncoder</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\NvCodec\nvenc.cpp">
+      <Filter>源文件\codec\nvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_critical_section.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_dispatcher.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_dispatcher_log.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_dxva2_device.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_function_table.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_library_iterator.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_load_dll.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_load_plugin.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_plugin_hive.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\mfx_win_reg_key.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\src\qsv_main.cpp">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\common_directx9.cpp">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\common_directx11.cpp">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\common_utils.cpp">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\common_utils_windows.cpp">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\QsvCodec\QsvEncoder.cpp">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\ScreenCapture\DXGIScreenCapture.cpp">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\ScreenCapture\GDIScreenCapture.cpp">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\ScreenCapture\ScreenCapture.cpp">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\ScreenCapture\WindowHelper.cpp">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\AudioCapture\AudioCapture.cpp">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\AudioCapture\WASAPICapture.cpp">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="capture\AudioCapture\WASAPIPlayer.cpp">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\AACEncoder.cpp">
+      <Filter>源文件\codec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\H264Encoder.cpp">
+      <Filter>源文件\codec</Filter>
+    </ClCompile>
+    <ClCompile Include="codec\avcodec\audio_resampler.cpp">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\Acceptor.h">
@@ -557,9 +578,6 @@
     <ClInclude Include="xop\RtspServer.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenCapture\DXGIScreenCapture.h">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClInclude>
     <ClInclude Include="xop\amf.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
@@ -584,47 +602,11 @@
     <ClInclude Include="xop\HttpFlvServer.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
-    <ClInclude Include="NvCodec\NvEncoder\nvEncodeAPI.h">
-      <Filter>源文件\NvCodec\NvEncoder</Filter>
-    </ClInclude>
-    <ClInclude Include="NvCodec\NvEncoder\NvEncoder.h">
-      <Filter>源文件\NvCodec\NvEncoder</Filter>
-    </ClInclude>
-    <ClInclude Include="NvCodec\NvEncoder\NvEncoderD3D11.h">
-      <Filter>源文件\NvCodec\NvEncoder</Filter>
-    </ClInclude>
-    <ClInclude Include="wasapi\WASAPICapture.h">
-      <Filter>源文件\wasapi</Filter>
-    </ClInclude>
-    <ClInclude Include="wasapi\WASAPIPlayer.h">
-      <Filter>源文件\wasapi</Filter>
-    </ClInclude>
     <ClInclude Include="xop\DigestAuthentication.h">
       <Filter>源文件\xop</Filter>
     </ClInclude>
     <ClInclude Include="md5\md5.hpp">
       <Filter>源文件\md5</Filter>
-    </ClInclude>
-    <ClInclude Include="avcodec\aac_encoder.h">
-      <Filter>源文件\avcodec</Filter>
-    </ClInclude>
-    <ClInclude Include="avcodec\av_encoder.h">
-      <Filter>源文件\avcodec</Filter>
-    </ClInclude>
-    <ClInclude Include="avcodec\h264_encoder.h">
-      <Filter>源文件\avcodec</Filter>
-    </ClInclude>
-    <ClInclude Include="wasapi\audio_buffer.h">
-      <Filter>源文件\wasapi</Filter>
-    </ClInclude>
-    <ClInclude Include="wasapi\audio_capture.h">
-      <Filter>源文件\wasapi</Filter>
-    </ClInclude>
-    <ClInclude Include="NvCodec\encoder_info.h">
-      <Filter>源文件\NvCodec</Filter>
-    </ClInclude>
-    <ClInclude Include="NvCodec\nvenc.h">
-      <Filter>源文件\NvCodec</Filter>
     </ClInclude>
     <ClInclude Include="ScreenLive.h">
       <Filter>源文件</Filter>
@@ -674,63 +656,6 @@
     <ClInclude Include="Overlay.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="ScreenCapture\ScreenCapture.h">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClInclude>
-    <ClInclude Include="ScreenCapture\GDIScreenCapture.h">
-      <Filter>源文件\ScreenCapture</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_critical_section.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_dispatcher.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_dispatcher_defs.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_dispatcher_log.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_dxva2_device.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_exposed_functions_list.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_library_iterator.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_load_dll.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_load_plugin.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_plugin_hive.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_vector.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfx_win_reg_key.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\src\mfxaudio_exposed_functions_list.h">
-      <Filter>源文件\QsvCodec\src</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\common_directx11.h">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\common_utils.h">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\QsvEncoder.h">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClInclude>
-    <ClInclude Include="QsvCodec\common_directx9.h">
-      <Filter>源文件\QsvCodec</Filter>
-    </ClInclude>
     <ClInclude Include="libyuv\include\libyuv.h">
       <Filter>源文件\libyuv\include</Filter>
     </ClInclude>
@@ -745,6 +670,120 @@
     </ClInclude>
     <ClInclude Include="imgui\gl3w\GL\glcorearb.h">
       <Filter>源文件\imgui\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\aac_encoder.h">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\av_common.h">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\av_encoder.h">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\h264_encoder.h">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\video_converter.h">
+      <Filter>源文件\codec\avcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\NvCodec\NvEncoder\nvEncodeAPI.h">
+      <Filter>源文件\codec\nvcodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\NvCodec\NvEncoder\NvEncoder.h">
+      <Filter>源文件\codec\nvcodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\NvCodec\NvEncoder\NvEncoderD3D11.h">
+      <Filter>源文件\codec\nvcodec\NvEncoder</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\NvCodec\encoder_info.h">
+      <Filter>源文件\codec\nvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\NvCodec\nvenc.h">
+      <Filter>源文件\codec\nvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_critical_section.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_dispatcher.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_dispatcher_defs.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_dispatcher_log.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_dxva2_device.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_exposed_functions_list.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_library_iterator.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_load_dll.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_load_plugin.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_plugin_hive.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_vector.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfx_win_reg_key.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\src\mfxaudio_exposed_functions_list.h">
+      <Filter>源文件\codec\qsvcodec\src</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\common_directx9.h">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\common_directx11.h">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\common_utils.h">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\QsvCodec\QsvEncoder.h">
+      <Filter>源文件\codec\qsvcodec</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\ScreenCapture\DXGIScreenCapture.h">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\ScreenCapture\GDIScreenCapture.h">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\ScreenCapture\ScreenCapture.h">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\ScreenCapture\WindowHelper.h">
+      <Filter>源文件\capture\ScreenCpature</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\AudioCapture\AudioBuffer.h">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\AudioCapture\AudioCapture.h">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\AudioCapture\WASAPICapture.h">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\AudioCapture\WASAPIPlayer.h">
+      <Filter>源文件\capture\AudioCapture</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\AACEncoder.h">
+      <Filter>源文件\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\H264Encoder.h">
+      <Filter>源文件\codec</Filter>
+    </ClInclude>
+    <ClInclude Include="codec\avcodec\audio_resampler.h">
+      <Filter>源文件\codec\avcodec</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -467,3 +467,21 @@ void QsvEncoder::SetBitrate(uint32_t bitrate_kbps)
 		}
 	}
 }
+
+int QsvEncoder::GetSequenceParams(uint8_t* buffer, int buffer_size)
+{
+	int size = 0;
+
+	if (is_initialized_) {
+		if (sps_size_ && pps_size_) {
+			if (buffer_size >= (sps_size_ + pps_size_)) {
+				memcpy(buffer + size, sps_buffer_.get(), sps_size_);
+				size += sps_size_;
+				memcpy(buffer + size, pps_buffer_.get(), pps_size_);
+				size += pps_size_;
+			}
+		}
+	}
+
+	return size;
+}

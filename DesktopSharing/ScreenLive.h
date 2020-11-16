@@ -4,12 +4,9 @@
 #include "xop/RtspServer.h"
 #include "xop/RtspPusher.h"
 #include "xop/RtmpPublisher.h"
-#include "net/Timer.h"
-#include "avcodec/h264_encoder.h"
-#include "avcodec/aac_encoder.h"
-#include "NvCodec/nvenc.h"
-#include "QsvCodec/QsvEncoder.h"
-#include "wasapi/audio_capture.h"
+#include "AACEncoder.h"
+#include "H264Encoder.h"
+#include "AudioCapture/AudioCapture.h"
 #include "ScreenCapture/ScreenCapture.h"
 #include <mutex>
 #include <atomic>
@@ -89,25 +86,21 @@ private:
 	bool is_encoder_started_ = false;
 
 	AVConfig av_config_;
-
 	std::mutex mutex_;
 
 	// capture
 	ScreenCapture* screen_capture_ = nullptr;
 	AudioCapture audio_capture_;
 
-	// encoder
-	void* nvenc_data_ = nullptr;
-	QsvEncoder qsv_encoder_;
-	ffmpeg::H264Encoder h264_encoder_;
-	ffmpeg::AACEncoder  aac_encoder_;
+    // encoder
+	H264Encoder h264_encoder_;
+	AACEncoder aac_encoder_;
 	std::shared_ptr<std::thread> encode_video_thread_ = nullptr;
 	std::shared_ptr<std::thread> encode_audio_thread_ = nullptr;
 
 	// streamer
-	std::unique_ptr<xop::EventLoop> event_loop_ = nullptr;
-
 	xop::MediaSessionId media_session_id_ = 0;
+	std::unique_ptr<xop::EventLoop> event_loop_ = nullptr;
 	std::shared_ptr<xop::RtspServer> rtsp_server_ = nullptr;
 	std::shared_ptr<xop::RtspPusher> rtsp_pusher_ = nullptr;
 	std::shared_ptr<xop::RtmpPublisher> rtmp_pusher_ = nullptr;
@@ -119,4 +112,3 @@ private:
 };
 
 #endif
-

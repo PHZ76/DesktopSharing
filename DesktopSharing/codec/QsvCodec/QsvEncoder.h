@@ -39,6 +39,8 @@ public:
 	virtual void ForceIDR();
 	virtual void SetBitrate(uint32_t bitrate_kbps);
 
+	virtual int GetSequenceParams(uint8_t* buffer, int buffer_size);
+
 private:
 	bool InitParams(QsvParams& qsv_params);
 	bool AllocateSurfaces();

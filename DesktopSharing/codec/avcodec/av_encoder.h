@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include "av_common.h"
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -17,17 +18,6 @@ extern "C" {
 }
 
 namespace ffmpeg {
-
-struct AVFrameDeleter {
-	void operator()(AVFrame* ptr) const { av_frame_free(&ptr); }
-};
-
-struct AVPacketDeleter {
-	void operator()(AVPacket* ptr) const { av_packet_free(&ptr); }
-};
-
-typedef std::unique_ptr<AVPacket, AVPacketDeleter> AVPacketPtr;
-typedef std::unique_ptr<AVFrame, AVFrameDeleter> AVFramePtr;
 
 struct VideoConfig
 {
@@ -65,9 +55,8 @@ public:
 	virtual void ForceIDR() {}
 	virtual void SetBitrate(uint32_t bitrate_kbps) {}
 
-	AVCodecContext* GetAVCodecContext() const {
-		return codec_context_;
-	}
+	AVCodecContext* GetAVCodecContext() const 
+	{ return codec_context_;}
 
 protected:
 	bool is_initialized_ = false;
