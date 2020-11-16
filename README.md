@@ -38,6 +38,6 @@
 -
 * 将编译生成的exe文件放入run-env中，即可运行。
 
-VLC播放效果
+</br>
 -
 ![image](https://github.com/PHZ76/DesktopSharing/blob/master/pic/2.pic.jpg) 
