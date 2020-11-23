@@ -11,20 +11,28 @@ GDIScreenCapture::~GDIScreenCapture()
 
 }
 
-bool GDIScreenCapture::Init()
+bool GDIScreenCapture::Init(int display_index)
 {
 	if (is_initialized_) {
 		return true;
 	}
 
+	std::vector<DX::Monitor> monitors = DX::GetMonitors();
+	if (monitors.size() < (size_t)(display_index + 1)) {
+		return false;
+	}
+
+	monitor_ = monitors[display_index];
+
+	char video_size[20] = { 0 };
+	snprintf(video_size, sizeof(video_size), "%dx%d",
+		monitor_.right - monitor_.left, monitor_.bottom - monitor_.top);
+
 	AVDictionary *options = nullptr;
 	av_dict_set_int(&options, "framerate", framerate_, AV_DICT_MATCH_CASE);
 	av_dict_set_int(&options, "draw_mouse", 1, AV_DICT_MATCH_CASE);
-
-	int width = GetSystemMetrics(SM_CXSCREEN);
-	int height = GetSystemMetrics(SM_CYSCREEN);
-	char video_size[20] = { 0 };
-	snprintf(video_size, sizeof(video_size), "%dx%d", width, height);
+	av_dict_set_int(&options, "offset_x", monitor_.left, AV_DICT_MATCH_CASE);
+	av_dict_set_int(&options, "offset_y", monitor_.top, AV_DICT_MATCH_CASE);
 	av_dict_set(&options, "video_size", video_size, 1);
 
 	input_format_ = av_find_input_format("gdigrab");

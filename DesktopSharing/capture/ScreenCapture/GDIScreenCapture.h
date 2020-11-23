@@ -1,10 +1,11 @@
 // PHZ
-// 2020-7-8
+// 2020-11-20
 
 #ifndef GDI_SCREEN_CAPTURE_H
 #define GDI_SCREEN_CAPTURE_H
 
 #include "ScreenCapture.h"
+#include "WindowHelper.h"
 extern "C" {
 #include "libavcodec/avcodec.h"
 #include "libavdevice/avdevice.h"
@@ -21,7 +22,7 @@ public:
 	GDIScreenCapture();
 	virtual ~GDIScreenCapture();
 
-	virtual bool Init();
+	virtual bool Init(int display_index = 0);
 	virtual bool Destroy();
 
 	virtual bool CaptureFrame(std::vector<uint8_t>& image, uint32_t& width, uint32_t& height);
@@ -35,6 +36,8 @@ private:
 	void StopCapture();
 	bool AquireFrame();
 	bool Decode(AVFrame* av_frame, AVPacket* av_packet);
+
+	DX::Monitor monitor_;
 
 	bool is_initialized_ = false;
 	bool is_started_ = false;

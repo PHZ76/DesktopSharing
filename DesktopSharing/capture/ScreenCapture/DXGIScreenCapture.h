@@ -1,10 +1,11 @@
 // PHZ
-// 2020-4-7
+// 2020-11-20
 
 #ifndef DXGI_SCREEN_CAPTURE_H
 #define DXGI_SCREEN_CAPTURE_H
 
 #include "ScreenCapture.h"
+#include "WindowHelper.h"
 #include <cstdio>
 #include <cstdint>
 #include <string>
@@ -23,7 +24,7 @@ public:
 	DXGIScreenCapture();
 	virtual ~DXGIScreenCapture();
 
-	bool Init();
+	bool Init(int display_index = 0);
 	bool Destroy();
 
 	uint32_t GetWidth()  const { return dxgi_desc_.ModeDesc.Width; }
@@ -32,18 +33,22 @@ public:
 	bool CaptureFrame(std::vector<uint8_t>& bgra_image, uint32_t& width, uint32_t& height);
 	//bool GetTextureHandle(HANDLE* handle, int* lockKey, int* unlockKey);
 	//bool CaptureImage(std::string pathname);
-	
+
 	//ID3D11Device* GetD3D11Device() { return d3d11_device_.Get(); }
 	//ID3D11DeviceContext* GetD3D11DeviceContext() { return d3d11_context_.Get(); }
 
 	bool CaptureStarted() const
-	{ return is_started_; }
+	{
+		return is_started_;
+	}
 
 private:
 	int StartCapture();
 	int StopCapture();
 	int CreateSharedTexture();
 	int AquireFrame();
+
+	DX::Monitor monitor_;
 
 	bool is_initialized_;
 	bool is_started_;

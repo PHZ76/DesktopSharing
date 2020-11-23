@@ -287,25 +287,39 @@ bool ScreenLive::IsConnected(int type)
 
 int ScreenLive::StartCapture()
 {
+	std::vector<DX::Monitor> monitors = DX::GetMonitors();
+	if (monitors.empty()) {
+		printf("Monitor not found. \n");
+		return -1;
+	}
+
+	for (size_t index = 0; index < monitors.size(); index++) {
+		printf("Monitor(%u) info: %dx%d \n", index,
+			monitors[index].right - monitors[index].left, 
+			monitors[index].bottom - monitors[index].top);
+	}
+
+	int display_index = 0; // monitor index
+
 	if (!screen_capture_) {
 		if (IsWindows8OrGreater()) {
-			printf("DXGI Screen capture start ... \n");
+			printf("DXGI Screen capture start, monitor index: %d \n", display_index);
 			screen_capture_ = new DXGIScreenCapture();
-			if (!screen_capture_->Init()) {
-				printf("DXGI Screen capture start failed. \n");
+			if (!screen_capture_->Init(display_index)) {
+				printf("DXGI Screen capture start failed, monitor index: %d \n", display_index);
 				delete screen_capture_;
 
-				printf("GDI Screen capture start ... \n");
+				printf("GDI Screen capture start, monitor index: %d \n", display_index);
 				screen_capture_ = new GDIScreenCapture();
 			}
 		}
 		else {
-			printf("GDI Screen capture start ... \n");
+			printf("GDI Screen capture start, monitor index: %d \n", display_index);
 			screen_capture_ = new GDIScreenCapture();
 		}
 
-		if (!screen_capture_->Init()) {
-			printf("Screen capture start failed. \n");
+		if (!screen_capture_->Init(display_index)) {
+			printf("Screen capture start failed, monitor index: %d \n", display_index);
 			delete screen_capture_;
 			screen_capture_ = nullptr;
 			return -1;

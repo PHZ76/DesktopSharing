@@ -1,6 +1,3 @@
-// PHZ
-// 2019-7-22
-
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -21,6 +18,7 @@ DXGIScreenCapture::DXGIScreenCapture()
 	, image_size_(0)
 	, key_(0)
 {
+	memset(&monitor_, 0, sizeof(DX::Monitor));
 	memset(&dxgi_desc_, 0, sizeof(dxgi_desc_));
 }
 
@@ -29,11 +27,18 @@ DXGIScreenCapture::~DXGIScreenCapture()
 	Destroy();
 }
 
-bool DXGIScreenCapture::Init()
+bool DXGIScreenCapture::Init(int display_index)
 {
 	if (is_initialized_) {
 		return true;
 	}
+
+	std::vector<DX::Monitor> monitors = DX::GetMonitors();
+	if (monitors.size() < (size_t)(display_index + 1)) {
+		return false;
+	}
+
+	monitor_ = monitors[display_index];
 
 	HRESULT hr = S_OK;
 
@@ -59,17 +64,13 @@ bool DXGIScreenCapture::Init()
 	do
 	{
 		if (dxgi_factory->EnumAdapters(index, dxgi_adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND) {
-			int i = 0;
-			hr = dxgi_adapter->EnumOutputs(i, dxgi_output.GetAddressOf());
-			while (dxgi_adapter->EnumOutputs(i, dxgi_output.GetAddressOf()) != DXGI_ERROR_NOT_FOUND) {
-				i++;
+			if (dxgi_adapter->EnumOutputs(display_index, dxgi_output.GetAddressOf()) != DXGI_ERROR_NOT_FOUND) {
 				if (dxgi_output.Get() != nullptr) {
 					break;
 				}
 			}
 		}
 	} while (0);
-
 
 	if (dxgi_adapter.Get() == nullptr) {
 		printf("[DXGIScreenCapture] DXGI adapter not found.\n");
@@ -284,7 +285,8 @@ int DXGIScreenCapture::AquireFrame()
 			auto lCursorSize = cursorInfo.cbSize;
 			HDC  hdc;
 			surface1->GetDC(FALSE, &hdc);
-			DrawIconEx(hdc, cursorPosition.x, cursorPosition.y, cursorInfo.hCursor, 0, 0, 0, 0, DI_NORMAL | DI_DEFAULTSIZE);
+			DrawIconEx(hdc, cursorPosition.x - monitor_.left, cursorPosition.y - monitor_.top, 
+				cursorInfo.hCursor, 0, 0, 0, 0, DI_NORMAL | DI_DEFAULTSIZE);
 			surface1->ReleaseDC(nullptr);
 		}
 	}

@@ -12,7 +12,7 @@ public:
 	ScreenCapture() {}
 	virtual ~ScreenCapture() {}
 
-	virtual bool Init() = 0;
+	virtual bool Init(int display_index = 0) = 0;
 	virtual bool Destroy() = 0;
 
 	virtual bool CaptureFrame(std::vector<uint8_t>& image, uint32_t& width, uint32_t& height) = 0;
