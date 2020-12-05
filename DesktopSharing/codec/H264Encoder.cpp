@@ -165,8 +165,6 @@ int H264Encoder::GetSequenceParams(uint8_t* out_buffer, int out_buffer_size)
 	}
 	else if (qsv_encoder_.IsInitialized()) {
 		size = qsv_encoder_.GetSequenceParams((uint8_t*)out_buffer, out_buffer_size);
-		printf("%x %x %x %x %x %x \n", out_buffer[0], out_buffer[1], out_buffer[2],
-			out_buffer[3], out_buffer[4], out_buffer[5]);
 	}
 	else {
 		AVCodecContext* codec_context = h264_encoder_.GetAVCodecContext();
