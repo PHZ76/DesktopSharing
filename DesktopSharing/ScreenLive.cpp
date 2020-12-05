@@ -184,13 +184,13 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		}
 
 		xop::Nal sps = xop::H264Parser::findNal((uint8_t*)extradata, extradata_size);
-		if (sps.first != nullptr && sps.second != nullptr && *sps.first == 0x67) {
+		if (sps.first != nullptr && sps.second != nullptr && ((*sps.first & 0x1f) == 7)) {
 			mediaInfo.sps_size = sps.second - sps.first + 1;
 			mediaInfo.sps.reset(new uint8_t[mediaInfo.sps_size]);
 			memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.sps_size);
 
 			xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - (uint8_t*)extradata));
-			if (pps.first != nullptr && pps.second != nullptr && *pps.first == 0x68) {
+			if (pps.first != nullptr && pps.second != nullptr && ((*pps.first&0x1f) == 8)) {
 				mediaInfo.pps_size = pps.second - pps.first + 1;
 				mediaInfo.pps.reset(new uint8_t[mediaInfo.pps_size]);
 				memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.pps_size);
