@@ -11,7 +11,7 @@ ScreenLive::ScreenLive()
 	: event_loop_(new xop::EventLoop)
 {
 	encoding_fps_ = 0;
-	rtsp_clients_ = 0;
+	rtsp_clients_.clear();
 }
 
 ScreenLive::~ScreenLive()
@@ -46,7 +46,7 @@ std::string ScreenLive::GetStatusInfo()
 	}
 
 	if (rtsp_server_ != nullptr) {
-		info += "RTSP Server (connections): " + std::to_string(rtsp_clients_) + " \n\n";
+		info += "RTSP Server (connections): " + std::to_string(rtsp_clients_.size()) + " \n\n";
 	}
 
 	if (rtsp_pusher_ != nullptr) {		
@@ -130,10 +130,15 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		xop::MediaSession* session = xop::MediaSession::CreateNew(config.suffix);
 		session->AddSource(xop::channel_0, xop::H264Source::CreateNew());
 		session->AddSource(xop::channel_1, xop::AACSource::CreateNew(samplerate, channels, false));
-		session->SetNotifyCallback([this](xop::MediaSessionId sessionId, uint32_t clients) {
-			printf("RTSP Client: %u\n", clients);
-			this->rtsp_clients_ = clients;
+		session->AddNotifyConnectedCallback([this](xop::MediaSessionId sessionId, std::string peer_ip, uint16_t peer_port) {			
+			this->rtsp_clients_.emplace(peer_ip + ":" + std::to_string(peer_port));
+			printf("RTSP client: %u\n", this->rtsp_clients_.size());
 		});
+		session->AddNotifyDisconnectedCallback([this](xop::MediaSessionId sessionId, std::string peer_ip, uint16_t peer_port) {			
+			this->rtsp_clients_.erase(peer_ip + ":" + std::to_string(peer_port));
+			printf("RTSP client: %u\n", this->rtsp_clients_.size());
+		});
+
 
 		session_id = rtsp_server->AddSession(session);
 		//printf("RTSP Server: rtsp://%s:%hu/%s \n", xop::NetInterface::GetLocalIPAddress().c_str(), config.port, config.suffix.c_str());
@@ -226,7 +231,7 @@ void ScreenLive::StopLive(int type)
 		if (rtsp_server_ != nullptr) {
 			rtsp_server_->Stop();
 			rtsp_server_ = nullptr;
-			rtsp_clients_ = 0;
+			rtsp_clients_.clear();
 			printf("RTSP Server stop. \n");
 		}
 		
@@ -262,7 +267,7 @@ bool ScreenLive::IsConnected(int type)
 	{
 	case SCREEN_LIVE_RTSP_SERVER:
 		if (rtsp_server_ != nullptr) {
-			is_connected = rtsp_clients_ > 0;
+			is_connected = rtsp_clients_.size() > 0;
 		}		
 		break;
 
@@ -428,14 +433,14 @@ void ScreenLive::EncodeVideo()
 
 
 	while (is_encoder_started_ && is_capture_started_) {
-		if (update_ts.elapsed() >= 1000) {
-			update_ts.reset();
+		if (update_ts.Elapsed() >= 1000) {
+			update_ts.Reset();
 			encoding_fps_ = encoding_fps;
 			encoding_fps = 0;
 		}
 
 		uint32_t delay = msec;
-		uint32_t elapsed = (uint32_t)encoding_ts.elapsed();
+		uint32_t elapsed = (uint32_t)encoding_ts.Elapsed();
 		if (elapsed > delay) {
 			delay = 0;
 		}
@@ -444,7 +449,7 @@ void ScreenLive::EncodeVideo()
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-		encoding_ts.reset();
+		encoding_ts.Reset();
 
 		std::vector<uint8_t> bgra_image;
 		uint32_t timestamp = xop::H264Source::GetTimestamp();
@@ -503,7 +508,7 @@ void ScreenLive::PushVideo(const uint8_t* data, uint32_t size, uint32_t timestam
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		/* RTSP服务器 */
-		if (rtsp_server_ != nullptr && this->rtsp_clients_ > 0) {
+		if (rtsp_server_ != nullptr && this->rtsp_clients_.size() > 0) {
 			rtsp_server_->PushFrame(media_session_id_, xop::channel_0, video_frame);
 		}
 
@@ -531,7 +536,7 @@ void ScreenLive::PushAudio(const uint8_t* data, uint32_t size, uint32_t timestam
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		/* RTSP服务器 */
-		if (rtsp_server_ != nullptr && this->rtsp_clients_ > 0) {
+		if (rtsp_server_ != nullptr && this->rtsp_clients_.size() > 0) {
 			rtsp_server_->PushFrame(media_session_id_, xop::channel_1, audio_frame);
 		}
 

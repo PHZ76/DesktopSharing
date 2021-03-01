@@ -44,9 +44,18 @@ public:
     uint16_t GetRtcpPort(MediaChannelId channel_id) const
     { return local_rtcp_port_[channel_id]; }
 
-    SOCKET GetRtcpfd(MediaChannelId channel_id)
+    SOCKET GetRtpSocket(MediaChannelId channel_id) const
+    { return rtpfd_[channel_id]; }
+
+    SOCKET GetRtcpSocket(MediaChannelId channel_id) const
     { return rtcpfd_[channel_id]; }
 
+    std::string GetIp()
+    { return rtsp_ip_; }
+
+    uint16_t GetPort()
+    { return rtsp_port_; }
+    
     bool IsMulticast() const
     { return is_multicast_; }
 
@@ -79,6 +88,8 @@ private:
     int  SendRtpOverUdp(MediaChannelId channel_id, RtpPacket pkt);
 
 	std::weak_ptr<TcpConnection> rtsp_connection_;
+    std::string rtsp_ip_;
+    uint16_t rtsp_port_;
 
     TransportMode transport_mode_;
     bool is_multicast_ = false;
@@ -89,8 +100,8 @@ private:
     uint8_t  frame_type_ = 0;
     uint16_t local_rtp_port_[MAX_MEDIA_CHANNEL];
     uint16_t local_rtcp_port_[MAX_MEDIA_CHANNEL];
-	SOCKET rtpfd_[MAX_MEDIA_CHANNEL];
-	SOCKET rtcpfd_[MAX_MEDIA_CHANNEL];
+    SOCKET rtpfd_[MAX_MEDIA_CHANNEL];
+    SOCKET rtcpfd_[MAX_MEDIA_CHANNEL];
 
     struct sockaddr_in peer_addr_;
     struct sockaddr_in peer_rtp_addr_[MAX_MEDIA_CHANNEL];

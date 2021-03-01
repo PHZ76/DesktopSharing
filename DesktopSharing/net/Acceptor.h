@@ -18,7 +18,7 @@ class Acceptor
 {
 public:	
 	Acceptor(EventLoop* eventLoop);
-	~Acceptor();
+	virtual ~Acceptor();
 
 	void SetNewConnectionCallback(const NewConnectionCallback& cb)
 	{ new_connection_callback_ = cb; }
@@ -39,5 +39,3 @@ private:
 }
 
 #endif 
-
-

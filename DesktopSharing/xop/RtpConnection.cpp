@@ -23,6 +23,10 @@ RtpConnection::RtpConnection(std::weak_ptr<TcpConnection> rtsp_connection)
 		media_channel_info_[chn].rtp_header.ts = htonl(rd());
 		media_channel_info_[chn].rtp_header.ssrc = htonl(rd());
 	}
+
+	auto conn = rtsp_connection_.lock();
+	rtsp_ip_ = conn->GetIp();
+	rtsp_port_ = conn->GetPort();
 }
 
 RtpConnection::~RtpConnection()
@@ -278,12 +282,8 @@ int RtpConnection::SendRtpOverTcp(MediaChannelId channel_id, RtpPacket pkt)
 
 int RtpConnection::SendRtpOverUdp(MediaChannelId channel_id, RtpPacket pkt)
 {
-	//media_channel_info_[channel_id].octetCount  += pktSize;
-	//media_channel_info_[channel_id].packetCount += 1;
-
-	int ret = sendto(rtpfd_[channel_id], (const char*)pkt.data.get()+4, pkt.size-4, 0, 
-					(struct sockaddr *)&(peer_rtp_addr_[channel_id]),
-					sizeof(struct sockaddr_in));
+	int ret = sendto(rtpfd_[channel_id], (const char*)pkt.data.get()+4, pkt.size-4, 0,
+					(struct sockaddr *)&(peer_rtp_addr_[channel_id]), sizeof(struct sockaddr_in));
                    
 	if(ret < 0) {        
 		Teardown();

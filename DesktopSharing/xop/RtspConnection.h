@@ -25,7 +25,7 @@ class MediaSession;
 class RtspConnection : public TcpConnection
 {
 public:
-	typedef std::function<void (SOCKET sockfd)> CloseCallback;
+	using CloseCallback = std::function<void (SOCKET sockfd)>;
 
 	enum ConnectionMode
 	{
@@ -43,7 +43,7 @@ public:
 
 	RtspConnection() = delete;
 	RtspConnection(std::shared_ptr<Rtsp> rtsp_server, TaskScheduler *task_scheduler, SOCKET sockfd);
-	~RtspConnection();
+	virtual ~RtspConnection();
 
 	MediaSessionId GetMediaSessionId()
 	{ return session_id_; }

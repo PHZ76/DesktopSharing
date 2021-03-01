@@ -11,6 +11,7 @@
 #include <mutex>
 #include <atomic>
 #include <string>
+#include <set>
 
 #define SCREEN_LIVE_RTSP_SERVER 1
 #define SCREEN_LIVE_RTSP_PUSHER 2
@@ -107,8 +108,7 @@ private:
 
 	// status info
 	std::atomic_int encoding_fps_;
-	std::atomic_int rtsp_clients_;
-
+	std::set<std::string> rtsp_clients_;
 };
 
 #endif

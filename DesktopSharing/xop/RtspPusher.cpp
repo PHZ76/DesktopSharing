@@ -36,7 +36,7 @@ void RtspPusher::RemoveSession(MediaSessionId sessionId)
 	media_session_ = nullptr;
 }
 
-MediaSessionPtr RtspPusher::LookMediaSession(MediaSessionId sessionId)
+MediaSession::Ptr RtspPusher::LookMediaSession(MediaSessionId session_id)
 {
 	return media_session_;
 }
@@ -45,15 +45,15 @@ int RtspPusher::OpenUrl(std::string url, int msec)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	static xop::Timestamp tp;
+	static xop::Timestamp timestamp;
 	int timeout = msec;
 	if (timeout <= 0) {
 		timeout = 10000;
 	}
 
-	tp.reset();
+	timestamp.Reset();
 
-	if (!this->parseRtspUrl(url)) {
+	if (!this->ParseRtspUrl(url)) {
 		LOG_ERROR("rtsp url(%s) was illegal.\n", url.c_str());
 		return -1;
 	}
@@ -81,7 +81,7 @@ int RtspPusher::OpenUrl(std::string url, int msec)
 		rtsp_conn_->SendOptions(RtspConnection::RTSP_PUSHER);
     });
 
-	timeout -= (int)tp.elapsed();
+	timeout -= (int)timestamp.Elapsed();
 	if (timeout < 0) {
 		timeout = 1000;
 	}

@@ -28,7 +28,13 @@ public:
 	typedef std::function<void()> EventCallback;
     
 	Channel() = delete;
-	Channel(SOCKET sockfd) : sockfd_(sockfd) {};
+
+	Channel(SOCKET sockfd) 
+		: sockfd_(sockfd)
+	{
+
+	}
+
 	virtual ~Channel() {};
     
 	void SetReadCallback(const EventCallback& cb)

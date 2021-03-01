@@ -53,8 +53,7 @@ bool TcpServer::Start(std::string ip, uint16_t port)
 
 void TcpServer::Stop()
 {
-	if (is_started_) {
-		
+	if (is_started_) {		
 		mutex_.lock();
 		for (auto iter : connections_) {
 			iter.second->Disconnect();
@@ -65,7 +64,7 @@ void TcpServer::Stop()
 		is_started_ = false;
 
 		while (1) {
-			Timer::Sleep(1);
+			Timer::Sleep(10);
 			if (connections_.empty()) {
 				break;
 			}

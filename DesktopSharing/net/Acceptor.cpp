@@ -59,13 +59,13 @@ void Acceptor::OnAccept()
 {
 	std::lock_guard<std::mutex> locker(mutex_);
 
-	SOCKET connfd = tcp_socket_->Accept();
-	if (connfd > 0) {
+	SOCKET socket = tcp_socket_->Accept();
+	if (socket > 0) {
 		if (new_connection_callback_) {
-			new_connection_callback_(connfd);
+			new_connection_callback_(socket);
 		}
 		else {
-			SocketUtil::Close(connfd);
+			SocketUtil::Close(socket);
 		}
 	}
 }

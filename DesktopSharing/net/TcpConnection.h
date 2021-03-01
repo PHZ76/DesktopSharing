@@ -7,6 +7,7 @@
 #include "BufferReader.h"
 #include "BufferWriter.h"
 #include "Channel.h"
+#include "SocketUtil.h"
 
 namespace xop
 {
@@ -41,6 +42,12 @@ public:
 
 	SOCKET GetSocket() const
 	{ return channel_->GetSocket(); }
+
+	uint16_t GetPort() const
+	{ return SocketUtil::GetPeerPort(channel_->GetSocket()); }
+    
+	std::string GetIp() const
+	{ return SocketUtil::GetPeerIp(channel_->GetSocket()); }
 
 protected:
 	friend class TcpServer;

@@ -108,13 +108,13 @@ int RtmpPublisher::OpenUrl(std::string url, int msec, std::string& status)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 	
-	static xop::Timestamp tp;
+	static xop::Timestamp timestamp;
 	int timeout = msec;
 	if (timeout <= 0) {
 		timeout = 10000;
 	}
 
-	tp.reset();
+	timestamp.Reset();
 
 	if (this->ParseRtmpUrl(url) != 0) {
 		LOG_INFO("[RtmpPublisher] rtmp url(%s) was illegal.\n", url.c_str());
@@ -147,7 +147,7 @@ int RtmpPublisher::OpenUrl(std::string url, int msec, std::string& status)
 		rtmp_conn_->Handshake();
 	});
 
-	timeout -= (int)tp.elapsed();
+	timeout -= (int)timestamp.Elapsed();
 	if (timeout < 0) {
 		timeout = 1000;
 	}
@@ -237,7 +237,7 @@ int RtmpPublisher::PushVideoFrame(uint8_t *data, uint32_t size)
 		if (!has_key_frame_) {
 			if (this->IsKeyFrame(data, size)) {
 				has_key_frame_ = true;
-				timestamp_.reset();
+				timestamp_.Reset();
 				//task_scheduler_->addTriggerEvent([=]() {
 					rtmp_conn_->SendVideoData(0, avc_sequence_header_, avc_sequence_header_size_);
 					rtmp_conn_->SendAudioData(0, aac_sequence_header_, aac_sequence_header_size_);
@@ -248,7 +248,7 @@ int RtmpPublisher::PushVideoFrame(uint8_t *data, uint32_t size)
 			}
 		}
 
-		uint64_t timestamp = timestamp_.elapsed();
+		uint64_t timestamp = timestamp_.Elapsed();
 		//uint64_t timestamp_delta = 0;
 		//if (timestamp < video_timestamp_)
 		//{
@@ -294,7 +294,7 @@ int RtmpPublisher::PushAudioFrame(uint8_t *data, uint32_t size)
 	}
 
 	if (has_key_frame_ && media_info_.audio_codec_id == RTMP_CODEC_ID_AAC) {
-		uint64_t timestamp = timestamp_.elapsed();
+		uint64_t timestamp = timestamp_.Elapsed();
 		//uint64_t timestamp_delta = 0;
 		//if (timestamp < audio_timestamp_)
 		//{

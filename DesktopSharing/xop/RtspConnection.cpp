@@ -16,8 +16,8 @@ using namespace std;
 
 RtspConnection::RtspConnection(std::shared_ptr<Rtsp> rtsp, TaskScheduler *task_scheduler, SOCKET sockfd)
 	: TcpConnection(task_scheduler, sockfd)
-	, task_scheduler_(task_scheduler)
 	, rtsp_(rtsp)
+	, task_scheduler_(task_scheduler)
 	, rtp_channel_(new Channel(sockfd))
 	, rtsp_request_(new RtspRequest)
 	, rtsp_response_(new RtspResponse)
@@ -85,7 +85,7 @@ void RtspConnection::OnClose()
 	if(session_id_ != 0) {
 		auto rtsp = rtsp_.lock();
 		if (rtsp) {
-			MediaSessionPtr media_session = rtsp->LookMediaSession(session_id_);
+			MediaSession::Ptr media_session = rtsp->LookMediaSession(session_id_);
 			if (media_session) {
 				media_session->RemoveClient(this->GetSocket());
 			}
@@ -109,7 +109,7 @@ bool RtspConnection::HandleRtspRequest(BufferReader& buffer)
 	}
 #endif
 
-    if (rtsp_request_->ParseRequest(&buffer)) {
+	if (rtsp_request_->ParseRequest(&buffer)) {
 		RtspRequest::Method method = rtsp_request_->GetMethod();
 		if(method == RtspRequest::RTCP) {
 			HandleRtcp(buffer);
@@ -146,7 +146,7 @@ bool RtspConnection::HandleRtspRequest(BufferReader& buffer)
 		if (rtsp_request_->GotAll()) {
 			rtsp_request_->Reset();
 		}
-    }
+	}
 	else {
 		return false;
 	}
@@ -158,8 +158,9 @@ bool RtspConnection::HandleRtspResponse(BufferReader& buffer)
 {
 #if RTSP_DEBUG
 	string str(buffer.Peek(), buffer.ReadableBytes());
-	if(str.find("rtsp")!=string::npos || str.find("RTSP") != string::npos)
+	if (str.find("rtsp") != string::npos || str.find("RTSP") != string::npos) {
 		cout << str << endl;
+	}		
 #endif
 
 	if (rtsp_response_->ParseResponse(&buffer)) {
@@ -215,15 +216,15 @@ void RtspConnection::HandleRtcp(BufferReader& buffer)
  
 void RtspConnection::HandleRtcp(SOCKET sockfd)
 {
-    char buf[1024] = {0};
-    if(recv(sockfd, buf, 1024, 0) > 0) {
-        KeepAlive();
-    }
+	char buf[1024] = {0};
+	if(recv(sockfd, buf, 1024, 0) > 0) {
+		KeepAlive();
+	}
 }
 
 void RtspConnection::HandleCmdOption()
 {
-	std::shared_ptr<char> res(new char[2048]);
+	std::shared_ptr<char> res(new char[2048], std::default_delete<char[]>());
 	int size = rtsp_request_->BuildOptionRes(res.get(), 2048);
 	this->SendRtspMessage(res, size);	
 }
@@ -239,8 +240,8 @@ void RtspConnection::HandleCmdDescribe()
 	}
 
 	int size = 0;
-	std::shared_ptr<char> res(new char[4096]);
-	MediaSessionPtr media_session = nullptr;
+	std::shared_ptr<char> res(new char[4096], std::default_delete<char[]>());
+	MediaSession::Ptr media_session = nullptr;
 
 	auto rtsp = rtsp_.lock();
 	if (rtsp) {
@@ -262,7 +263,7 @@ void RtspConnection::HandleCmdDescribe()
 			}
 		}
 
-		std::string sdp = media_session->GetSdpMessage(rtsp->GetVersion());
+		std::string sdp = media_session->GetSdpMessage(SocketUtil::GetSocketIp(this->GetSocket()), rtsp->GetVersion());
 		if(sdp == "") {
 			size = rtsp_request_->BuildServerErrorRes(res.get(), 4096);
 		}
@@ -282,9 +283,9 @@ void RtspConnection::HandleCmdSetup()
 	}
 
 	int size = 0;
-	std::shared_ptr<char> res(new char[4096]);
+	std::shared_ptr<char> res(new char[4096], std::default_delete<char[]>());
 	MediaChannelId channel_id = rtsp_request_->GetChannelId();
-	MediaSessionPtr media_session = nullptr;
+	MediaSession::Ptr media_session = nullptr;
 
 	auto rtsp = rtsp_.lock();
 	if (rtsp) {
@@ -320,14 +321,14 @@ void RtspConnection::HandleCmdSetup()
 			size = rtsp_request_->BuildSetupTcpRes(res.get(), 4096, rtp_channel, rtcp_channel, session_id);
 		}
 		else if(rtsp_request_->GetTransportMode() == RTP_OVER_UDP) {
-			uint16_t cliRtpPort = rtsp_request_->GetRtpPort();
-			uint16_t cliRtcpPort = rtsp_request_->GetRtcpPort();
+			uint16_t peer_rtp_port = rtsp_request_->GetRtpPort();
+			uint16_t peer_rtcp_port = rtsp_request_->GetRtcpPort();
 			uint16_t session_id = rtp_conn_->GetRtpSessionId();
 
-			if(rtp_conn_->SetupRtpOverUdp(channel_id, cliRtpPort, cliRtcpPort)) {                
-				SOCKET rtcpfd = rtp_conn_->GetRtcpfd(channel_id);
-				rtcp_channels_[channel_id].reset(new Channel(rtcpfd));
-				rtcp_channels_[channel_id]->SetReadCallback([rtcpfd, this]() { this->HandleRtcp(rtcpfd); });
+			if(rtp_conn_->SetupRtpOverUdp(channel_id, peer_rtp_port, peer_rtcp_port)) {
+				SOCKET rtcp_fd = rtp_conn_->GetRtcpSocket(channel_id);
+				rtcp_channels_[channel_id].reset(new Channel(rtcp_fd));
+				rtcp_channels_[channel_id]->SetReadCallback([rtcp_fd, this]() { this->HandleRtcp(rtcp_fd); });
 				rtcp_channels_[channel_id]->EnableReading();
 				task_scheduler_->UpdateChannel(rtcp_channels_[channel_id]);
 			}
@@ -360,7 +361,13 @@ server_error:
 
 void RtspConnection::HandleCmdPlay()
 {
-	if (auth_info_ != nullptr && !HandleAuthentication()) {
+	if (auth_info_ != nullptr) {
+		if (!HandleAuthentication()) {
+			return;
+		}
+	}
+
+	if (rtp_conn_ == nullptr) {
 		return;
 	}
 
@@ -368,7 +375,7 @@ void RtspConnection::HandleCmdPlay()
 	rtp_conn_->Play();
 
 	uint16_t session_id = rtp_conn_->GetRtpSessionId();
-	std::shared_ptr<char> res(new char[2048]);
+	std::shared_ptr<char> res(new char[2048], std::default_delete<char[]>());
 
 	int size = rtsp_request_->BuildPlayRes(res.get(), 2048, nullptr, session_id);
 	SendRtspMessage(res, size);
@@ -376,20 +383,28 @@ void RtspConnection::HandleCmdPlay()
 
 void RtspConnection::HandleCmdTeardown()
 {
+	if (rtp_conn_ == nullptr) {
+		return;
+	}
+
 	rtp_conn_->Teardown();
 
 	uint16_t session_id = rtp_conn_->GetRtpSessionId();
-	std::shared_ptr<char> res(new char[2048]);
+	std::shared_ptr<char> res(new char[2048], std::default_delete<char[]>());
 	int size = rtsp_request_->BuildTeardownRes(res.get(), 2048, session_id);
 	SendRtspMessage(res, size);
 
-	HandleClose();
+	//HandleClose();
 }
 
 void RtspConnection::HandleCmdGetParamter()
 {
+	if (rtp_conn_ == nullptr) {
+		return;
+	}
+
 	uint16_t session_id = rtp_conn_->GetRtpSessionId();
-	std::shared_ptr<char> res(new char[2048]);
+	std::shared_ptr<char> res(new char[2048], std::default_delete<char[]>());
 	int size = rtsp_request_->BuildGetParamterRes(res.get(), 2048, session_id);
 	SendRtspMessage(res, size);
 }
@@ -405,7 +420,7 @@ bool RtspConnection::HandleAuthentication()
 			has_auth_ = true;
 		}
 		else {
-			std::shared_ptr<char> res(new char[4096]);
+			std::shared_ptr<char> res(new char[4096], std::default_delete<char[]>());
 			_nonce = auth_info_->GetNonce();
 			int size = rtsp_request_->BuildUnauthorizedRes(res.get(), 4096, auth_info_->GetRealm().c_str(), _nonce.c_str());
 			SendRtspMessage(res, size);
@@ -432,14 +447,14 @@ void RtspConnection::SendOptions(ConnectionMode mode)
 	rtsp_response_->SetUserAgent(USER_AGENT);
 	rtsp_response_->SetRtspUrl(rtsp->GetRtspUrl().c_str());
 
-	std::shared_ptr<char> req(new char[2048]);
+	std::shared_ptr<char> req(new char[2048], std::default_delete<char[]>());
 	int size = rtsp_response_->BuildOptionReq(req.get(), 2048);
 	SendRtspMessage(req, size);
 }
 
 void RtspConnection::SendAnnounce()
 {
-	MediaSessionPtr media_session = nullptr;
+	MediaSession::Ptr media_session = nullptr;
 
 	auto rtsp = rtsp_.lock();
 	if (rtsp) {
@@ -463,20 +478,20 @@ void RtspConnection::SendAnnounce()
 		}
 	}
 
-	std::string sdp = media_session->GetSdpMessage(rtsp->GetVersion());
+	std::string sdp = media_session->GetSdpMessage(SocketUtil::GetSocketIp(this->GetSocket()), rtsp->GetVersion());
 	if (sdp == "") {
 		HandleClose();
 		return;
 	}
 
-	std::shared_ptr<char> req(new char[4096]);
+	std::shared_ptr<char> req(new char[4096], std::default_delete<char[]>());
 	int size = rtsp_response_->BuildAnnounceReq(req.get(), 4096, sdp.c_str());
 	SendRtspMessage(req, size);
 }
 
 void RtspConnection::SendDescribe()
 {
-	std::shared_ptr<char> req(new char[2048]);
+	std::shared_ptr<char> req(new char[2048], std::default_delete<char[]>());
 	int size = rtsp_response_->BuildDescribeReq(req.get(), 2048);
 	SendRtspMessage(req, size);
 }
@@ -484,8 +499,8 @@ void RtspConnection::SendDescribe()
 void RtspConnection::SendSetup()
 {
 	int size = 0;
-	std::shared_ptr<char> buf(new char[2048]);	
-	MediaSessionPtr media_session = nullptr;
+	std::shared_ptr<char> buf(new char[2048], std::default_delete<char[]>());
+	MediaSession::Ptr media_session = nullptr;
 
 	auto rtsp = rtsp_.lock();
 	if (rtsp) {

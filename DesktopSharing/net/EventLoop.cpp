@@ -65,10 +65,11 @@ void EventLoop::Loop()
 #endif
 		task_schedulers_.push_back(task_scheduler_ptr);
 		std::shared_ptr<std::thread> thread(new std::thread(&TaskScheduler::Start, task_scheduler_ptr.get()));
+		thread->native_handle();
 		threads_.push_back(thread);
 	}
 
-	int priority = TASK_SCHEDULER_PRIORITY_REALTIME;
+	const int priority = TASK_SCHEDULER_PRIORITY_REALTIME;
 
 	for (auto iter : threads_) 
 	{

@@ -30,13 +30,13 @@ int RtmpClient::OpenUrl(std::string url, int msec, std::string& status)
 {
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	static xop::Timestamp tp;
+	static xop::Timestamp timestamp;
 	int timeout = msec;
 	if (timeout <= 0) {
 		timeout = 5000;
 	}
 
-	tp.reset();
+	timestamp.Reset();
 
 	if (this->ParseRtmpUrl(url) != 0) {
 		LOG_INFO("[RtmpPublisher] rtmp url(%s) was illegal.\n", url.c_str());
@@ -70,7 +70,7 @@ int RtmpClient::OpenUrl(std::string url, int msec, std::string& status)
 		rtmp_conn_->Handshake();
 	});
 
-	timeout -= (int)tp.elapsed();
+	timeout -= (int)timestamp.Elapsed();
 	if (timeout < 0) {
 		timeout = 1000;
 	}
