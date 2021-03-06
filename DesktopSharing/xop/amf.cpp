@@ -157,7 +157,7 @@ uint32_t AmfDecoder::decodeInt32(const char *data, int size)
 }
 
 AmfEncoder::AmfEncoder(uint32_t size)
-    : m_data(new char[size])
+    : m_data(new char[size], std::default_delete<char[]>())
     , m_size(size)
 {
     
@@ -324,7 +324,7 @@ void AmfEncoder::realloc(uint32_t size)
         return ;
     }
 
-    std::shared_ptr<char> data(new char[size]);
+    std::shared_ptr<char> data(new char[size], std::default_delete<char[]>());
     memcpy(data.get(), m_data.get(), m_index);
     m_size = size;
     m_data = data;

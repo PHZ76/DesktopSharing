@@ -11,10 +11,9 @@ class AudioBuffer
 {
 public:
 	AudioBuffer(uint32_t size = 10240) 
-		: _buffer(new std::vector<char>(size))
-		, _bufferSize(size)
+		: _bufferSize(size)
 	{
-		_buffer->resize(size);
+		_buffer.resize(size);
 	}
 
 	~AudioBuffer()
@@ -77,7 +76,7 @@ private:
 
 	uint32_t writableBytes() const
 	{
-		return _buffer->size() - _writerIndex;
+		return _buffer.size() - _writerIndex;
 	}
 
 	char* peek()
@@ -113,8 +112,8 @@ private:
 
 		if (_readerIndex > 0 && _writerIndex > 0)
 		{
-			_buffer->erase(_buffer->begin(), _buffer->begin() + _readerIndex);
-			_buffer->resize(_bufferSize);
+			_buffer.erase(_buffer.begin(), _buffer.begin() + _readerIndex);
+			_buffer.resize(_bufferSize);
 			_writerIndex -= _readerIndex;
 			_readerIndex = 0;		
 		}
@@ -127,12 +126,12 @@ private:
 
 	char* begin()
 	{
-		return &*_buffer->begin();
+		return &*_buffer.begin();
 	}
 
 	const char* begin() const
 	{
-		return &*_buffer->begin();
+		return &*_buffer.begin();
 	}
 
 	char* beginWrite()
@@ -147,7 +146,7 @@ private:
 
 	std::mutex _mutex;
 	uint32_t _bufferSize = 0;
-	std::shared_ptr<std::vector<char>> _buffer;
+	std::vector<char> _buffer;
 	size_t _readerIndex = 0;
 	size_t _writerIndex = 0;
 };

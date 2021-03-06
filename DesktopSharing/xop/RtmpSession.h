@@ -56,7 +56,7 @@ public:
 	void SendMetaData(AmfObjects& metaData);
 	void SendMediaData(uint8_t type, uint64_t timestamp, std::shared_ptr<char> data, uint32_t size);
 
-	std::shared_ptr<RtmpConnection> getPublisher();
+	std::shared_ptr<RtmpConnection> GetPublisher();
 
 	void SetGopCache(uint32_t cacheLen)
 	{

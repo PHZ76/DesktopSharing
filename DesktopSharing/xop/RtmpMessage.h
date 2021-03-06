@@ -36,7 +36,7 @@ struct RtmpMessage
 		timestamp = 0;
 		extend_timestamp = 0;
 		if (length > 0) {
-			payload.reset(new char[length]);
+			payload.reset(new char[length], std::default_delete<char[]>());
 		}
 	}
 

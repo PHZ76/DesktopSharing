@@ -76,7 +76,7 @@ bool RtmpServer::HasPublisher(std::string stream_path)
        return false;
     }
     
-    return (session->getPublisher()!=nullptr);
+    return (session->GetPublisher()!=nullptr);
 }
 
 

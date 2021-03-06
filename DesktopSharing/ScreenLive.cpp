@@ -179,7 +179,7 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		}
 
 		mediaInfo.audio_specific_config_size = extradata_size;
-		mediaInfo.audio_specific_config.reset(new uint8_t[mediaInfo.audio_specific_config_size]);
+		mediaInfo.audio_specific_config.reset(new uint8_t[mediaInfo.audio_specific_config_size], std::default_delete<uint8_t[]>());
 		memcpy(mediaInfo.audio_specific_config.get(), extradata, extradata_size);
 
 		extradata_size = h264_encoder_.GetSequenceParams(extradata, 1024);
@@ -191,13 +191,13 @@ bool ScreenLive::StartLive(int type, LiveConfig& config)
 		xop::Nal sps = xop::H264Parser::findNal((uint8_t*)extradata, extradata_size);
 		if (sps.first != nullptr && sps.second != nullptr && ((*sps.first & 0x1f) == 7)) {
 			mediaInfo.sps_size = sps.second - sps.first + 1;
-			mediaInfo.sps.reset(new uint8_t[mediaInfo.sps_size]);
+			mediaInfo.sps.reset(new uint8_t[mediaInfo.sps_size], std::default_delete<uint8_t[]>());
 			memcpy(mediaInfo.sps.get(), sps.first, mediaInfo.sps_size);
 
 			xop::Nal pps = xop::H264Parser::findNal(sps.second, extradata_size - (sps.second - (uint8_t*)extradata));
 			if (pps.first != nullptr && pps.second != nullptr && ((*pps.first&0x1f) == 8)) {
 				mediaInfo.pps_size = pps.second - pps.first + 1;
-				mediaInfo.pps.reset(new uint8_t[mediaInfo.pps_size]);
+				mediaInfo.pps.reset(new uint8_t[mediaInfo.pps_size], std::default_delete<uint8_t[]>());
 				memcpy(mediaInfo.pps.get(), pps.first, mediaInfo.pps_size);
 			}
 		}
@@ -472,7 +472,7 @@ void ScreenLive::EncodeVideo()
 
 void ScreenLive::EncodeAudio()
 {
-	std::shared_ptr<uint8_t> pcm_buffer(new uint8_t[48000 * 8]);	
+	std::shared_ptr<uint8_t> pcm_buffer(new uint8_t[48000 * 8], std::default_delete<uint8_t[]>());
 	uint32_t frame_samples = aac_encoder_.GetFrames();
 	uint32_t channel = audio_capture_.GetChannels();
 	uint32_t samplerate = audio_capture_.GetSamplerate();

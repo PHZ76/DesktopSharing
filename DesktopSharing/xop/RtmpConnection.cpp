@@ -68,7 +68,7 @@ bool RtmpConnection::OnRead(BufferReader& buffer)
 		ret = HandleChunk(buffer);
 	}
 	else {
-		std::shared_ptr<char> res(new char[4096]);
+		std::shared_ptr<char> res(new char[4096], std::default_delete<char[]>());
 		int res_size = handshake_->Parse(buffer, res.get(), 4096);
 		if (res_size < 0) {
 			ret = false;
@@ -307,7 +307,7 @@ bool RtmpConnection::HandleVideo(RtmpMessage& rtmp_msg)
 		if (frame_type == 1 && codec_id == RTMP_CODEC_ID_H264) {
 			if (payload[1] == 0) {
 				avc_sequence_header_size_ = length;
-				avc_sequence_header_.reset(new char[length]);
+				avc_sequence_header_.reset(new char[length], std::default_delete<char[]>());
 				memcpy(avc_sequence_header_.get(), rtmp_msg.payload.get(), length);
 				session->SetAvcSequenceHeader(avc_sequence_header_, avc_sequence_header_size_);
 				type = RTMP_AVC_SEQUENCE_HEADER;
@@ -351,7 +351,7 @@ bool RtmpConnection::HandleAudio(RtmpMessage& rtmp_msg)
 
 		if (sound_format == RTMP_CODEC_ID_AAC && payload[1] == 0) {
 			aac_sequence_header_size_ = rtmp_msg.length;
-			aac_sequence_header_.reset(new char[rtmp_msg.length]);
+			aac_sequence_header_.reset(new char[rtmp_msg.length], std::default_delete<char[]>());
 			memcpy(aac_sequence_header_.get(), rtmp_msg.payload.get(), rtmp_msg.length);
 			session->SetAacSequenceHeader(aac_sequence_header_, aac_sequence_header_size_);
 			type = RTMP_AAC_SEQUENCE_HEADER;
@@ -367,7 +367,7 @@ bool RtmpConnection::HandleAudio(RtmpMessage& rtmp_msg)
 bool RtmpConnection::Handshake()
 {
 	uint32_t req_size = 1 + 1536; //COC1  
-	std::shared_ptr<char> req(new char[req_size]);
+	std::shared_ptr<char> req(new char[req_size], std::default_delete<char[]>());
 	handshake_->BuildC0C1(req.get(), req_size);
 	this->Send(req.get(), req_size);
 	return true;
@@ -762,7 +762,7 @@ bool RtmpConnection::SendMetaData(AmfObjects metaData)
 
 void RtmpConnection::SetPeerBandwidth()
 {
-    std::shared_ptr<char> data(new char[5]);
+    std::shared_ptr<char> data(new char[5], std::default_delete<char[]>());
     WriteUint32BE(data.get(), peer_bandwidth_);
     data.get()[4] = 2;
     RtmpMessage rtmp_msg;
@@ -774,7 +774,7 @@ void RtmpConnection::SetPeerBandwidth()
 
 void RtmpConnection::SendAcknowledgement()
 {
-    std::shared_ptr<char> data(new char[4]);
+    std::shared_ptr<char> data(new char[4], std::default_delete<char[]>());
     WriteUint32BE(data.get(), acknowledgement_size_);
 
     RtmpMessage rtmp_msg;
@@ -787,7 +787,7 @@ void RtmpConnection::SendAcknowledgement()
 void RtmpConnection::SetChunkSize()
 {
 	rtmp_chunk_->SetOutChunkSize(max_chunk_size_);
-    std::shared_ptr<char> data(new char[4]);
+    std::shared_ptr<char> data(new char[4], std::default_delete<char[]>());
     WriteUint32BE((char*)data.get(), max_chunk_size_);
 
     RtmpMessage rtmp_msg;
@@ -936,7 +936,7 @@ bool RtmpConnection::SendAudioData(uint64_t timestamp, std::shared_ptr<char> pay
 void RtmpConnection::SendRtmpChunks(uint32_t csid, RtmpMessage& rtmp_msg)
 {    
     uint32_t capacity = rtmp_msg.length + rtmp_msg.length/ max_chunk_size_ *5 + 1024;
-    std::shared_ptr<char> buffer(new char[capacity]);
+    std::shared_ptr<char> buffer(new char[capacity], std::default_delete<char[]>());
 
 	int size = rtmp_chunk_->CreateChunk(csid, rtmp_msg, buffer.get(), capacity);
 	if (size > 0) {

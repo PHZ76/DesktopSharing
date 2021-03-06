@@ -297,7 +297,7 @@ int DXGIScreenCapture::AquireFrame()
 		if (dsec.pData != NULL) {
 			uint32_t image_width = GetWidth();
 			uint32_t image_height = GetHeight();
-			image_ptr_.reset(new uint8_t[image_size_]);
+			image_ptr_.reset(new uint8_t[image_size_], std::default_delete<uint8_t[]>());
 
 			for (uint32_t y = 0; y < image_height; y++) {
 				memcpy(image_ptr_.get() + y * image_width * 4, (uint8_t*)dsec.pData + y * dsec.RowPitch, image_width * 4);

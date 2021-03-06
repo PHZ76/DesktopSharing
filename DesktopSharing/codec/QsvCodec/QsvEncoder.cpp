@@ -289,7 +289,7 @@ int QsvEncoder::Encode(const uint8_t* bgra_image, uint32_t width, uint32_t heigh
 	}
 
 	int yuv_buf_size = width * height * 3 / 2;
-	std::shared_ptr<uint8_t> nv12_buf(new uint8_t[yuv_buf_size]);
+	std::shared_ptr<uint8_t> nv12_buf(new uint8_t[yuv_buf_size], std::default_delete<uint8_t[]>());
 
 	int stride_y = width;
 	int stride_uv = width;// (width + 1) / 2;

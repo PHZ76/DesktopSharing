@@ -57,7 +57,7 @@ int RtmpPublisher::SetMediaInfo(MediaInfo media_info)
 
 	if (media_info_.video_codec_id == RTMP_CODEC_ID_H264) {
 		if (media_info_.sps_size > 0 && media_info_.pps > 0) {
-			avc_sequence_header_.reset(new char[4096]);
+			avc_sequence_header_.reset(new char[4096], std::default_delete<char[]>());
 			uint8_t *data = (uint8_t *)avc_sequence_header_.get();
 			uint32_t index = 0;
 
@@ -184,10 +184,10 @@ void RtmpPublisher::Close()
 	std::lock_guard<std::mutex> lock(mutex_);
 
 	if (rtmp_conn_ != nullptr) {		
-		std::shared_ptr<RtmpConnection> rtmpConn = rtmp_conn_;
-		SOCKET sockfd = rtmpConn->GetSocket();
-		task_scheduler_->AddTriggerEvent([sockfd, rtmpConn]() {
-			rtmpConn->Disconnect();
+		std::shared_ptr<RtmpConnection> rtmp_conn = rtmp_conn_;
+		SOCKET sockfd = rtmp_conn->GetSocket();
+		task_scheduler_->AddTriggerEvent([sockfd, rtmp_conn]() {
+			rtmp_conn->Disconnect();
 		});
 		rtmp_conn_ = nullptr;
 		video_timestamp_ = 0;
@@ -257,7 +257,7 @@ int RtmpPublisher::PushVideoFrame(uint8_t *data, uint32_t size)
 		//timestamp_delta = timestamp - video_timestamp_;
 		//video_timestamp_ = timestamp;
 
-		std::shared_ptr<char> payload(new char[size + 4096]);
+		std::shared_ptr<char> payload(new char[size + 4096], std::default_delete<char[]>());
 		uint32_t payload_size = 0;
 
 		uint8_t *buffer = (uint8_t *)payload.get();
@@ -304,7 +304,7 @@ int RtmpPublisher::PushAudioFrame(uint8_t *data, uint32_t size)
 		//audio_timestamp_ = timestamp;
 		
 		uint32_t payload_size = size + 2;
-		std::shared_ptr<char> payload(new char[size + 2]);
+		std::shared_ptr<char> payload(new char[size + 2], std::default_delete<char[]>());
 		payload.get()[0] = audio_tag_;
 		payload.get()[1] = 1; // 0: aac sequence header, 1: aac raw data
 		memcpy(payload.get() + 2, data, size);

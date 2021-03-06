@@ -104,7 +104,7 @@ int H264Encoder::Encode(uint8_t* in_buffer, uint32_t in_width, uint32_t in_heigh
 
 	int frame_size = 0;
 	int max_buffer_size = encoder_config_.video.width * encoder_config_.video.height * 4;
-	std::shared_ptr<uint8_t> out_buffer(new uint8_t[max_buffer_size]);
+	std::shared_ptr<uint8_t> out_buffer(new uint8_t[max_buffer_size], std::default_delete<uint8_t[]>());
 
 	if (nvenc_data_ != nullptr) {
 		ID3D11Device* device = nvenc_info.get_device(nvenc_data_);

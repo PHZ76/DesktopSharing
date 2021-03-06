@@ -195,7 +195,7 @@ bool GDIScreenCapture::Decode(AVFrame* av_frame, AVPacket* av_packet)
 		std::lock_guard<std::mutex> locker(mutex_);
 
 		image_size_ = av_frame->pkt_size;
-		image_.reset(new uint8_t[image_size_]);
+		image_.reset(new uint8_t[image_size_], std::default_delete<uint8_t[]>());
 		width_ = av_frame->width;
 		height_ = av_frame->height;
 

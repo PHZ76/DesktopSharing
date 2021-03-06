@@ -6,7 +6,7 @@ WASAPICapture::WASAPICapture()
 	, m_mixFormat(NULL)
 {
 	m_pcmBufSize = 48000 * 32 * 2 * 2;
-	m_pcmBuf.reset(new uint8_t[m_pcmBufSize]);
+	m_pcmBuf.reset(new uint8_t[m_pcmBufSize], std::default_delete<uint8_t[]>());
 }
 
 WASAPICapture::~WASAPICapture()
@@ -214,7 +214,7 @@ int WASAPICapture::capture()
 		if (m_pcmBufSize < numFramesAvailable * m_mixFormat->nBlockAlign)
 		{
 			m_pcmBufSize = numFramesAvailable * m_mixFormat->nBlockAlign;
-			m_pcmBuf.reset(new uint8_t[m_pcmBufSize]);
+			m_pcmBuf.reset(new uint8_t[m_pcmBufSize], std::default_delete<uint8_t[]>());
 		}
 
 		if (flags & AUDCLNT_BUFFERFLAGS_SILENT)
