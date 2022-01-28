@@ -225,6 +225,7 @@ bool MainWindow::UpdateARGB(const uint8_t* data, uint32_t width, uint32_t height
 		texture_format_ = SDL_PIXELFORMAT_ARGB8888;
 		texture_width_ = width;
 		texture_height_ = height;
+		SDL_SetTextureScaleMode(texture_, SDL_ScaleModeLinear);
 	}
 
 	if (texture_) {
