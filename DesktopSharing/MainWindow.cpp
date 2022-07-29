@@ -152,6 +152,7 @@ bool MainWindow::Init()
 	if (!ret) {
 		delete overlay_;
 		overlay_ = nullptr;
+		return false;
 	}
 
 	overlay_->SetRect(0, 0 + video_height_, video_width_, kMinOverlayHeight);
